@@ -72,6 +72,20 @@ export function pieceKanji(piece: Piece): string {
   return pieceInfo(piece).kanji;
 }
 
+/**
+ * What is written on a traditional piece: two kanji, read top to bottom (飛車, 角行…).
+ * The promoted side of silver, knight, lance and pawn carries a single cursive character
+ * (全, 圭, 杏, と); dragon and horse keep two (龍王, 龍馬). Sente's king is 玉将, Gote's 王将.
+ */
+export function pieceFace(piece: Piece): string {
+  if (piece.type === "K") return piece.color === "black" ? "玉将" : "王将";
+  if (piece.promoted && piece.type !== "R" && piece.type !== "B") return pieceInfo(piece).kanji;
+  return pieceInfo(piece).kanjiName;
+}
+
+/** Relative size of a traditional piece: the king is the largest, the pawn the smallest. */
+export const PIECE_SCALE: Readonly<Record<string, number>> = { K: 1, R: 0.97, B: 0.97, G: 0.93, S: 0.93, N: 0.9, L: 0.88, P: 0.85 };
+
 /** "o Bispo", "a Torre", "a Lança promovida". */
 export function withArticle(piece: Pick<Piece, "type" | "promoted">): string {
   const feminine = piece.type === "R" || piece.type === "L" || (piece.promoted && piece.type === "S");

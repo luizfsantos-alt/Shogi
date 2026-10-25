@@ -3,6 +3,7 @@ import { attackMap } from "../core/attacks";
 import { checkHelp, describeCheckHelp } from "../core/coach";
 import { describeIllegal, explainBoardMove, explainMove } from "../core/explain";
 import { formatSquare, parseUsiMove } from "../core/notation";
+import { pieceInfo } from "../core/pieces";
 import { findKing, SfenError } from "../core/position";
 import { opposite, type Color, type Piece, type Square, type UsiMove } from "../core/types";
 import { formatUsiRecord, parseUsiRecord, RecordFormatError } from "../core/usiRecord";
@@ -33,6 +34,9 @@ export class App {
   private lastOver = false;
   /** No sounds while the saved game is being restored at startup. */
   private soundsReady = false;
+  /** When a press-and-hold last showed a piece's name, so its release does not also count as a click. */
+  private longPressEndedAt = 0;
+  private tooltip: HTMLElement | null = null;
   /** Piece shown in the learning panel. */
   private infoPiece: Piece | null = null;
   private overlayHidden = false;
@@ -138,6 +142,13 @@ export class App {
       storage.savePreferences(this.preferences);
       if (soundToggle.checked) playSound("move");
     });
+    const marksToggle = element("input", { type: "checkbox", id: "show-marks" });
+    marksToggle.checked = this.preferences.showMarks;
+    marksToggle.addEventListener("change", () => {
+      this.preferences.showMarks = marksToggle.checked;
+      storage.savePreferences(this.preferences);
+      this.render();
+    });
     const styleSelect = element("select", { id: "piece-style" });
     for (const style of PIECE_STYLES) styleSelect.append(element("option", { value: style.id }, style.label));
     const panel = element(
@@ -151,6 +162,7 @@ export class App {
       element("h2", {}, "Jogadas"),
       element("ol", { id: "moves", class: "move-list" }),
       element("label", { class: "field" }, "Estilo das peças ", styleSelect),
+      element("label", { class: "choice" }, marksToggle, " Mostrar os movimentos nas peças"),
       element("label", { class: "choice" }, attacksToggle, " Mostrar as casas atacadas pelo adversário"),
       element("label", { class: "choice" }, soundToggle, " Sons"),
       element(
@@ -235,7 +247,10 @@ export class App {
         if (row === 0) cell.classList.add("edge-top");
         if (col === 0) cell.classList.add("edge-left");
         cell.setAttribute("aria-label", `${formatSquare(square)}${piece ? `, ${describePiece(piece)}` : ""}`);
-        if (piece) cell.append(renderPiece(piece, style, piece.color !== this.bottomColor()));
+        if (piece) {
+          cell.append(renderPiece(piece, style, piece.color !== this.bottomColor(), this.preferences.showMarks));
+          this.pressAndHold(cell, piece);
+        }
         if (this.selection?.kind === "board" && same(this.selection.square, square)) cell.classList.add("selected");
         if (targets.some((t) => same(t, square))) cell.classList.add(piece ? "target-capture" : "target");
         if (lastMove && (same(lastMove.from, square) || same(lastMove.to, square))) cell.classList.add("last");
@@ -283,7 +298,8 @@ export class App {
     for (const type of types) {
       const piece: Piece = { color, type, promoted: false };
       const button = element("button", { type: "button", class: "hand-piece", "aria-label": `${describePiece(piece)}, ${hand[type]}` });
-      button.append(renderPiece(piece, this.preferences.pieceStyle, color !== this.bottomColor()));
+      button.append(renderPiece(piece, this.preferences.pieceStyle, color !== this.bottomColor(), this.preferences.showMarks));
+      this.pressAndHold(button, piece);
       if (hand[type] > 1) button.append(element("span", { class: "count" }, String(hand[type])));
       if (this.selection?.kind === "hand" && this.selection.type === type && backend.sideToMove() === color) {
         button.classList.add("selected");
@@ -408,6 +424,65 @@ export class App {
 
   // ---------------------------------------------------------------- interaction
 
+  /** Press and hold a piece (mouse or touch) to see its Portuguese name while holding. */
+  private pressAndHold(target: HTMLElement, piece: Piece): void {
+    let timer = 0;
+    let start = { x: 0, y: 0 };
+    const cancel = (): void => {
+      window.clearTimeout(timer);
+      timer = 0;
+    };
+    target.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+      start = { x: event.clientX, y: event.clientY };
+      cancel();
+      timer = window.setTimeout(() => {
+        timer = 0;
+        this.showTooltip(target, piece);
+      }, 450);
+    });
+    target.addEventListener("pointermove", (event) => {
+      if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 10) cancel();
+    });
+    for (const type of ["pointerup", "pointercancel", "pointerleave"]) target.addEventListener(type, cancel);
+    // Long presses on phones would otherwise open the system menu.
+    target.addEventListener("contextmenu", (event) => event.preventDefault());
+  }
+
+  private showTooltip(target: HTMLElement, piece: Piece): void {
+    this.hideTooltip();
+    const info = pieceInfo(piece);
+    const rect = target.getBoundingClientRect();
+    const tooltip = element("div", { class: "piece-tooltip", role: "tooltip" }, info.namePt, element("small", {}, `${info.romaji} · ${sideName(piece.color)}`));
+    tooltip.style.left = `${Math.min(Math.max(rect.left + rect.width / 2, 90), window.innerWidth - 90)}px`;
+    tooltip.style.top = `${Math.max(rect.top, 60)}px`;
+    document.body.append(tooltip);
+    this.tooltip = tooltip;
+    const hide = (): void => {
+      this.longPressEndedAt = Date.now();
+      this.hideTooltip();
+      window.removeEventListener("pointerup", hide);
+      window.removeEventListener("pointercancel", hide);
+    };
+    window.addEventListener("pointerup", hide);
+    window.addEventListener("pointercancel", hide);
+  }
+
+  private hideTooltip(): void {
+    this.tooltip?.remove();
+    this.tooltip = null;
+  }
+
+  /**
+   * True (once) if the click that is arriving is the release of a press-and-hold. Some phones
+   * send no click after a long press, so the mark expires quickly instead of waiting for one.
+   */
+  private consumeLongPress(): boolean {
+    const recent = Date.now() - this.longPressEndedAt < 400;
+    this.longPressEndedAt = 0;
+    return recent;
+  }
+
   private setNotice(text: string, kind: "info" | "warning" = "info"): void {
     this.notice = text;
     this.noticeKind = kind;
@@ -427,6 +502,7 @@ export class App {
   }
 
   private async clickSquare(square: Square, piece: Piece | null): Promise<void> {
+    if (this.consumeLongPress()) return;
     const backend = this.session.backend;
     if (piece) this.infoPiece = piece;
     if (backend.result().over || !this.session.canHumanMove()) {
@@ -477,6 +553,7 @@ export class App {
   }
 
   private clickHand(color: Color, type: string): void {
+    if (this.consumeLongPress()) return;
     const backend = this.session.backend;
     this.infoPiece = { color, type, promoted: false };
     if (!this.session.canHumanMove() || color !== backend.sideToMove()) {
@@ -506,7 +583,7 @@ export class App {
     const piece = this.session.backend.pieceAt(from)!;
     const option = (promoted: boolean, label: string) => {
       const box = element("div", { class: "promotion-option" });
-      box.append(renderPiece({ ...piece, promoted }, this.preferences.pieceStyle, false), element("span", {}, label));
+      box.append(renderPiece({ ...piece, promoted }, this.preferences.pieceStyle, false, this.preferences.showMarks), element("span", {}, label));
       return box;
     };
     const body = element("div", { class: "promotion-choice" }, option(true, "Promover"), option(false, "Não promover"));
