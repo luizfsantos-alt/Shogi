@@ -1,0 +1,567 @@
+:root {
+  --bg: #f4efe6;
+  --surface: #fffaf1;
+  --text: #2a2118;
+  --muted: #6b5d4d;
+  --border: #d6c7ae;
+  --accent: #9b3d12;
+  --accent-text: #fff;
+  --danger: #b3261e;
+  --board: #e2b764;
+  --board-line: #6e4b1c;
+  --piece: #f7e3b5;
+  --piece-edge: #8a6a3a;
+  --piece-text: #1d1408;
+  --piece-promoted: #c0261c;
+  --marks: #6e5a3a;
+  --last: rgba(255, 214, 92, 0.55);
+  --selected: rgba(46, 125, 50, 0.45);
+  --target: rgba(46, 125, 50, 0.75);
+  --check: rgba(211, 47, 47, 0.6);
+  --overlay: rgba(20, 14, 8, 0.55);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1b1712;
+    --surface: #26201a;
+    --text: #f1e8da;
+    --muted: #b9a993;
+    --border: #4a3f33;
+    --accent: #e0814f;
+    --accent-text: #1b1712;
+    --danger: #ff8a80;
+    --board: #b98d45;
+    --board-line: #3d2a10;
+    --marks: #6e5a3a;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+select,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  min-height: 44px;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+button.danger {
+  color: var(--danger);
+}
+
+button:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.loading {
+  padding: 2rem;
+  text-align: center;
+}
+
+/* ------------------------------------------------------------ layout */
+
+#app {
+  --sq: min(calc((100vw - 2.6rem) / var(--files, 9)), calc((100dvh - 15rem) / var(--ranks, 9)), 60px);
+}
+
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 12px 24px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.play-area {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.panel {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+@media (min-width: 900px) {
+  #app {
+    --sq: min(calc((100vw - 420px) / var(--files, 9)), calc((100dvh - 12rem) / var(--ranks, 9)), 68px);
+  }
+
+  .layout {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .panel {
+    width: 340px;
+  }
+}
+
+/* ------------------------------------------------------------ board */
+
+.board-frame {
+  position: relative;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(var(--files, 9), var(--sq)) 1.2rem;
+  grid-template-rows: 1.2rem repeat(var(--ranks, 9), var(--sq));
+  background: var(--board);
+  padding: 4px;
+  border-radius: 6px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+.coord {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: var(--board-line);
+  font-weight: 600;
+}
+
+.sq {
+  position: relative;
+  min-height: 0;
+  padding: 1px;
+  border: none;
+  border-right: 1px solid var(--board-line);
+  border-bottom: 1px solid var(--board-line);
+  border-radius: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* outer border of the playing area */
+.sq.edge-top {
+  border-top: 1px solid var(--board-line);
+}
+
+.sq.edge-left {
+  border-left: 1px solid var(--board-line);
+}
+
+.sq.last {
+  background: var(--last);
+}
+
+.sq.selected {
+  background: var(--selected);
+}
+
+.sq.check {
+  background: var(--check);
+}
+
+.sq.target::after {
+  content: "";
+  width: 28%;
+  height: 28%;
+  border-radius: 50%;
+  background: var(--target);
+}
+
+.sq.target-capture::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 3px solid var(--target);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.sq:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+}
+
+/* ------------------------------------------------------------ pieces */
+
+.piece {
+  width: 92%;
+  height: 92%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.piece.upside-down {
+  transform: rotate(180deg);
+}
+
+.piece-body {
+  fill: var(--piece);
+  stroke: var(--piece-edge);
+  stroke-width: 3;
+}
+
+.piece-label {
+  fill: var(--piece-text);
+  font-weight: 700;
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif CJK JP", system-ui, sans-serif;
+}
+
+.piece.promoted .piece-label {
+  fill: var(--piece-promoted);
+}
+
+.piece-marks {
+  fill: var(--marks);
+  stroke: var(--marks);
+}
+
+/* ------------------------------------------------------------ players and hands */
+
+.player-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: calc(var(--sq) * 0.9 + 8px);
+}
+
+.player-name {
+  flex: 0 0 auto;
+  font-size: 0.9rem;
+  color: var(--muted);
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.player-name.to-move {
+  color: var(--text);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.hand-empty {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.hand-piece {
+  position: relative;
+  width: calc(var(--sq) * 0.9);
+  height: calc(var(--sq) * 0.9);
+  min-height: 0;
+  padding: 1px;
+  border-radius: 6px;
+  background: var(--board);
+}
+
+.hand-piece.selected {
+  outline: 3px solid var(--target);
+}
+
+.hand-piece .count {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  min-width: 1.3rem;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* ------------------------------------------------------------ panel */
+
+.status {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  min-height: 3rem;
+}
+
+.check-warning {
+  margin-top: 4px;
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.error {
+  margin-top: 4px;
+  color: var(--danger);
+}
+
+.notice {
+  min-height: 1.4rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.notice:empty {
+  display: none;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.panel h2 {
+  margin: 4px 0 0;
+  font-size: 1rem;
+}
+
+.move-list {
+  margin: 0;
+  padding: 8px 8px 8px 2.6rem;
+  max-height: 14rem;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  columns: 2;
+  font-variant-numeric: tabular-nums;
+}
+
+.move-list:empty::before {
+  content: "Nenhuma jogada ainda.";
+  color: var(--muted);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+
+.field select,
+.field input,
+.field textarea {
+  min-height: 40px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.spinner {
+  display: inline-block;
+  width: 0.9rem;
+  height: 0.9rem;
+  margin-left: 8px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 3s;
+  }
+}
+
+/* ------------------------------------------------------------ overlay and dialogs */
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--overlay);
+  border-radius: 6px;
+}
+
+.overlay[hidden] {
+  display: none;
+}
+
+.overlay-card,
+.dialog {
+  max-width: min(92vw, 480px);
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.overlay-card h2,
+.dialog h2 {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+}
+
+.dialog::backdrop {
+  background: var(--overlay);
+}
+
+.dialog-body {
+  margin-bottom: 12px;
+}
+
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.new-game fieldset {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 0 0 10px;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+}
+
+.choice input {
+  width: 20px;
+  height: 20px;
+}
+
+.promotion-choice {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+}
+
+.promotion-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.promotion-option .piece {
+  width: 64px;
+  height: 64px;
+  padding: 4px;
+  border-radius: 8px;
+  background: var(--board);
+}
+
+.save-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.save-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.save-list small {
+  display: block;
+  color: var(--muted);
+}
+
+.save-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.export {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.export textarea {
+  width: 100%;
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
+  resize: vertical;
+}

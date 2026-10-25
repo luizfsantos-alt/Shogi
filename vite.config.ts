@@ -13,6 +13,7 @@ const crossOriginIsolation = {
 export default defineConfig({
   server: { headers: crossOriginIsolation },
   preview: { headers: crossOriginIsolation },
+  worker: { format: "es" },
   optimizeDeps: {
     // Emscripten modules locate their .wasm files themselves; pre-bundling breaks that.
     exclude: ["ffish-es6", "fairy-stockfish-nnue.wasm"],

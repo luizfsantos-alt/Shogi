@@ -4,7 +4,8 @@ Shogi (xadrez japonês) no navegador, fiel às regras oficiais, com IA em nívei
 aprendizado. As regras e a IA vêm do [Fairy-Stockfish](https://github.com/fairy-stockfish/Fairy-Stockfish)
 compilado para WebAssembly.
 
-> **Estado:** Fase 1 concluída (motor de regras integrado e testado). A interface jogável chega na Fase 2.
+> **Estado:** Fase 2 concluída: dá para jogar contra o computador (ou a dois no mesmo aparelho).
+> Próximas fases: modo aprendizado (3), calibração dos níveis da IA (4) e acabamento (5).
 
 ## Como rodar
 
@@ -30,10 +31,28 @@ src/
     notation.ts         # USI <-> notação interna do Fairy-Stockfish
     position.ts         # SFEN: leitura, escrita e validação de posição
     impasse.ts          # declaração de impasse (jishogi, regra dos 27 pontos)
+    pieces.ts           # nomes (PT / romaji / kanji) e movimentos de cada peça
+    kifu.ts             # notação legível da lista de jogadas (P-7f, Bx2b+, P*5e)
+    usiRecord.ts        # exportar/importar partidas em texto USI
     ffishLoader.ts      # carrega o WebAssembly do ffish.js
-  ui/                   # interface (Fase 2+)
-tests/                  # testes de regras, notação e de fumaça
+  ai/                   # IA; sem DOM
+    Engine.ts           # interface do motor (trocável, ex.: YaneuraOu no futuro)
+    FairyEngine.ts      # Fairy-Stockfish via protocolo UCI, com cancelamento
+    levels.ts           # os 5 níveis (único lugar para ajustar a força)
+    uci.ts              # conversão de posições/jogadas para o motor
+  worker/               # Web Worker que roda o motor fora da thread da interface
+  ui/
+    session.ts          # partida em andamento: turnos, IA, desfazer (sem DOM, testado)
+    App.ts              # tela do jogo
+    pieceView.ts        # desenho das peças (cunha) nos estilos PT / EN / kanji
+    interaction.ts      # seleção → casas destacadas → jogada / pergunta de promoção
+    storage.ts          # salvar/carregar no localStorage
+scripts/copy-engine.mjs # copia os arquivos do motor para public/engine/
+tests/                  # regras, notação, motor, sessão, interação
 ```
+
+Os arquivos do motor (`stockfish.js`, `stockfish.worker.js`, `stockfish.wasm`) são copiados
+automaticamente de `node_modules` para `public/engine/` antes de `npm run dev` e `npm run build`.
 
 A UI nunca fala com o ffish diretamente: tudo passa por `GameBackend`, usando notação USI
 (`7g7f`, `P*5e`, `8h2b+`) e SFEN. Internamente o Fairy-Stockfish usa coordenadas de xadrez
