@@ -11,14 +11,26 @@ const root = document.querySelector<HTMLElement>("#app")!;
 function createEngine(variant: VariantDefinition, onError: (message: string) => void): FairyEngine | null {
   // The threaded engine needs SharedArrayBuffer, only available on cross-origin isolated pages.
   if (!self.crossOriginIsolated) {
-    onError("O motor de IA precisa dos cabeçalhos COOP/COEP (veja o README). Só o modo dois jogadores está disponível.");
+    onError("A IA não pôde ser ativada neste navegador (em janelas anônimas isso costuma ser bloqueado). Tente uma janela normal e recarregue a página. Por enquanto, só o modo dois jogadores está disponível.");
     return null;
   }
   const threads = Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 2) - 1));
   return new FairyEngine(new WorkerTransport(onError), variant, { threads, hashMb: 32 });
 }
 
+/**
+ * On hosts without COOP/COEP headers (GitHub Pages), coi-serviceworker (see index.html) reloads
+ * the page once its service worker is active. Wait for that reload instead of starting a game
+ * without the AI; if service workers are blocked, give up after a few seconds and start anyway.
+ */
+async function waitForIsolationReload(): Promise<void> {
+  if (self.crossOriginIsolated || !self.isSecureContext || !("serviceWorker" in navigator)) return;
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+  await Promise.race([navigator.serviceWorker.ready.then(() => sleep(3000)), sleep(5000)]);
+}
+
 async function main(): Promise<void> {
+  await waitForIsolationReload();
   const backend = await loadBackend();
   let app: App | null = null;
   let session: GameSession | null = null;

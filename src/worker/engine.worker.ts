@@ -2,7 +2,7 @@
 /**
  * Web Worker hosting Fairy-Stockfish (fairy-stockfish-nnue.wasm). It only relays UCI text:
  * commands in, engine output lines out. The engine files are served from public/engine/
- * (copied there by scripts/copy-engine.mjs).
+ * (copied there by scripts/copy-vendor.mjs).
  */
 import type { WorkerRequest, WorkerResponse } from "./protocol";
 

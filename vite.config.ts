@@ -11,6 +11,8 @@ const crossOriginIsolation = {
 };
 
 export default defineConfig({
+  // Sub-path the site is served from: "/" normally, "/Shogi/" on GitHub Pages (set by the workflow).
+  base: process.env.BASE_PATH ?? "/",
   server: { headers: crossOriginIsolation },
   preview: { headers: crossOriginIsolation },
   worker: { format: "es" },
