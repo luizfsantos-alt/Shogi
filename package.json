@@ -1,0 +1,29 @@
+{
+  "name": "shogi-web",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Shogi no navegador, fiel às regras oficiais, com IA em níveis e modo de aprendizado (Fairy-Stockfish).",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "predev": "node scripts/copy-engine.mjs",
+    "build": "tsc --noEmit && vite build",
+    "prebuild": "node scripts/copy-engine.mjs",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "calibrate:quality": "CALIBRATE=1 vitest run scripts/calibration/quality.calib.ts",
+    "calibrate:match": "CALIBRATE=1 vitest run scripts/calibration/match.calib.ts"
+  },
+  "dependencies": {
+    "fairy-stockfish-nnue.wasm": "1.1.12",
+    "ffish-es6": "0.7.10"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.5",
+    "typescript": "7.0.2",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  }
+}
