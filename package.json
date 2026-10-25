@@ -12,7 +12,9 @@
     "prebuild": "node scripts/copy-engine.mjs",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "calibrate:quality": "CALIBRATE=1 vitest run scripts/calibration/quality.calib.ts",
+    "calibrate:match": "CALIBRATE=1 vitest run scripts/calibration/match.calib.ts"
   },
   "dependencies": {
     "fairy-stockfish-nnue.wasm": "1.1.12",

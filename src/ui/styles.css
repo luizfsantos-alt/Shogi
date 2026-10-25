@@ -108,14 +108,28 @@ select:focus-visible {
 
 /* ------------------------------------------------------------ layout */
 
+/* Square size: limited by the width, and by the height needed for board + both hands (~ranks + 2 squares). */
 #app {
-  --sq: min(calc((100vw - 2.6rem) / var(--files, 9)), calc((100dvh - 15rem) / var(--ranks, 9)), 60px);
+  --coord: 1.2rem;
+  --pad: 12px;
+  --sq: min(calc((100vw - 2 * var(--pad) - var(--coord) - 8px) / var(--files, 9)), calc((100dvh - 8rem) / (var(--ranks, 9) + 2)), 60px);
+}
+
+@media (max-width: 480px) {
+  #app {
+    --coord: 0.9rem;
+    --pad: 6px;
+  }
+
+  .coord {
+    font-size: 0.65rem;
+  }
 }
 
 .app {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 12px 24px;
+  padding: 0 var(--pad, 12px) 24px;
 }
 
 .topbar {
@@ -153,7 +167,7 @@ select:focus-visible {
 
 @media (min-width: 900px) {
   #app {
-    --sq: min(calc((100vw - 420px) / var(--files, 9)), calc((100dvh - 12rem) / var(--ranks, 9)), 68px);
+    --sq: min(calc((100vw - 420px) / var(--files, 9)), calc((100dvh - 8rem) / (var(--ranks, 9) + 2)), 68px);
   }
 
   .layout {
@@ -175,8 +189,8 @@ select:focus-visible {
 
 .board {
   display: grid;
-  grid-template-columns: repeat(var(--files, 9), var(--sq)) 1.2rem;
-  grid-template-rows: 1.2rem repeat(var(--ranks, 9), var(--sq));
+  grid-template-columns: repeat(var(--files, 9), var(--sq)) var(--coord);
+  grid-template-rows: var(--coord) repeat(var(--ranks, 9), var(--sq));
   background: var(--board);
   padding: 4px;
   border-radius: 6px;
@@ -404,6 +418,11 @@ select:focus-visible {
   border-radius: 8px;
   columns: 2;
   font-variant-numeric: tabular-nums;
+}
+
+.move-list:empty {
+  columns: auto;
+  padding-left: 12px;
 }
 
 .move-list:empty::before {
@@ -832,4 +851,76 @@ select:focus-visible {
 
 .zone-cell.zone-white {
   background: rgba(155, 61, 18, 0.4);
+}
+
+/* ------------------------------------------------------------ phones in landscape */
+
+/* Short screens: hands go beside the board (like the komadai of a real board). */
+@media (orientation: landscape) and (max-height: 560px) and (max-width: 899px) {
+  #app {
+    --sq: min(calc((100dvh - 4.8rem) / var(--ranks, 9)), calc((100vw - 300px - 2 * var(--pad) - 9rem - 20px) / var(--files, 9)));
+  }
+
+  .topbar {
+    padding: 2px 0;
+  }
+
+  .topbar h1 {
+    font-size: 1.1rem;
+  }
+
+  .topbar button {
+    min-height: 36px;
+    padding: 0.25rem 0.7rem;
+  }
+
+  .layout {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .play-area {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .player-bar {
+    width: 4.5rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+
+  .player-bar.top {
+    order: -1;
+    justify-content: flex-start;
+  }
+
+  .player-bar.bottom {
+    order: 1;
+    justify-content: flex-end;
+  }
+
+  .player-name {
+    font-size: 0.7rem;
+    padding: 2px 4px;
+    border-radius: 6px;
+  }
+
+  .hand {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .hand-empty {
+    font-size: 0.7rem;
+    text-align: center;
+  }
+
+  .panel {
+    width: 300px;
+    max-height: calc(100dvh - 3rem);
+    overflow-y: auto;
+  }
 }

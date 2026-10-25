@@ -19,7 +19,8 @@ export default defineConfig({
     exclude: ["ffish-es6", "fairy-stockfish-nnue.wasm"],
   },
   test: {
-    include: ["tests/**/*.test.ts"],
+    // `npm run calibrate` runs the (slow) AI calibration in scripts/calibration instead of the tests.
+    include: process.env.CALIBRATE ? ["scripts/calibration/**/*.calib.ts"] : ["tests/**/*.test.ts"],
     environment: "node",
     testTimeout: 120_000,
   },

@@ -1,9 +1,10 @@
 import type { Engine } from "../ai/Engine";
-import { getLevel, HINT_LEVEL } from "../ai/levels";
+import { DEFAULT_LEVEL, getLevel, HINT_LEVEL } from "../ai/levels";
 import { describeMove } from "../core/coach";
 import type { GameBackend } from "../core/GameBackend";
 import { formatWesternMove } from "../core/kifu";
 import { opposite, type Color, type UsiMove } from "../core/types";
+import { startSfenFor } from "../core/variants";
 
 export type GameMode = "ai" | "local";
 
@@ -12,6 +13,8 @@ export interface GameSettings {
   /** The human's side when playing against the computer. */
   humanColor: Color;
   level: number;
+  /** Handicap given by Gote (the computer, against a person); "none" for an even game. */
+  handicap?: string;
 }
 
 /** Everything needed to restore a game (saved to localStorage). */
@@ -32,7 +35,7 @@ export interface Hint {
   facts: string[];
 }
 
-export const DEFAULT_SETTINGS: GameSettings = { mode: "ai", humanColor: "black", level: 2 };
+export const DEFAULT_SETTINGS: GameSettings = { mode: "ai", humanColor: "black", level: DEFAULT_LEVEL, handicap: "none" };
 
 /**
  * One game being played: the rules backend plus turn handling, the computer's moves,
@@ -53,6 +56,8 @@ export class GameSession {
     readonly backend: GameBackend,
     private readonly engine: Engine | null,
     private readonly onChange: () => void,
+    /** Minimum time the computer appears to think, so instant replies are easy to follow. */
+    private readonly minThinkMs = 600,
   ) {}
 
   get engineAvailable(): boolean {
@@ -61,8 +66,10 @@ export class GameSession {
 
   newGame(settings: GameSettings, sfen?: string): void {
     this.cancelAi();
-    this.settings = { ...settings };
-    this.backend.load(sfen);
+    const handicapped = !sfen && settings.handicap && settings.handicap !== "none";
+    // With a handicap the computer is the stronger side: Gote, without the removed pieces.
+    this.settings = handicapped && settings.mode === "ai" ? { ...settings, humanColor: "black" } : { ...settings };
+    this.backend.load(sfen ?? startSfenFor(this.backend.variant, settings.handicap));
     this.notations = [];
     void this.engine?.newGame();
     this.afterChange();
@@ -224,7 +231,8 @@ export class GameSession {
     this.onChange();
     try {
       const request = { initialSfen: this.backend.initialSfen(), moves: this.backend.history() };
-      const move = await this.engine!.bestMove(request, getLevel(this.settings.level));
+      const pause = new Promise((resolve) => setTimeout(resolve, this.minThinkMs));
+      const [move] = await Promise.all([this.engine!.bestMove(request, getLevel(this.settings.level)), pause]);
       if (turn !== this.aiTurnId) return;
       this.thinking = false;
       if (move && this.backend.isLegal(move)) this.pushWithNotation(move);

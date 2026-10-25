@@ -1,0 +1,4 @@
+# Netlify and Cloudflare Pages: the AI engine needs a cross-origin isolated page.
+/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp

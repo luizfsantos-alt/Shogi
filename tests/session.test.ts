@@ -15,7 +15,7 @@ const vsAi = (humanColor: "black" | "white"): GameSettings => ({ mode: "ai", hum
 
 async function session(): Promise<{ s: GameSession; settled: () => Promise<void> }> {
   let notify = (): void => {};
-  const s = new GameSession(await newGame(), engine, () => notify());
+  const s = new GameSession(await newGame(), engine, () => notify(), 0);
   const settled = () =>
     new Promise<void>((resolve) => {
       const check = (): void => {
@@ -116,5 +116,23 @@ describe("GameSession hints", () => {
     expect(s.hint?.notation).toBe("G*5b");
     s.play("5i4h");
     expect(s.hint).toBeNull();
+  });
+});
+
+describe("GameSession, handicap and impasse", () => {
+  it("handicap: the computer plays Gote without the rook and moves first", async () => {
+    const { s, settled } = await session();
+    s.newGame({ mode: "ai", humanColor: "white", level: 1, handicap: "rook" });
+    expect(s.settings.humanColor).toBe("black");
+    expect(s.backend.initialSfen()).toBe("lnsgkgsnl/7b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1");
+    await settled();
+    expect(s.backend.history()).toHaveLength(1);
+    expect(s.canHumanMove()).toBe(true);
+  });
+
+  it("the computer declares impasse when it can", async () => {
+    const { s } = await session();
+    s.restore({ initialSfen: "8K/9/9/9/9/9/9/4kssss/3ggggbr w 9p 1", moves: [], settings: vsAi("black") });
+    expect(s.backend.result()).toEqual({ over: true, winner: "white", reason: "impasse" });
   });
 });

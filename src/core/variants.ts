@@ -15,6 +15,15 @@ export interface ImpasseRule {
   bigPieceValue: number;
 }
 
+/**
+ * Handicap start: the stronger player (Gote, "uwate") plays without some pieces and moves first.
+ */
+export interface Handicap {
+  id: string;
+  label: string;
+  sfen: string;
+}
+
 export interface VariantDefinition {
   /** Variant name as known by Fairy-Stockfish (built-in or defined in `ini`). */
   id: string;
@@ -43,6 +52,7 @@ export interface VariantDefinition {
   /** Maximum number of pieces of each base type in the whole game (board + hands), if fixed. */
   maxPieceCounts?: Readonly<Record<string, number>>;
   impasse?: ImpasseRule;
+  handicaps?: readonly Handicap[];
   /**
    * Fairy-Stockfish variants.ini section defining this variant. Leave undefined for variants
    * built into Fairy-Stockfish. See README ("Como adicionar uma variante").
@@ -62,6 +72,12 @@ const SHOGI: VariantDefinition = {
   noDoubledPawns: true,
   pawnDropMateIllegal: true,
   maxPieceCounts: { K: 2, R: 2, B: 2, G: 4, S: 4, N: 4, L: 4, P: 18 },
+  handicaps: [
+    { id: "lance", label: "Lança (kyō-ochi)", sfen: "lnsgkgsn1/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1" },
+    { id: "bishop", label: "Bispo (kaku-ochi)", sfen: "lnsgkgsnl/1r7/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1" },
+    { id: "rook", label: "Torre (hisha-ochi)", sfen: "lnsgkgsnl/7b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1" },
+    { id: "two", label: "Torre e Bispo (nimai-ochi)", sfen: "lnsgkgsnl/9/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1" },
+  ],
   impasse: {
     blackPoints: 28,
     whitePoints: 27,
@@ -85,4 +101,9 @@ export function getVariant(name: string): VariantDefinition {
 
 export function listVariants(): VariantDefinition[] {
   return Object.values(VARIANTS);
+}
+
+/** Starting SFEN for a handicap id; the standard start for "none" or an unknown id. */
+export function startSfenFor(variant: VariantDefinition, handicap: string | undefined): string {
+  return variant.handicaps?.find((h) => h.id === handicap)?.sfen ?? variant.startSfen;
 }

@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { FairyEngine } from "../src/ai/FairyEngine";
 import { getLevel, LEVELS, type LevelConfig } from "../src/ai/levels";
 import { goCommand, positionCommand } from "../src/ai/uci";
+import { usiToFairy } from "../src/core/notation";
 import { getVariant } from "../src/core/variants";
 import { newGame, nodeEngineTransport } from "./helpers";
 
@@ -66,5 +67,47 @@ describe("FairyEngine", () => {
       const move = await engine.bestMove({ initialSfen: START, moves: ["7g7f"] }, { ...getLevel(level.id), movetimeMs: 200 });
       expect(move).toMatch(/^\d[a-i]\d[a-i]\+?$/);
     }
+  });
+});
+
+describe("the engine knows the repetition rules (it gets the whole move history)", () => {
+  /** Score (cp, side to move) of one move, searched with the full history. */
+  async function scoreOf(initialSfen: string, moves: string[], move: string): Promise<number> {
+    const transport = await nodeEngineTransport();
+    let score = 0;
+    const done = new Promise<void>((resolve) =>
+      transport.onLine((line) => {
+        const cp = / score cp (-?\d+)/.exec(line);
+        const mate = / score mate (-?\d+)/.exec(line);
+        if (cp) score = Number(cp[1]);
+        if (mate) score = Number(mate[1]) > 0 ? 100_000 : -100_000;
+        if (line.startsWith("bestmove")) resolve();
+      }),
+    );
+    transport.send(`setoption name UCI_Variant value shogi`);
+    transport.send(positionCommand({ initialSfen, moves }, shogi));
+    transport.send(`go depth 4 searchmoves ${usiToFairy(move, shogi.dims)}`);
+    await done;
+    transport.terminate();
+    return score;
+  }
+
+  // Gote king on 1a in check from the Sente rook on 1i; the rook keeps checking from 1i and 2i.
+  const START_CHECK = "8k/9/9/9/9/9/9/9/K7R w - 1";
+  const cycle = ["1a2a", "1i2i", "2a1a", "2i1i"];
+
+  it("sees that a 4th repetition by perpetual check loses for the checking side", async () => {
+    const history = [...cycle, ...cycle, "1a2a", "1i2i", "2a1a"];
+    // Without history the check is a normal move; with it, it would be the 4th repetition.
+    expect(await scoreOf(START_CHECK, ["1a2a", "1i2i", "2a1a"], "2i1i")).toBeGreaterThan(-1000);
+    expect(await scoreOf(START_CHECK, history, "2i1i")).toBeLessThan(-10_000);
+  });
+
+  it("avoids that losing repetition when choosing its move", async () => {
+    const history = [...cycle, ...cycle, "1a2a", "1i2i", "2a1a"];
+    const engine = new FairyEngine(await nodeEngineTransport(), shogi);
+    await engine.init();
+    expect(await engine.bestMove({ initialSfen: START_CHECK, moves: history }, quick)).not.toBe("2i1i");
+    engine.dispose();
   });
 });

@@ -12,6 +12,7 @@ import { chooseMove, targetsFor, type Selection } from "./interaction";
 import { describePiece, PIECE_STYLES, renderPiece, type PieceStyle } from "./pieceView";
 import { pieceCard } from "./pieceCard";
 import { showRules } from "./rules";
+import { playSound } from "./sound";
 import { DEFAULT_SETTINGS, type GameSession, type GameSettings } from "./session";
 import * as storage from "./storage";
 import { resultReason, resultTitle, sideName, turnText } from "./text";
@@ -24,6 +25,11 @@ export class App {
   private flipped = false;
   private notice = "";
   private noticeKind: "info" | "warning" = "info";
+  /** Plies and game state at the last change, to know which sound to play. */
+  private lastPlies = 0;
+  private lastOver = false;
+  /** No sounds while the saved game is being restored at startup. */
+  private soundsReady = false;
   /** Piece shown in the learning panel. */
   private infoPiece: Piece | null = null;
   private overlayHidden = false;
@@ -54,10 +60,31 @@ export class App {
   onGameChange(): void {
     this.overlayHidden = false;
     storage.saveCurrentGame(this.session.toSaved());
+    this.playSounds();
     this.render();
   }
 
+  private playSounds(): void {
+    const backend = this.session.backend;
+    const plies = backend.history().length;
+    const over = backend.result().over;
+    if (this.preferences.sound && this.soundsReady) {
+      if (over && !this.lastOver) playSound("end");
+      else if (plies === this.lastPlies + 1) {
+        const capture = this.session.notations.at(-1)?.includes("x") ?? false;
+        playSound(backend.isCheck() ? "check" : capture ? "capture" : "move");
+      }
+    }
+    this.lastPlies = plies;
+    this.lastOver = over;
+  }
+
   start(): void {
+    this.restoreOrStartGame();
+    this.soundsReady = true;
+  }
+
+  private restoreOrStartGame(): void {
     const saved = storage.loadCurrentGame();
     if (saved && saved.variant === this.session.backend.variant.id) {
       try {
@@ -101,6 +128,13 @@ export class App {
       storage.savePreferences(this.preferences);
       this.render();
     });
+    const soundToggle = element("input", { type: "checkbox", id: "sound" });
+    soundToggle.checked = this.preferences.sound;
+    soundToggle.addEventListener("change", () => {
+      this.preferences.sound = soundToggle.checked;
+      storage.savePreferences(this.preferences);
+      if (soundToggle.checked) playSound("move");
+    });
     const styleSelect = element("select", { id: "piece-style" });
     for (const style of PIECE_STYLES) styleSelect.append(element("option", { value: style.id }, style.label));
     const panel = element(
@@ -115,6 +149,7 @@ export class App {
       element("ol", { id: "moves", class: "move-list" }),
       element("label", { class: "field" }, "Estilo das peças ", styleSelect),
       element("label", { class: "choice" }, attacksToggle, " Mostrar as casas atacadas pelo adversário"),
+      element("label", { class: "choice" }, soundToggle, " Sons"),
       element(
         "div",
         { class: "actions secondary" },
@@ -517,6 +552,12 @@ export class App {
       levelSelect.append(option);
     }
     levelSelect.value = String(last.level);
+    const handicapSelect = element("select", { name: "handicap" });
+    handicapSelect.append(element("option", { value: "none" }, "Nenhum (partida normal)"));
+    for (const handicap of this.session.backend.variant.handicaps ?? []) {
+      handicapSelect.append(element("option", { value: handicap.id }, `Gote joga sem: ${handicap.label}`));
+    }
+    handicapSelect.value = last.handicap ?? "none";
     const form = element(
       "form",
       { class: "new-game" },
@@ -536,6 +577,13 @@ export class App {
         radio("side", "random", "Aleatório", false),
       ),
       element("label", { class: "field" }, "Nível ", levelSelect),
+      element(
+        "label",
+        { class: "field" },
+        "Handicap ",
+        handicapSelect,
+        element("small", { class: "muted" }, "Com handicap, Gote (o computador) joga sem essas peças e começa a partida; você joga de Sente. Bom para aprender."),
+      ),
     );
     if (!engineOk) form.prepend(element("p", { class: "error" }, "O motor de IA não está disponível neste navegador."));
 
@@ -555,6 +603,7 @@ export class App {
       mode: data.get("mode") === "local" ? "local" : "ai",
       humanColor: side === "random" ? (Math.random() < 0.5 ? "black" : "white") : side,
       level: Number(data.get("level") ?? last.level),
+      handicap: String(data.get("handicap") ?? "none"),
     };
     this.preferences.lastSettings = { ...settings, humanColor: side === "random" ? last.humanColor : settings.humanColor };
     storage.savePreferences(this.preferences);
