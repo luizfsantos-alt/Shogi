@@ -7,9 +7,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "predev": "node scripts/copy-engine.mjs",
+    "predev": "node scripts/copy-vendor.mjs",
     "build": "tsc --noEmit && vite build",
-    "prebuild": "node scripts/copy-engine.mjs",
+    "prebuild": "node scripts/copy-vendor.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -17,6 +17,7 @@
     "calibrate:match": "CALIBRATE=1 vitest run scripts/calibration/match.calib.ts"
   },
   "dependencies": {
+    "coi-serviceworker": "0.1.7",
     "fairy-stockfish-nnue.wasm": "1.1.12",
     "ffish-es6": "0.7.10"
   },

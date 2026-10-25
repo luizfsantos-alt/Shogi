@@ -36,9 +36,9 @@ npm run build    # build de produção em dist/
 npm run preview  # serve o build localmente: http://localhost:4173
 ```
 
-Os arquivos do motor de IA (`stockfish.js`, `stockfish.worker.js`, `stockfish.wasm`) são copiados
-de `node_modules` para `public/engine/` automaticamente antes de `dev` e `build`
-(`scripts/copy-engine.mjs`).
+Os arquivos do motor de IA (`stockfish.js`, `stockfish.worker.js`, `stockfish.wasm`) e o
+`coi-serviceworker.js` são copiados de `node_modules` para `public/` automaticamente antes de
+`dev` e `build` (`scripts/copy-vendor.mjs`).
 
 ## Estrutura
 
@@ -74,7 +74,7 @@ src/
     storage.ts          # salvar/carregar no localStorage
     sound.ts            # sons sintetizados (Web Audio)
 scripts/
-  copy-engine.mjs       # copia os arquivos do motor para public/engine/
+  copy-vendor.mjs       # copia o motor e o coi-serviceworker para public/
   calibration/          # ferramentas para calibrar os níveis da IA
 tests/                  # regras, notação, explicações, motor, sessão, interação
 ```
@@ -190,9 +190,14 @@ Sem eles o jogo abre, mas só no modo "dois jogadores" (aparece um aviso).
 - **Netlify**: pronto, `netlify.toml` (build) + `public/_headers` (cabeçalhos).
 - **Cloudflare Pages**: comando de build `npm run build`, pasta `dist`; o `public/_headers` vale.
 - **Vercel**: pronto, `vercel.json`.
-- **GitHub Pages**: não permite cabeçalhos próprios. Seria preciso um service worker que os
-  injete (ex.: [`coi-serviceworker`](https://github.com/gzuidhof/coi-serviceworker)); não incluído,
-  por ser uma dependência extra.
+- **GitHub Pages**: pronto, com o workflow `.github/workflows/pages.yml`, que roda os testes, faz o
+  build e publica a cada push na `main`. Configuração única no GitHub: **Settings → Pages →
+  Build and deployment → Source: "GitHub Actions"**. O site fica em
+  `https://<usuário>.github.io/<repositório>/` (o workflow ajusta o caminho base com `BASE_PATH`).
+  Como o Pages não permite cabeçalhos próprios, o
+  [`coi-serviceworker`](https://github.com/gzuidhof/coi-serviceworker) (MIT) os acrescenta pelo
+  navegador: na primeira visita a página recarrega sozinha uma vez. Onde service workers estão
+  bloqueados (algumas abas anônimas), a IA fica indisponível e o jogo oferece o modo dois jogadores.
 - Qualquer outro servidor: configure os dois cabeçalhos acima e sirva a pasta `dist/`.
 
 O ffish.js (regras) não precisa desses cabeçalhos; só o motor de IA.
@@ -208,6 +213,8 @@ Este projeto é software livre sob a **GNU General Public License v3.0 ou poster
   Fairy-Stockfish em WebAssembly (Fabian Fichter, Johannes Czech).
 - [fairy-stockfish-nnue.wasm](https://github.com/fairy-stockfish/fairy-stockfish.wasm): motor
   Fairy-Stockfish em WebAssembly.
+- [coi-serviceworker](https://github.com/gzuidhof/coi-serviceworker) (MIT), de Guido Zuidhof:
+  cabeçalhos COOP/COEP no GitHub Pages.
 
 **Aviso GPL:** quem distribuir este programa, inclusive publicando-o na web, deve oferecer o
 código-fonte completo sob a mesma licença. O rodapé do jogo já mostra a licença, os créditos e
