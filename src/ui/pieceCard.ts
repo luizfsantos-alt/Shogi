@@ -1,4 +1,4 @@
-import { pieceInfo, pieceKanji } from "../core/pieces";
+import { pieceFace, pieceInfo } from "../core/pieces";
 import type { VariantDefinition } from "../core/variants";
 import type { Color, Piece } from "../core/types";
 import { movementDiagram } from "./diagram";
@@ -17,7 +17,7 @@ export function pieceCard(piece: Piece, variant: VariantDefinition, style: Piece
       "div",
       { class: "piece-card-head" },
       element("strong", {}, info.namePt),
-      element("span", {}, `${info.romaji} · ${info.kanjiName} (${pieceKanji(piece)})`),
+      element("span", {}, `${info.romaji} · ${pieceFace(piece)}`),
       element("small", {}, `Peça de ${owner}`),
     ),
     element("div", { class: "piece-card-row" }, movementDiagram(piece, style), element("p", {}, info.movePt)),

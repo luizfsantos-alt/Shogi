@@ -23,6 +23,8 @@ compilado para WebAssembly. Funciona no computador e no celular; não precisa de
   declarar impasse, fim de partida com o motivo.
 - Salvamento automático, partidas salvas no navegador, exportar/importar em **SFEN** e **USI**.
 - Sons opcionais (desligáveis), tema claro/escuro automático, layout para celular (retrato e paisagem).
+- **PWA**: dá para instalar como aplicativo (celular e computador) e **jogar offline, inclusive
+  contra o computador**. Quando sai uma versão nova, o app avisa e atualiza com um toque.
 
 ## Como rodar
 
@@ -36,9 +38,9 @@ npm run build    # build de produção em dist/
 npm run preview  # serve o build localmente: http://localhost:4173
 ```
 
-Os arquivos do motor de IA (`stockfish.js`, `stockfish.worker.js`, `stockfish.wasm`) e o
-`coi-serviceworker.js` são copiados de `node_modules` para `public/` automaticamente antes de
-`dev` e `build` (`scripts/copy-vendor.mjs`).
+Os arquivos do motor de IA (`stockfish.js`, `stockfish.worker.js`, `stockfish.wasm`) são copiados
+de `node_modules` para `public/engine/` automaticamente antes de `dev` e `build`
+(`scripts/copy-vendor.mjs`).
 
 ## Estrutura
 
@@ -65,6 +67,9 @@ src/
     levels.ts           # os 5 níveis (único lugar para ajustar a força)
     uci.ts              # conversão de posições/jogadas para o motor
   worker/               # Web Worker que roda o motor fora da thread da interface
+  pwa/
+    sw.template.js      # service worker: cache offline + cabeçalhos COOP/COEP (vira dist/sw.js)
+    register.ts         # registro, aviso de versão nova, botão "Instalar app"
   ui/
     session.ts          # partida em andamento: turnos, IA, desfazer, dicas (sem DOM, testado)
     App.ts              # tela do jogo
@@ -74,7 +79,8 @@ src/
     storage.ts          # salvar/carregar no localStorage
     sound.ts            # sons sintetizados (Web Audio)
 scripts/
-  copy-vendor.mjs       # copia o motor e o coi-serviceworker para public/
+  copy-vendor.mjs       # copia o motor para public/engine/
+  make-icons.cjs        # gera os ícones do app em public/icons/ (precisa do Playwright)
   calibration/          # ferramentas para calibrar os níveis da IA
 tests/                  # regras, notação, explicações, motor, sessão, interação
 ```
@@ -194,13 +200,32 @@ Sem eles o jogo abre, mas só no modo "dois jogadores" (aparece um aviso).
   build e publica a cada push na `main`. Configuração única no GitHub: **Settings → Pages →
   Build and deployment → Source: "GitHub Actions"**. O site fica em
   `https://<usuário>.github.io/<repositório>/` (o workflow ajusta o caminho base com `BASE_PATH`).
-  Como o Pages não permite cabeçalhos próprios, o
-  [`coi-serviceworker`](https://github.com/gzuidhof/coi-serviceworker) (MIT) os acrescenta pelo
+  Como o Pages não permite cabeçalhos próprios, o service worker do app os acrescenta pelo
   navegador: na primeira visita a página recarrega sozinha uma vez. Onde service workers estão
   bloqueados (algumas abas anônimas), a IA fica indisponível e o jogo oferece o modo dois jogadores.
 - Qualquer outro servidor: configure os dois cabeçalhos acima e sirva a pasta `dist/`.
 
 O ffish.js (regras) não precisa desses cabeçalhos; só o motor de IA.
+
+## PWA (instalar e jogar offline)
+
+- `public/manifest.webmanifest`: nome, cores e ícones (`public/icons/`, gerados por
+  `node scripts/make-icons.cjs`).
+- `src/pwa/sw.template.js`: o service worker. No `npm run build`, o plugin em `vite.config.ts`
+  gera `dist/sw.js` com a lista de todos os arquivos do build (~3,6 MB, incluindo o motor) e uma
+  versão calculada do conteúdo. Ele:
+  - guarda tudo no aparelho na primeira visita, então o jogo inteiro funciona offline;
+  - acrescenta os cabeçalhos COOP/COEP em todas as respostas (necessário no GitHub Pages);
+  - páginas: rede primeiro (sempre atualizadas quando online), cache se offline;
+    demais arquivos: cache primeiro.
+- `src/pwa/register.ts`: registra o service worker (só no build de produção), recarrega a página
+  uma vez na primeira visita se faltarem os cabeçalhos, mostra "Nova versão disponível" quando
+  um build novo é publicado (a atualização só acontece quando o jogador toca em "Atualizar") e o
+  botão "Instalar app" quando o navegador oferece a instalação.
+- Como instalar: **Android/Chrome** — botão "Instalar app" ou menu ⋮ → "Instalar app";
+  **iPhone/iPad (Safari)** — Compartilhar → "Adicionar à Tela de Início";
+  **computador (Chrome/Edge)** — botão "Instalar app" ou o ícone na barra de endereço.
+- Em `npm run dev` não há service worker (o servidor de desenvolvimento já envia os cabeçalhos).
 
 ## Licença e créditos
 
@@ -213,8 +238,8 @@ Este projeto é software livre sob a **GNU General Public License v3.0 ou poster
   Fairy-Stockfish em WebAssembly (Fabian Fichter, Johannes Czech).
 - [fairy-stockfish-nnue.wasm](https://github.com/fairy-stockfish/fairy-stockfish.wasm): motor
   Fairy-Stockfish em WebAssembly.
-- [coi-serviceworker](https://github.com/gzuidhof/coi-serviceworker) (MIT), de Guido Zuidhof:
-  cabeçalhos COOP/COEP no GitHub Pages.
+- [Noto Serif JP](https://fonts.google.com/noto/specimen/Noto+Serif+JP) (SIL OFL 1.1): recorte com
+  os caracteres das peças em `src/ui/fonts/`.
 
 **Aviso GPL:** quem distribuir este programa, inclusive publicando-o na web, deve oferecer o
 código-fonte completo sob a mesma licença. O rodapé do jogo já mostra a licença, os créditos e

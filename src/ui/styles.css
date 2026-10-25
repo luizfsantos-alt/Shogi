@@ -1,3 +1,10 @@
+@font-face {
+  font-family: "Koma";
+  src: url("./fonts/koma.woff2") format("woff2");
+  font-weight: 700;
+  font-display: block;
+}
+
 :root {
   --bg: #f4efe6;
   --surface: #fffaf1;
@@ -277,15 +284,28 @@ select:focus-visible {
 }
 
 .piece-body {
-  fill: var(--piece);
-  stroke: var(--piece-edge);
-  stroke-width: 3;
+  fill: url(#koma-wood);
+  stroke: #9a6f36;
+  stroke-width: 1.2;
+}
+
+.piece-edge {
+  fill: url(#koma-edge);
+  opacity: 0.85;
 }
 
 .piece-label {
   fill: var(--piece-text);
   font-weight: 700;
-  font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif CJK JP", system-ui, sans-serif;
+}
+
+/* Bundled subset of Noto Serif JP Bold (only the characters on the pieces), with system Mincho fallbacks. */
+.piece-label.kanji {
+  font-family: "Koma", "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif CJK JP", serif;
+}
+
+.piece-label.latin {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 .piece.promoted .piece-label {
@@ -934,4 +954,80 @@ select:focus-visible {
 
 .footer a {
   color: inherit;
+}
+
+/* ------------------------------------------------------------ press-and-hold name */
+
+.sq,
+.hand-piece {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.piece-tooltip {
+  position: fixed;
+  z-index: 50;
+  transform: translate(-50%, calc(-100% - 10px));
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.piece-tooltip small {
+  display: block;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+.piece-tooltip::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom: 0;
+  border-top-color: var(--text);
+}
+
+/* ------------------------------------------------------------ app updates */
+
+.update-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--info-bg);
+  border: 1px solid var(--border);
+}
+
+.update-banner[hidden] {
+  display: none;
+}
+
+.update-banner span {
+  flex: 1 1 200px;
+}
+
+.topbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.topbar-actions button[hidden] {
+  display: none;
 }

@@ -5,6 +5,7 @@ import { loadBackend } from "./ui/loadBackend";
 import { GameSession } from "./ui/session";
 import type { VariantDefinition } from "./core/variants";
 import { WorkerTransport } from "./worker/WorkerTransport";
+import { setupServiceWorker } from "./pwa/register";
 
 const root = document.querySelector<HTMLElement>("#app")!;
 
@@ -18,19 +19,8 @@ function createEngine(variant: VariantDefinition, onError: (message: string) => 
   return new FairyEngine(new WorkerTransport(onError), variant, { threads, hashMb: 32 });
 }
 
-/**
- * On hosts without COOP/COEP headers (GitHub Pages), coi-serviceworker (see index.html) reloads
- * the page once its service worker is active. Wait for that reload instead of starting a game
- * without the AI; if service workers are blocked, give up after a few seconds and start anyway.
- */
-async function waitForIsolationReload(): Promise<void> {
-  if (self.crossOriginIsolated || !self.isSecureContext || !("serviceWorker" in navigator)) return;
-  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-  await Promise.race([navigator.serviceWorker.ready.then(() => sleep(3000)), sleep(5000)]);
-}
-
 async function main(): Promise<void> {
-  await waitForIsolationReload();
+  await setupServiceWorker();
   const backend = await loadBackend();
   let app: App | null = null;
   let session: GameSession | null = null;

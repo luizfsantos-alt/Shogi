@@ -5,15 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
     <title>Shogi</title>
-    <!--
-      On hosts that cannot send COOP/COEP headers (GitHub Pages), this service worker adds them,
-      so the threaded AI engine can run. It does nothing where the page is already isolated.
-      All our files are same-origin, so "require-corp" works in every browser (Safari included).
-    -->
-    <script>
-      window.coi = { coepCredentialless: () => false, quiet: true };
-    </script>
-    <script src="coi-serviceworker.js"></script>
+    <meta name="description" content="Shogi (xadrez japonês) contra o computador, com modo aprendizado. Funciona offline." />
+    <meta name="theme-color" content="#6b2410" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/png" href="/icons/favicon-64.png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Shogi" />
   </head>
   <body>
     <div id="app"><p class="loading">Carregando o Shogi…</p></div>
