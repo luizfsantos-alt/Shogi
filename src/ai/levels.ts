@@ -13,8 +13,8 @@
  *   jump to ~230 cp with ~20% serious mistakes (>= 400 cp). Depth limits matter much more:
  *   full strength at depth 1-6 loses ~100-130 cp per move, at 1 s ~55 cp.
  * - Matches between neighbouring levels (engine vs engine, 10-12 games, random openings):
- *   Iniciante 1 x 11 Fácil; Fácil 0 x 12 Médio; Médio 0 x 12 Difícil; Difícil vs Mestre:
- *   Mestre wins, in longer games (130+ plies). Every step is clearly stronger than the last.
+ *   Iniciante 1 x 11 Fácil; Fácil 0 x 12 Médio; Médio 0 x 12 Difícil; Difícil 0 x 6 Mestre
+ *   (in longer games, 91-172 plies). Every step is clearly stronger than the last.
  */
 
 export interface LevelConfig {

@@ -166,7 +166,7 @@ Calibração atual (detalhes no comentário de `levels.ts`):
 | 2. Fácil | skill -5, profundidade 3 | venceu 11 de 12 |
 | 3. Médio | skill 10, profundidade 3 | venceu 12 de 12 |
 | 4. Difícil | força total, 1 s por jogada | venceu 12 de 12 |
-| 5. Mestre | força total, 4 s por jogada | vence o Difícil, em partidas mais longas |
+| 5. Mestre | força total, 4 s por jogada | venceu 6 de 6 (partidas mais longas e disputadas) |
 
 Descobertas: com tempo de sobra, o `Skill Level` de 0 a 20 quase não muda a força; o que mais
 pesa é o limite de profundidade/tempo, e os valores negativos de skill são os que produzem os
