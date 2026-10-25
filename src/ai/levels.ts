@@ -34,3 +34,6 @@ export const DEFAULT_LEVEL = 2;
 export function getLevel(id: number): LevelConfig {
   return LEVELS.find((level) => level.id === id) ?? LEVELS[DEFAULT_LEVEL - 1];
 }
+
+/** Strength used for the "hint" button: full strength, short search. */
+export const HINT_LEVEL: LevelConfig = { id: 0, name: "Dica", description: "", skill: 20, depth: 14, movetimeMs: 1500 };

@@ -1,5 +1,6 @@
 import type { Engine } from "../ai/Engine";
-import { getLevel } from "../ai/levels";
+import { getLevel, HINT_LEVEL } from "../ai/levels";
+import { describeMove } from "../core/coach";
 import type { GameBackend } from "../core/GameBackend";
 import { formatWesternMove } from "../core/kifu";
 import { opposite, type Color, type UsiMove } from "../core/types";
@@ -24,6 +25,13 @@ export interface SavedGame {
   savedAt: string;
 }
 
+export interface Hint {
+  move: UsiMove;
+  notation: string;
+  /** Plain-language facts about the move ("captura a Torre", "dá xeque"…). */
+  facts: string[];
+}
+
 export const DEFAULT_SETTINGS: GameSettings = { mode: "ai", humanColor: "black", level: 2 };
 
 /**
@@ -36,7 +44,10 @@ export class GameSession {
   notations: string[] = [];
   thinking = false;
   engineError: string | null = null;
+  hint: Hint | null = null;
+  hintPending = false;
   private aiTurnId = 0;
+  private hintId = 0;
 
   constructor(
     readonly backend: GameBackend,
@@ -127,6 +138,25 @@ export class GameSession {
     this.afterChange();
   }
 
+  /** Asks the engine for a good move for the player and explains it. */
+  async requestHint(): Promise<void> {
+    if (!this.engineAvailable || !this.canHumanMove() || this.hintPending) return;
+    const id = ++this.hintId;
+    this.hintPending = true;
+    this.hint = null;
+    this.onChange();
+    const request = { initialSfen: this.backend.initialSfen(), moves: this.backend.history() };
+    const move = await this.engine!.bestMove(request, HINT_LEVEL).catch(() => null);
+    if (id !== this.hintId) return;
+    this.hintPending = false;
+    if (move && this.backend.isLegal(move)) {
+      const position = this.backend.position();
+      const notation = formatWesternMove(position, this.backend.legalMoves(), move, this.backend.variant.dims);
+      this.hint = { move, notation, facts: describeMove(this.backend, move) };
+    }
+    this.onChange();
+  }
+
   lastMove(): UsiMove | null {
     return this.backend.history().at(-1) ?? null;
   }
@@ -158,8 +188,17 @@ export class GameSession {
   }
 
   private afterChange(): void {
+    this.cancelHint();
     this.onChange();
     this.maybeComputerTurn();
+  }
+
+  private cancelHint(): void {
+    this.hint = null;
+    if (!this.hintPending) return;
+    this.hintPending = false;
+    this.hintId++;
+    this.engine?.stop();
   }
 
   private cancelAi(): void {

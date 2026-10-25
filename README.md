@@ -4,8 +4,9 @@ Shogi (xadrez japonês) no navegador, fiel às regras oficiais, com IA em nívei
 aprendizado. As regras e a IA vêm do [Fairy-Stockfish](https://github.com/fairy-stockfish/Fairy-Stockfish)
 compilado para WebAssembly.
 
-> **Estado:** Fase 2 concluída: dá para jogar contra o computador (ou a dois no mesmo aparelho).
-> Próximas fases: modo aprendizado (3), calibração dos níveis da IA (4) e acabamento (5).
+> **Estado:** Fase 3 concluída: jogo contra o computador com modo aprendizado (explicação de
+> jogadas ilegais, painel das peças, ajuda no xeque, dicas, regras, casas atacadas).
+> Próximas fases: calibração dos níveis da IA (4) e acabamento (5).
 
 ## Como rodar
 
@@ -32,6 +33,9 @@ src/
     position.ts         # SFEN: leitura, escrita e validação de posição
     impasse.ts          # declaração de impasse (jishogi, regra dos 27 pontos)
     pieces.ts           # nomes (PT / romaji / kanji) e movimentos de cada peça
+    attacks.ts          # casas atacadas / alcance das peças (TS puro, a partir de pieces.ts)
+    explain.ts          # POR QUE uma jogada é ilegal (nifu, uchifuzume, cravada, xeque…)
+    coach.ts            # ajuda para sair do xeque e explicação simples das dicas
     kifu.ts             # notação legível da lista de jogadas (P-7f, Bx2b+, P*5e)
     usiRecord.ts        # exportar/importar partidas em texto USI
     ffishLoader.ts      # carrega o WebAssembly do ffish.js

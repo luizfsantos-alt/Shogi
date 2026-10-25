@@ -104,3 +104,17 @@ describe("GameSession, two players on one device", () => {
     expect(s.backend.result()).toEqual({ over: true, winner: "black", reason: "resignation" });
   });
 });
+
+describe("GameSession hints", () => {
+  it("suggests a legal move with an explanation, and forgets it after a move", async () => {
+    const { s } = await session();
+    s.newGame({ mode: "local", humanColor: "black", level: 1 });
+    s.restore({ initialSfen: "4k4/9/4P4/9/9/9/9/9/4K4 b G 1", moves: [], settings: { mode: "local", humanColor: "black", level: 1 } });
+    await s.requestHint();
+    expect(s.hint?.move).toBe("G*5b");
+    expect(s.hint?.facts).toContain("dá xeque-mate!");
+    expect(s.hint?.notation).toBe("G*5b");
+    s.play("5i4h");
+    expect(s.hint).toBeNull();
+  });
+});

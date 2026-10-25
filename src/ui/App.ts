@@ -1,4 +1,7 @@
 import { LEVELS } from "../ai/levels";
+import { attackMap } from "../core/attacks";
+import { checkHelp, describeCheckHelp } from "../core/coach";
+import { describeIllegal, explainBoardMove, explainMove } from "../core/explain";
 import { formatSquare, parseUsiMove } from "../core/notation";
 import { findKing, SfenError } from "../core/position";
 import { opposite, type Color, type Piece, type Square, type UsiMove } from "../core/types";
@@ -7,6 +10,8 @@ import { IllegalMoveError } from "../core/GameBackend";
 import { element, showDialog } from "./dialogs";
 import { chooseMove, targetsFor, type Selection } from "./interaction";
 import { describePiece, PIECE_STYLES, renderPiece, type PieceStyle } from "./pieceView";
+import { pieceCard } from "./pieceCard";
+import { showRules } from "./rules";
 import { DEFAULT_SETTINGS, type GameSession, type GameSettings } from "./session";
 import * as storage from "./storage";
 import { resultReason, resultTitle, sideName, turnText } from "./text";
@@ -18,9 +23,12 @@ export class App {
   private selection: Selection | null = null;
   private flipped = false;
   private notice = "";
+  private noticeKind: "info" | "warning" = "info";
+  /** Piece shown in the learning panel. */
+  private infoPiece: Piece | null = null;
   private overlayHidden = false;
   private preferences = storage.loadPreferences();
-  private readonly els: Record<"board" | "top" | "bottom" | "status" | "notice" | "moves" | "actions" | "overlay", HTMLElement>;
+  private readonly els: Record<"board" | "top" | "bottom" | "status" | "coach" | "notice" | "moves" | "actions" | "overlay" | "pieceInfo", HTMLElement>;
 
   constructor(
     private readonly root: HTMLElement,
@@ -33,6 +41,8 @@ export class App {
       top: get("hand-top"),
       bottom: get("hand-bottom"),
       status: get("status"),
+      coach: get("coach"),
+      pieceInfo: get("piece-info"),
       notice: get("notice"),
       moves: get("moves"),
       actions: get("actions"),
@@ -70,7 +80,7 @@ export class App {
       "header",
       { class: "topbar" },
       element("h1", {}, "Shogi"),
-      element("div", { class: "topbar-actions" }, button("btn-new", "Nova partida")),
+      element("div", { class: "topbar-actions" }, button("btn-rules", "Regras"), button("btn-new", "Nova partida")),
     );
     const play = element(
       "section",
@@ -84,6 +94,13 @@ export class App {
       ),
       element("div", { id: "hand-bottom", class: "player-bar bottom" }),
     );
+    const attacksToggle = element("input", { type: "checkbox", id: "show-attacks" });
+    attacksToggle.checked = this.preferences.showAttacks;
+    attacksToggle.addEventListener("change", () => {
+      this.preferences.showAttacks = attacksToggle.checked;
+      storage.savePreferences(this.preferences);
+      this.render();
+    });
     const styleSelect = element("select", { id: "piece-style" });
     for (const style of PIECE_STYLES) styleSelect.append(element("option", { value: style.id }, style.label));
     const panel = element(
@@ -91,10 +108,13 @@ export class App {
       { class: "panel" },
       element("div", { id: "status", class: "status", "aria-live": "polite" }),
       element("div", { id: "notice", class: "notice", role: "status" }),
+      element("div", { id: "coach", class: "coach", "aria-live": "polite" }),
       element("div", { id: "actions", class: "actions" }),
+      element("section", { id: "piece-info", class: "piece-info", "aria-live": "polite" }),
       element("h2", {}, "Jogadas"),
       element("ol", { id: "moves", class: "move-list" }),
       element("label", { class: "field" }, "Estilo das peças ", styleSelect),
+      element("label", { class: "choice" }, attacksToggle, " Mostrar as casas atacadas pelo adversário"),
       element(
         "div",
         { class: "actions secondary" },
@@ -111,6 +131,7 @@ export class App {
       storage.savePreferences(this.preferences);
       this.render();
     });
+    layout.querySelector("#btn-rules")!.addEventListener("click", () => void showRules(this.session.backend.variant, this.preferences.pieceStyle));
     layout.querySelector("#btn-new")!.addEventListener("click", () => void this.askNewGame());
     layout.querySelector("#btn-save")!.addEventListener("click", () => void this.saveGame());
     layout.querySelector("#btn-load")!.addEventListener("click", () => void this.loadGame());
@@ -127,7 +148,9 @@ export class App {
     this.renderBoard();
     this.renderPlayers();
     this.renderStatus();
+    this.renderCoach();
     this.renderActions();
+    this.renderPieceInfo();
     this.renderMoves();
     this.renderOverlay();
   }
@@ -146,6 +169,9 @@ export class App {
     const lastMove = last ? parseUsiMove(last) : null;
     const checkedKing = backend.isCheck() ? findKing(backend.position(), backend.sideToMove(), backend.variant.dims) : null;
     const same = (a: Square | null | undefined, b: Square) => !!a && a.file === b.file && a.rank === b.rank;
+    const hint = this.session.hint ? parseUsiMove(this.session.hint.move) : null;
+    const attacks = this.preferences.showAttacks && !backend.result().over ? attackMap(backend.position(), this.opponentColor(), backend.variant.dims) : null;
+    const attackers = this.session.canHumanMove() ? (checkHelp(backend)?.attackers ?? []) : [];
 
     const cells: HTMLElement[] = [];
     // Column labels (file numbers) above the board.
@@ -166,12 +192,30 @@ export class App {
         if (targets.some((t) => same(t, square))) cell.classList.add(piece ? "target-capture" : "target");
         if (lastMove && (same(lastMove.from, square) || same(lastMove.to, square))) cell.classList.add("last");
         if (same(checkedKing, square)) cell.classList.add("check");
+        if (attackers.some((a) => same(a, square))) cell.classList.add("attacker");
+        if (hint && (same(hint.from, square) || same(hint.to, square))) cell.classList.add("hint");
+        const attackCount = attacks?.get(`${square.file},${square.rank}`);
+        if (attackCount) {
+          cell.classList.add("attacked");
+          if (attackCount > 1) cell.dataset.attacks = String(attackCount);
+        }
         cell.addEventListener("click", () => void this.clickSquare(square, piece));
         cells.push(cell);
       }
       cells.push(element("div", { class: "coord rank" }, String.fromCharCode(97 + (this.flipped ? ranks - 1 - row : row))));
     }
     this.els.board.replaceChildren(...cells);
+  }
+
+  /** Whose attacks are shown: the computer's, or in a local game the side not to move. */
+  private opponentColor(): Color {
+    const { settings, backend } = this.session;
+    return settings.mode === "ai" ? opposite(settings.humanColor) : opposite(backend.sideToMove());
+  }
+
+  /** The player looking at the screen, or null in a two-player game. */
+  private viewer(): Color | null {
+    return this.session.settings.mode === "ai" ? this.session.settings.humanColor : null;
   }
 
   private renderPlayers(): void {
@@ -215,7 +259,45 @@ export class App {
       if (backend.isCheck()) status.append(element("div", { class: "check-warning" }, "Xeque! O rei está sendo atacado."));
     }
     if (this.session.engineError) status.append(element("div", { class: "error" }, this.session.engineError));
+    this.renderNotice();
+  }
+
+  private renderNotice(): void {
     this.els.notice.textContent = this.notice;
+    this.els.notice.className = `notice ${this.noticeKind}`;
+  }
+
+  private renderCoach(): void {
+    const { backend } = this.session;
+    const coach = this.els.coach;
+    coach.replaceChildren();
+    if (backend.result().over) return;
+    const help = this.session.canHumanMove() ? checkHelp(backend) : null;
+    if (help) coach.append(element("p", { class: "check-help" }, describeCheckHelp(help, backend)));
+    if (this.session.hintPending) {
+      coach.append(element("p", { class: "hint-text" }, "Procurando uma boa jogada…", element("span", { class: "spinner", "aria-hidden": "true" })));
+    }
+    const hint = this.session.hint;
+    if (hint) {
+      const why = hint.facts.length ? hint.facts.join(", ") : "melhora a posição das suas peças (segundo o computador, é a melhor jogada aqui)";
+      const play = element("button", { type: "button", class: "primary" }, "Jogar a dica");
+      play.addEventListener("click", () => this.act(() => this.session.play(hint.move)));
+      coach.append(element("div", { class: "hint-text" }, element("p", {}, element("strong", {}, `Dica: ${hint.notation}`), ` — ${why}.`), play));
+    }
+  }
+
+  private renderPieceInfo(): void {
+    const container = this.els.pieceInfo;
+    if (!this.infoPiece) {
+      container.replaceChildren(element("p", { class: "muted" }, "Toque em qualquer peça (sua ou do adversário) para ver o nome e como ela se move."));
+      return;
+    }
+    const close = element("button", { type: "button", class: "close", "aria-label": "Fechar painel da peça" }, "×");
+    close.addEventListener("click", () => {
+      this.infoPiece = null;
+      this.render();
+    });
+    container.replaceChildren(close, pieceCard(this.infoPiece, this.session.backend.variant, this.preferences.pieceStyle, this.viewer()));
   }
 
   private renderActions(): void {
@@ -227,7 +309,9 @@ export class App {
       b.addEventListener("click", handler);
       return b;
     };
+    const canHint = this.session.engineAvailable && this.session.canHumanMove() && !this.session.hintPending;
     const buttons = [
+      button("Dica", () => void this.session.requestHint(), canHint, "primary"),
       button("Desfazer", () => this.act(() => this.session.undo()), this.session.canUndo()),
       button("Virar tabuleiro", () => {
         this.flipped = !this.flipped;
@@ -276,9 +360,10 @@ export class App {
 
   // ---------------------------------------------------------------- interaction
 
-  private setNotice(text: string): void {
+  private setNotice(text: string, kind: "info" | "warning" = "info"): void {
     this.notice = text;
-    this.els.notice.textContent = text;
+    this.noticeKind = kind;
+    this.renderNotice();
   }
 
   private act(action: () => void): void {
@@ -288,46 +373,82 @@ export class App {
       action();
     } catch (error) {
       this.notice = error instanceof Error ? error.message : String(error);
+      this.noticeKind = "warning";
     }
     this.render();
   }
 
   private async clickSquare(square: Square, piece: Piece | null): Promise<void> {
     const backend = this.session.backend;
-    if (backend.result().over) return this.setNotice("A partida terminou. Comece uma nova partida ou desfaça a última jogada.");
-    if (!this.session.canHumanMove()) return this.setNotice("Aguarde: é a vez do computador.");
-
+    if (piece) this.infoPiece = piece;
+    if (backend.result().over || !this.session.canHumanMove()) {
+      this.render();
+      return this.setNotice(backend.result().over ? "A partida terminou. Comece uma nova partida ou desfaça a última jogada." : "Aguarde: é a vez do computador.");
+    }
     const side = backend.sideToMove();
-    if (this.selection) {
-      const choice = chooseMove(this.selection, square, backend.legalMoves());
+    const selection = this.selection;
+
+    if (selection) {
+      const legal = backend.legalMoves();
+      const choice = chooseMove(selection, square, legal);
       if (choice.kind !== "none") {
         const move = choice.kind === "move" ? choice.move : await this.askPromotion(choice.promote, choice.stay);
-        if (move) this.act(() => this.session.play(move));
+        if (!move) return;
+        const forced = move.endsWith("+") && !legal.includes(move.slice(0, -1));
+        this.act(() => this.session.play(move));
+        if (forced) this.setNotice("Promoção obrigatória: nessa casa a peça ficaria sem jogadas, então ela foi promovida automaticamente.");
         return;
       }
+      const sameSquare = selection.kind === "board" && selection.square.file === square.file && selection.square.rank === square.rank;
+      if (sameSquare || !(piece && piece.color === side)) {
+        this.selection = null;
+        this.render();
+        if (sameSquare) return this.setNotice("");
+        const reason = selection.kind === "board"
+          ? explainBoardMove(backend, selection.square, square)
+          : explainMove(backend, `${selection.type}*${formatSquare(square)}`);
+        return this.setNotice(describeIllegal(reason, backend.position(), backend.variant), "warning");
+      }
     }
+
     if (piece && piece.color === side) {
       this.selection = { kind: "board", square };
-      this.notice = targetsFor(this.selection, backend.legalMoves()).length === 0 ? "Essa peça não tem jogadas legais agora." : "";
+      this.notice = "";
+      if (targetsFor(this.selection, backend.legalMoves()).length === 0) {
+        this.notice = backend.isCheck()
+          ? "Seu rei está em xeque, e essa peça não consegue tirá-lo do xeque."
+          : "Essa peça não tem jogadas legais agora (está bloqueada ou cravada protegendo o rei).";
+        this.noticeKind = "warning";
+      }
       this.render();
       return;
     }
-    const hadSelection = this.selection !== null;
-    this.selection = null;
     this.render();
-    if (hadSelection) this.setNotice("Jogada ilegal.");
-    else if (piece) this.setNotice(`Essa peça é de ${sideName(piece.color)}. Agora é a vez de ${sideName(side)}.`);
+    if (piece) this.setNotice(`Essa peça é de ${sideName(piece.color)}${this.viewer() === null ? "" : " (o adversário)"}. Veja no painel como ela se move.`);
+    else this.setNotice("Toque primeiro numa peça sua (no tabuleiro ou na sua mão) e depois na casa de destino.");
   }
 
   private clickHand(color: Color, type: string): void {
     const backend = this.session.backend;
-    if (!this.session.canHumanMove()) return this.setNotice(backend.result().over ? "A partida terminou." : "Aguarde: é a vez do computador.");
-    if (color !== backend.sideToMove()) return this.setNotice(`Essas peças são de ${sideName(color)}.`);
+    this.infoPiece = { color, type, promoted: false };
+    if (!this.session.canHumanMove() || color !== backend.sideToMove()) {
+      this.selection = null;
+      this.render();
+      if (backend.result().over) return this.setNotice("A partida terminou.");
+      if (!this.session.canHumanMove()) return this.setNotice("Aguarde: é a vez do computador.");
+      return this.setNotice(`Essas peças são de ${sideName(color)}. Veja no painel como elas se movem.`);
+    }
     const same = this.selection?.kind === "hand" && this.selection.type === type;
     this.selection = same ? null : { kind: "hand", type };
     this.notice = "";
-    if (this.selection && targetsFor(this.selection, backend.legalMoves()).length === 0) {
-      this.notice = "Não há casa legal para colocar essa peça agora.";
+    if (this.selection) {
+      if (targetsFor(this.selection, backend.legalMoves()).length === 0) {
+        this.notice = "Não há casa legal para colocar essa peça agora.";
+        this.noticeKind = "warning";
+      } else {
+        this.notice = "Toque numa casa destacada para colocar a peça.";
+        this.noticeKind = "info";
+      }
     }
     this.render();
   }

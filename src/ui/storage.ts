@@ -13,6 +13,8 @@ const MAX_SAVES = 30;
 
 export interface Preferences {
   pieceStyle: PieceStyle;
+  /** Shade the squares the opponent attacks. */
+  showAttacks: boolean;
   lastSettings?: GameSettings;
 }
 
@@ -61,7 +63,7 @@ export function deleteSave(id: string): void {
 }
 
 export function loadPreferences(): Preferences {
-  return { pieceStyle: "pt", ...read<Partial<Preferences>>(PREFS_KEY) };
+  return { pieceStyle: "pt", showAttacks: false, ...read<Partial<Preferences>>(PREFS_KEY) };
 }
 
 export function savePreferences(preferences: Preferences): void {
