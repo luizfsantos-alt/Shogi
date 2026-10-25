@@ -8,7 +8,7 @@
   --accent-text: #fff;
   --danger: #b3261e;
   --board: #e2b764;
-  --board-line: #6e4b1c;
+  --board-line: #5a3a12;
   --piece: #f7e3b5;
   --piece-edge: #8a6a3a;
   --piece-text: #1d1408;
@@ -923,4 +923,15 @@ select:focus-visible {
     max-height: calc(100dvh - 3rem);
     overflow-y: auto;
   }
+}
+
+.footer {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.footer a {
+  color: inherit;
 }

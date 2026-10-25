@@ -19,6 +19,9 @@ import { resultReason, resultTitle, sideName, turnText } from "./text";
 
 type SideChoice = Color | "random";
 
+/** Where the source code is published (required by the GPL when the game is distributed). */
+const SOURCE_URL = "https://github.com/luizfsantos-alt/Shogi";
+
 /** The game screen: renders the session and turns clicks into moves. */
 export class App {
   private selection: Selection | null = null;
@@ -158,7 +161,17 @@ export class App {
         button("btn-export", "Exportar / Importar"),
       ),
     );
-    const layout = element("div", { class: "app" }, header, element("main", { class: "layout" }, play, panel));
+    const link = (href: string, text: string) => element("a", { href, target: "_blank", rel: "noopener" }, text);
+    const footer = element(
+      "footer",
+      { class: "footer" },
+      "Software livre (GPL-3.0). Regras e IA: ",
+      link("https://github.com/fairy-stockfish/Fairy-Stockfish", "Fairy-Stockfish"),
+      ". ",
+      link(SOURCE_URL, "Código-fonte"),
+      ".",
+    );
+    const layout = element("div", { class: "app" }, header, element("main", { class: "layout" }, play, panel), footer);
 
     styleSelect.value = this.preferences.pieceStyle;
     styleSelect.addEventListener("change", () => {
