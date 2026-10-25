@@ -998,3 +998,36 @@ select:focus-visible {
   border-bottom: 0;
   border-top-color: var(--text);
 }
+
+/* ------------------------------------------------------------ app updates */
+
+.update-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--info-bg);
+  border: 1px solid var(--border);
+}
+
+.update-banner[hidden] {
+  display: none;
+}
+
+.update-banner span {
+  flex: 1 1 200px;
+}
+
+.topbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.topbar-actions button[hidden] {
+  display: none;
+}

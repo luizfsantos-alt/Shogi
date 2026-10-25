@@ -4,4 +4,3 @@ dist/
 .vite/
 coverage/
 public/engine/
-public/coi-serviceworker.js

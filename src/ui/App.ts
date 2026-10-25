@@ -4,6 +4,7 @@ import { checkHelp, describeCheckHelp } from "../core/coach";
 import { describeIllegal, explainBoardMove, explainMove } from "../core/explain";
 import { formatSquare, parseUsiMove } from "../core/notation";
 import { pieceInfo } from "../core/pieces";
+import { onInstallAvailable, onUpdateAvailable } from "../pwa/register";
 import { findKing, SfenError } from "../core/position";
 import { opposite, type Color, type Piece, type Square, type UsiMove } from "../core/types";
 import { formatUsiRecord, parseUsiRecord, RecordFormatError } from "../core/usiRecord";
@@ -114,7 +115,7 @@ export class App {
       "header",
       { class: "topbar" },
       element("h1", {}, "Shogi"),
-      element("div", { class: "topbar-actions" }, button("btn-rules", "Regras"), button("btn-new", "Nova partida")),
+      element("div", { class: "topbar-actions" }, button("btn-install", "Instalar app"), button("btn-rules", "Regras"), button("btn-new", "Nova partida")),
     );
     const play = element(
       "section",
@@ -183,7 +184,9 @@ export class App {
       link(SOURCE_URL, "Código-fonte"),
       ".",
     );
-    const layout = element("div", { class: "app" }, header, element("main", { class: "layout" }, play, panel), footer);
+    const updateBanner = element("div", { id: "update-banner", class: "update-banner", role: "status", hidden: "" });
+    const layout = element("div", { class: "app" }, updateBanner, header, element("main", { class: "layout" }, play, panel), footer);
+    this.setupPwaControls(layout);
 
     styleSelect.value = this.preferences.pieceStyle;
     styleSelect.addEventListener("change", () => {
@@ -423,6 +426,31 @@ export class App {
   }
 
   // ---------------------------------------------------------------- interaction
+
+  /** "Instalar app" while the browser offers it, and the "new version" banner. */
+  private setupPwaControls(layout: HTMLElement): void {
+    const installButton = layout.querySelector<HTMLButtonElement>("#btn-install")!;
+    installButton.hidden = true;
+    let install: (() => Promise<void>) | null = null;
+    installButton.addEventListener("click", () => void install?.());
+    onInstallAvailable((available) => {
+      install = available;
+      installButton.hidden = available === null;
+    });
+
+    const banner = layout.querySelector<HTMLElement>("#update-banner")!;
+    onUpdateAvailable((apply) => {
+      const update = element("button", { type: "button", class: "primary" }, "Atualizar");
+      update.addEventListener("click", () => {
+        update.disabled = true;
+        apply();
+      });
+      const later = element("button", { type: "button" }, "Depois");
+      later.addEventListener("click", () => (banner.hidden = true));
+      banner.replaceChildren(element("span", {}, "Nova versão disponível. A partida atual fica salva."), update, later);
+      banner.hidden = false;
+    });
+  }
 
   /** Press and hold a piece (mouse or touch) to see its Portuguese name while holding. */
   private pressAndHold(target: HTMLElement, piece: Piece): void {
