@@ -59,9 +59,11 @@ public:
 	Dictionary game_result() const;
 
 	// Search (async): emits best_move(move) on the main thread; "" when there is no move.
+	// is_searching() stays true until that signal is emitted.
 	bool start_search(int depth, int movetime_ms, int skill);
 	void stop();
 	bool is_searching() const;
+	void _finish_search(const String &move);
 
 	struct Game;
 

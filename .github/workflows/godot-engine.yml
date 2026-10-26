@@ -1,4 +1,5 @@
-# Builds the Fairy-Stockfish GDExtension (godot/engine), runs its headless tests with Godot,
+# Builds the Fairy-Stockfish GDExtension (godot/engine), runs the headless tests of the engine and
+# of the GDScript rules layer (godot/game) with Godot,
 # exports a debug APK with the demo scene and runs it on an x86_64 emulator.
 name: Godot engine
 
@@ -51,6 +52,7 @@ jobs:
           # import itself completes); a second pass must succeed.
           "$GODOT" --headless --path godot --import || "$GODOT" --headless --path godot --import
           "$GODOT" --headless --path godot -s res://engine/test/test_engine.gd
+          "$GODOT" --headless --path godot -s res://game/test/test_game.gd
 
       - uses: actions/cache@v4
         id: templates

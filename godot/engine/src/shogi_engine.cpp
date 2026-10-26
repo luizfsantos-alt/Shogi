@@ -408,7 +408,9 @@ Dictionary ShogiEngine::game_result() const {
 }
 
 bool ShogiEngine::start_search(int depth, int movetime_ms, int skill) {
-	if (g_search_busy.exchange(true))
+	// `searching` stays true until best_move has been emitted (on the main thread), so a new
+	// search can never receive the signal of the previous one.
+	if (searching.load() || g_search_busy.exchange(true))
 		return false;
 	join_waiter();
 	searching = true;
@@ -438,10 +440,9 @@ bool ShogiEngine::start_search(int depth, int movetime_ms, int skill) {
 		SF::Thread *best = main->bestThread ? main->bestThread : main;
 		SF::Move m = best->rootMoves.empty() ? SF::MOVE_NONE : best->rootMoves[0].pv[0];
 		String usi = String::utf8(move_to_usi(best->rootPos, m).c_str());
-		searching = false;
 		g_search_busy = false;
 		if (Object *obj = ObjectDB::get_instance(self))
-			obj->call_deferred("emit_signal", "best_move", usi);
+			obj->call_deferred("_finish_search", usi);
 	});
 	return true;
 }
@@ -449,6 +450,11 @@ bool ShogiEngine::start_search(int depth, int movetime_ms, int skill) {
 void ShogiEngine::stop() {
 	if (searching.load())
 		SF::Threads.stop = true;
+}
+
+void ShogiEngine::_finish_search(const String &move) {
+	searching = false;
+	emit_signal("best_move", move);
 }
 
 bool ShogiEngine::is_searching() const {
@@ -475,6 +481,7 @@ void ShogiEngine::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("start_search", "depth", "movetime_ms", "skill"), &ShogiEngine::start_search, DEFVAL(0), DEFVAL(0), DEFVAL(20));
 	ClassDB::bind_method(D_METHOD("stop"), &ShogiEngine::stop);
 	ClassDB::bind_method(D_METHOD("is_searching"), &ShogiEngine::is_searching);
+	ClassDB::bind_method(D_METHOD("_finish_search", "move"), &ShogiEngine::_finish_search);
 	ADD_SIGNAL(MethodInfo("best_move", PropertyInfo(Variant::STRING, "move")));
 }
 

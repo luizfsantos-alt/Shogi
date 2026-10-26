@@ -32,7 +32,7 @@ Tudo em **USI** (`7g7f`, `P*5e`, `8h2b+`) e **SFEN**, como no PWA.
 | `game_result()` → `Dictionary` | `{over: false}` ou `{over: true, winner: "black"/"white"/"draw", reason: "checkmate"/"no-legal-moves"/"repetition"/"perpetual-check"}`, lido como `FairyBackend.result()` (`result(true)`). |
 | `perft(depth)` → `int` | Perft nativo (benchmark). |
 | `start_search(depth, movetime_ms, skill)` → `bool` | Busca assíncrona nas threads do motor; emite **`best_move(move)`** na thread principal (`""` se não há lance). `depth`/`movetime_ms` = 0 → sem esse limite (ambos 0 → profundidade 10, como o PWA). `skill` de −20 a 20. |
-| `stop()`, `is_searching()` | `stop()` encerra a busca já, e `best_move` chega com o melhor lance até ali. |
+| `stop()`, `is_searching()` | `stop()` encerra a busca já, e `best_move` chega com o melhor lance até ali. `is_searching()` só volta a `false` quando `best_move` é emitido, então uma busca nova nunca recebe o sinal da anterior. |
 | `configure(threads, hash_mb)` | Threads limitadas a 1–4 (padrão 2), hash padrão 16 MB. |
 | `ShogiEngine.engine_info()` | Versão do Fairy-Stockfish. |
 
