@@ -546,6 +546,14 @@ func _build_menu() -> void:
 		_refresh_arrows())
 	layer.add_child(moves)
 
+	# Build version, so a test on the phone shows which APK is running.
+	var version := Label.new()
+	version.text = "v" + str(ProjectSettings.get_setting("application/config/version", "?"))
+	version.add_theme_font_size_override("font_size", 22)
+	version.modulate = Color(1, 1, 1, 0.5)
+	version.position = Vector2(120, 46)
+	layer.add_child(version)
+
 	var panel := PanelContainer.new()
 	panel.position = Vector2(24, 116)
 	panel.visible = false

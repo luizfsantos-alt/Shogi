@@ -1,6 +1,6 @@
 // Movement arrows drawn over the pieces: gold for your pieces, red for an opponent's piece.
 // One quad per arrow; its length and width (cm) come per instance so the head keeps its shape.
-// `heads` = 2 draws a double head: the piece slides any distance that way.
+// `heads`: 0 a plain segment (the knight's stem), 1 an arrow, 2 a double head (any distance).
 shader_type spatial;
 render_mode unshaded, blend_mix, depth_test_disabled, depth_draw_never, cull_disabled, shadows_disabled;
 
@@ -12,7 +12,7 @@ instance uniform vec4 tint : source_color = vec4(1.0, 0.75, 0.25, 1.0);
 
 uniform vec3 outline_color : source_color = vec3(0.12, 0.05, 0.02);
 uniform float shaft = 0.16;     // half width of the shaft, cm
-uniform float head_len = 0.75;  // cm
+uniform float head_len = 0.6;   // cm
 uniform float outline = 0.09;   // cm
 
 // Rough signed distance to a triangular head whose tip is at `tip`.
@@ -27,8 +27,11 @@ void fragment() {
 	float len = length_cm * grow;
 	vec2 p = vec2((UV.x - 0.5) * width_cm, (1.0 - UV.y) * length_cm);
 	float half_w = width_cm * 0.5 - outline;
-	float d = max(max(abs(p.x) - shaft, -p.y), p.y - (len - head_len * 0.6));
-	d = min(d, head(p, len, half_w));
+	float shaft_end = heads > 0.5 ? len - head_len * 0.6 : len;
+	float d = max(max(abs(p.x) - shaft, -p.y), p.y - shaft_end);
+	if (heads > 0.5) {
+		d = min(d, head(p, len, half_w));
+	}
 	if (heads > 1.5) {
 		d = min(d, head(p, len - head_len * 0.75, half_w));
 	}

@@ -35,9 +35,9 @@ Do Hearthstone vêm só a **sensação 3D** e os **efeitos gordos**; o resto da 
 - Superfície com **gloss**: verniz com reflexo visível.
 - Kanji **entalhado** (sulco com a tinta no fundo), na fonte **Kaisei Tokumin ExtraBold**
   (OFL): pesada e legível, com os traços abertos. A Potta One do PWA ficou ilegível na peça.
-- **Botão "Movimentos"** (só nos níveis iniciais): setas saem da borda de cada peça de quem
-  joga, mostrando como ela anda. Seta curta = uma casa; seta longa com ponta dupla = qualquer
-  distância; o cavalo aponta para a casa do salto. Tocar numa peça do adversário mostra as
+- **Botão "Movimentos"** (só nos níveis iniciais): setas bem curtas saem da borda de cada peça
+  de quem joga. Ponta simples = uma casa; ponta dupla = qualquer distância (bispo, torre,
+  lança); o cavalo mostra um L, como no xadrez (duas casas à frente, uma para o lado). Tocar numa peça do adversário mostra as
   setas dela em **vermelho**. Vermelho significa sempre perigo (xeque, lance proibido, ameaça).
   A onda de luz automática foi descartada: com todas as peças pulsando, ficava ilegível.
 
