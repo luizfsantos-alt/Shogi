@@ -32,7 +32,7 @@ Tudo em **USI** (`7g7f`, `P*5e`, `8h2b+`) e **SFEN**, como no PWA.
 | `game_result()` → `Dictionary` | `{over: false}` ou `{over: true, winner: "black"/"white"/"draw", reason: "checkmate"/"no-legal-moves"/"repetition"/"perpetual-check"}`, lido como `FairyBackend.result()` (`result(true)`). |
 | `perft(depth)` → `int` | Perft nativo (benchmark). |
 | `start_search(depth, movetime_ms, skill)` → `bool` | Busca assíncrona nas threads do motor; emite **`best_move(move)`** na thread principal (`""` se não há lance). `depth`/`movetime_ms` = 0 → sem esse limite (ambos 0 → profundidade 10, como o PWA). `skill` de −20 a 20. |
-| `stop()`, `is_searching()` | `stop()` encerra a busca já, e `best_move` chega com o melhor lance até ali. |
+| `stop()`, `is_searching()` | `stop()` encerra a busca já, e `best_move` chega com o melhor lance até ali. `is_searching()` só volta a `false` quando `best_move` é emitido, então uma busca nova nunca recebe o sinal da anterior. |
 | `configure(threads, hash_mb)` | Threads limitadas a 1–4 (padrão 2), hash padrão 16 MB. |
 | `ShogiEngine.engine_info()` | Versão do Fairy-Stockfish. |
 
@@ -96,3 +96,17 @@ imprime as linhas `SELFTEST` no log (logcat, tag `godot`), para medir no aparelh
 | busca depth 1 skill −15 / depth 3 skill 10 | 7 ms / 7–25 ms |
 | busca movetime 1000 ms | 1009 ms |
 | `stop()` após 300 ms | volta em 301 ms |
+
+## Medidas no Android (CI, emulador x86_64 API 35, 2 núcleos)
+
+| | |
+| --- | --- |
+| `.so` arm64-v8a / x86_64 (strip, `libc++` estática) | 1,79 MB / 1,82 MB; segmentos LOAD alinhados a 0x4000, `zipalign -P 16` OK |
+| APK de debug (template do Godot, arm64 + x86_64) | 60,6 MB |
+| perft 3 / perft 4 nativo | 2,5 ms / 109 ms |
+| busca depth 3 skill 10 | 58 ms |
+| busca movetime 1000 ms | 1025 ms |
+
+O emulador não tem GPU: com o renderizador Mobile o Vulkan do SwiftShader não apresenta os quadros,
+então o CI roda no emulador um segundo APK com o renderizador Compatibility. O APK principal continua
+com o Mobile (decisão do projeto) e precisa de um aparelho real.
