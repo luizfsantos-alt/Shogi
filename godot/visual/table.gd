@@ -1,7 +1,7 @@
 class_name Table
 extends Node3D
 ## Visual test of the table: board, komadai, the 40 pieces, touch and drag, the effects and the
-## movement wave. Moves follow the pieces' patterns only (no check or other rules yet: the
+## movement arrows. Moves follow the pieces' patterns only (no check or other rules yet: the
 ## engine branch brings those). Sides alternate, so both can be tried on one phone.
 ##
 ## Units are centimetres; the board top is at y = 0, centred on the origin.
@@ -22,17 +22,13 @@ const START := [
 	"LNSGKGSNL",
 ]
 const HAND_ORDER := ["R", "B", "G", "S", "N", "L", "P"]
-const WAVE_CYCLE := 2.5       ## seconds between waves
-const WAVE_SWEEP := 0.8       ## the cascade crosses the board in this time
-const WAVE_STEP := 0.06       ## delay per square along a slide
-const WAVE_PULSE := 0.45      ## how long a square stays lit
 const GOLD := Color(1.0, 0.72, 0.28)
-const RED := Color(1.0, 0.16, 0.08)
+const ARROW_GOLD := Color(1.0, 0.78, 0.25)
+const ARROW_RED := Color(0.95, 0.12, 0.06)
 
 ## Tuning (menu).
 var lift_height := 2.4
-var wave_on := true
-var wave_strength := 0.55
+var arrows_on := false            ## the "Movimentos" button (beginner levels)
 
 var pieces: Array[Koma] = []
 var hands := [[], []]                ## pieces in hand per colour
@@ -48,8 +44,8 @@ var _dragging := false
 var _press_screen := Vector2.ZERO
 var _carry_prev := Vector3.ZERO
 var _busy := false
-var _enemy_wave: Koma = null
-var _enemy_wave_t0 := 0.0
+var _enemy_arrows: Koma = null      ## opponent's piece whose arrows are shown
+var arrows: MoveArrows
 var _time := 0.0
 var _last_move: Array = []           ## squares of the last move
 
@@ -61,6 +57,9 @@ func _ready() -> void:
 	fx.attach_camera(camera)
 	_build_board()
 	_build_squares()
+	arrows = MoveArrows.new()
+	arrows.cell = CELL
+	add_child(arrows)
 	_setup_position()
 	_build_menu()
 	_run_cmdline_demo()
@@ -171,6 +170,7 @@ func _build_board() -> void:
 	var bm := ShaderMaterial.new()
 	bm.shader = shader
 	bm.set_shader_parameter("cell", CELL)
+	bm.set_shader_parameter("noise_tex", Koma.shared_noise())
 	board.material_override = bm
 	board.position.y = -BOARD_SIZE.y * 0.5
 	add_child(board)
@@ -183,6 +183,7 @@ func _build_board() -> void:
 		var sm := ShaderMaterial.new()
 		sm.shader = shader
 		sm.set_shader_parameter("draw_grid", false)
+		sm.set_shader_parameter("noise_tex", Koma.shared_noise())
 		stand.material_override = sm
 		# Sente's stand is on its right, near side; Gote's mirrors it.
 		var side := 1.0 if c == 0 else -1.0
@@ -309,12 +310,14 @@ func _on_press(screen: Vector2) -> void:
 			return
 		_deselect()
 	if hit == null:
-		_enemy_wave = null
+		if _enemy_arrows != null:
+			_enemy_arrows = null
+			_refresh_arrows()
 		return
 	if hit.colour != side_to_move:
-		# The opponent's piece shows where it can go, in red.
-		_enemy_wave = null if _enemy_wave == hit else hit
-		_enemy_wave_t0 = _time
+		# The opponent's piece shows how it moves, in red. Tap again to hide.
+		_enemy_arrows = null if _enemy_arrows == hit or hit.square.x < 0 else hit
+		_refresh_arrows()
 		return
 	_select(hit)
 
@@ -363,7 +366,8 @@ func _ray_plane(screen: Vector2, y: float) -> Vector3:
 
 func _select(p: Koma) -> void:
 	_selected = p
-	_enemy_wave = null
+	_enemy_arrows = null
+	arrows.clear()
 	_dragging = false
 	_carry_prev = p.position
 	if p.square.x >= 0:
@@ -378,6 +382,7 @@ func _deselect() -> void:
 		_selected.slam(0.12, func() -> void: pass)
 	_selected = null
 	_targets = []
+	_refresh_arrows()
 
 
 func _carry_to(screen: Vector2) -> void:
@@ -413,7 +418,7 @@ func _move_selected(to: Vector2i, dragged: bool) -> void:
 	var from_hand := from.x < 0
 	_selected = null
 	_targets = []
-	_enemy_wave = null
+	_enemy_arrows = null
 	_busy = true
 	var victim := piece_at(to)
 	var dest := square_pos(to)
@@ -447,6 +452,7 @@ func _move_selected(to: Vector2i, dragged: bool) -> void:
 	_last_move = [from, to] if not from_hand else [to]
 	side_to_move = 1 - side_to_move
 	_busy = false
+	_refresh_arrows()
 
 
 ## The captured piece is knocked off the board, spins through the air to the capturer's stand
@@ -467,6 +473,7 @@ func _capture(victim: Koma, new_owner: int) -> void:
 	t.tween_method(func(k: float) -> void:
 		victim.position = start.lerp(peak, k).lerp(peak.lerp(end, k), k), 0.0, 1.0, 0.55).set_trans(Tween.TRANS_SINE)
 	t.tween_property(spin, "rotation:y", spin.rotation.y + TAU * 2.0, 0.55)
+	victim.fade_to_team(new_owner, 0.5)  # red turns to pearl (or back) in the air
 	t.tween_property(spin, "rotation:x", spin.rotation.x + TAU, 0.55)
 	t.chain().tween_callback(func() -> void:
 		spin.rotation = Vector3.ZERO
@@ -476,62 +483,34 @@ func _capture(victim: Koma, new_owner: int) -> void:
 		_relayout_hand(new_owner))
 
 
-# --- Squares: targets, last move and the movement wave -------------------------------------
+# --- Squares and arrows ------------------------------------------------------------------
 
 func _update_squares() -> void:
-	var light := PackedFloat32Array()
-	light.resize(81)
-	var tint := []
-	tint.resize(81)
-	tint.fill(GOLD)
+	var mm := _squares.multimesh
+	var lit := {}
 	if _selected != null:
+		var v := 0.75 + 0.15 * sin(_time * 6.0)
 		for sq: Vector2i in _targets:
-			light[sq.y * 9 + sq.x] = 0.75 + 0.15 * sin(_time * 6.0)
+			lit[sq] = v
 	else:
 		for sq: Vector2i in _last_move:
-			light[sq.y * 9 + sq.x] = 0.18
-		if wave_on and not _busy:
-			_wave(light)
-	if _enemy_wave != null and _enemy_wave.square.x >= 0:
-		var t := fmod(_time - _enemy_wave_t0, WAVE_CYCLE * 0.6)
-		for r: Array in KomaMoves.reach(_enemy_wave.kind, _enemy_wave.promoted, _enemy_wave.colour, _enemy_wave.square, occupant):
-			var sq: Vector2i = r[0]
-			var v := _pulse(t - (r[1] - 1) * WAVE_STEP) * 0.95
-			var i := sq.y * 9 + sq.x
-			if v > light[i]:
-				light[i] = v
-				tint[i] = RED
-	var mm := _squares.multimesh
-	for i in 81:
-		var c: Color = tint[i]
-		mm.set_instance_custom_data(i, Color(c.r, c.g, c.b, light[i]))
+			lit[sq] = 0.18
+	for row in 9:
+		for col in 9:
+			var v: float = lit.get(Vector2i(col, row), 0.0)
+			mm.set_instance_custom_data(row * 9 + col, Color(GOLD.r, GOLD.g, GOLD.b, v))
 
 
-## Gold wave: every few seconds each of the mover's pieces sends a short pulse of light along
-## the squares it can reach, one piece after another across the board.
-func _wave(light: PackedFloat32Array) -> void:
-	var own: Array[Koma] = []
-	for p in pieces:
-		if p.colour == side_to_move and p.square.x >= 0:
-			own.append(p)
-	own.sort_custom(func(a: Koma, b: Koma) -> bool: return a.square.x * 10 + a.square.y < b.square.x * 10 + b.square.y)
-	var t := fmod(_time, WAVE_CYCLE)
-	for i in own.size():
-		var p := own[i]
-		var start := WAVE_SWEEP * i / maxf(own.size(), 1.0)
-		var self_glow := _pulse(t - start + 0.08)
-		p.material.set_shader_parameter("glow", self_glow * 0.18 * wave_strength / 0.55)
-		for r: Array in KomaMoves.reach(p.kind, p.promoted, p.colour, p.square, occupant):
-			var sq: Vector2i = r[0]
-			var v := _pulse(t - start - (r[1] - 1) * WAVE_STEP) * wave_strength
-			var idx := sq.y * 9 + sq.x
-			light[idx] = maxf(light[idx], v)
-
-
-func _pulse(x: float) -> float:
-	if x < 0.0 or x > WAVE_PULSE:
-		return 0.0
-	return sin(PI * x / WAVE_PULSE)
+## Arrows of the mover's pieces (button on) and of a tapped opponent's piece.
+func _refresh_arrows() -> void:
+	arrows.clear()
+	if _selected != null or _busy:
+		return
+	if _enemy_arrows != null:
+		arrows.show_for([_enemy_arrows], ARROW_RED)
+	elif arrows_on:
+		var own := pieces.filter(func(p: Koma) -> bool: return p.colour == side_to_move and p.square.x >= 0)
+		arrows.show_for(own, ARROW_GOLD)
 
 
 # --- Menu ----------------------------------------------------------------------------------
@@ -547,6 +526,25 @@ func _build_menu() -> void:
 	button.custom_minimum_size = Vector2(84, 84)
 	button.modulate = Color(1, 1, 1, 0.75)
 	layer.add_child(button)
+
+	# "Movimentos": arrows out of every piece of the side to move (beginner levels only).
+	var moves := Button.new()
+	moves.text = "⇡ Movimentos"
+	moves.toggle_mode = true
+	moves.add_theme_font_size_override("font_size", 34)
+	moves.custom_minimum_size = Vector2(300, 96)
+	moves.anchor_top = 1.0
+	moves.anchor_bottom = 1.0
+	moves.offset_left = 24
+	moves.offset_top = -120
+	moves.offset_bottom = -24
+	moves.offset_right = 324
+	moves.modulate = Color(1, 1, 1, 0.85)
+	moves.toggled.connect(func(on: bool) -> void:
+		arrows_on = on
+		_enemy_arrows = null
+		_refresh_arrows())
+	layer.add_child(moves)
 
 	var panel := PanelContainer.new()
 	panel.position = Vector2(24, 116)
@@ -578,9 +576,7 @@ func _build_menu() -> void:
 		s.value_changed.connect(on_change)
 		box.add_child(s)
 
-	add_toggle.call("Ajuda de movimento (onda)", wave_on, func(v: bool) -> void: wave_on = v; _clear_piece_glow())
 	add_toggle.call("Efeitos reduzidos", fx.reduced, func(v: bool) -> void: fx.reduced = v)
-	add_slider.call("Brilho da onda", wave_strength, 0.1, 1.0, func(v: float) -> void: wave_strength = v)
 	add_slider.call("Tremor no impacto", fx.impact_shake, 0.0, 1.0, func(v: float) -> void: fx.impact_shake = v)
 	add_slider.call("Pausa no impacto (s)", fx.hitstop, 0.0, 0.15, func(v: float) -> void: fx.hitstop = v)
 	add_slider.call("Poeira", fx.impact_dust, 0.0, 2.0, func(v: float) -> void: fx.impact_dust = v)
@@ -591,14 +587,10 @@ func _build_menu() -> void:
 	reset.pressed.connect(func() -> void:
 		_selected = null
 		_targets = []
-		_enemy_wave = null
-		_setup_position())
+		_enemy_arrows = null
+		_setup_position()
+		_refresh_arrows())
 	box.add_child(reset)
-
-
-func _clear_piece_glow() -> void:
-	for p in pieces:
-		p.material.set_shader_parameter("glow", 0.0)
 
 
 # --- Screenshots for development -----------------------------------------------------------
@@ -619,8 +611,11 @@ func _run_cmdline_demo() -> void:
 		"lift":
 			_select(piece_at(Vector2i(7, 7)))   # Sente's rook
 		"enemy":
-			_enemy_wave = piece_at(Vector2i(7, 1)) # Gote's bishop
-			_enemy_wave_t0 = _time
+			_enemy_arrows = piece_at(Vector2i(7, 1)) # Gote's bishop
+			_refresh_arrows()
+		"arrows":
+			arrows_on = true
+			_refresh_arrows()
 		"impact":
 			_select(piece_at(Vector2i(2, 6)))
 			await get_tree().create_timer(0.3).timeout

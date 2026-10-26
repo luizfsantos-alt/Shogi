@@ -1,7 +1,7 @@
 /**
  * Generates the engraving masks for the piece faces: godot/visual/textures/kanji/<name>.png.
  * White = carved deepest, black = untouched surface. The soft edge is the groove wall.
- * Uses the Potta One brush font already bundled with the PWA, drawn in Chromium.
+ * Uses Kaisei Tokumin ExtraBold (fonts/, reduced to the piece characters), drawn in Chromium.
  *
  *   node godot/visual/tools/make_kanji_textures.mjs
  */
@@ -14,9 +14,8 @@ import { createRequire } from "node:module";
 const { chromium } = createRequire(import.meta.url)("playwright");
 
 const here = dirname(fileURLToPath(import.meta.url));
-const root = join(here, "../../..");
 const out = join(here, "../textures/kanji");
-const font = readFileSync(join(root, "src/ui/fonts/koma-kanji.woff2")).toString("base64");
+const font = readFileSync(join(here, "../fonts/kaisei-tokumin-800-koma.woff2")).toString("base64");
 
 // Front (unpromoted) faces read top to bottom; promoted backs use one character.
 const FACES = {
@@ -29,7 +28,7 @@ const W = 384, H = 448;
 const browser = await chromium.launch();
 const page = await browser.newPage();
 await page.setContent(`<style>@font-face{font-family:K;src:url(data:font/woff2;base64,${font})}</style><canvas></canvas>`);
-await page.evaluate(() => document.fonts.load("100px K", "王"));
+await page.evaluate(() => document.fonts.load("100px K", "王将"));
 for (const [name, text] of Object.entries(FACES)) {
   const png = await page.evaluate(({ text, W, H }) => {
     const c = document.createElement("canvas");

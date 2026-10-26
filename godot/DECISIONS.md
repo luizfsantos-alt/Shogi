@@ -28,15 +28,18 @@ Do Hearthstone vêm só a **sensação 3D** e os **efeitos gordos**; o resto da 
 
 - Cunha 3D gerada por código, com **leves defeitos** (cantos gastos, faces não perfeitamente
   planas, lascas e arranhões finos; semente diferente por peça, nenhuma igual à outra).
-- Kanji **entalhado** na peça: sulco de verdade (relevo/normal map), com tinta no fundo do
-  sulco; ouro no kanji e na borda das promovidas.
-- Superfície com **um certo gloss**: verniz com reflexo especular visível, não fosco.
-- **Modo de ajuda ao movimento** (desligável): a cada 2,5 s uma onda curta e discreta de luz
-  sai das **suas** peças, em cascata, na direção em que cada uma anda. Peças de alcance longo
-  mandam a onda até onde realmente chegam. Ao **tocar numa peça do adversário**, ela emite a
-  própria onda.
-- **Cores**: onda das suas peças em **dourado/âmbar**; onda de peça adversária em **vermelho**.
-  Vermelho significa sempre perigo (xeque, lance proibido, ameaça).
+- **Cores (decisão antiga do PWA, retomada):** quem joga primeiro (Sente) em **laca perolada
+  com escrita preta**; quem joga depois (Gote) em **laca vermelha com escrita em ouro**. A face
+  promovida tem escrita em ouro nos dois lados, e a borda da peça promovida fica dourada. Uma
+  peça capturada troca de cor no ar, a caminho do komadai.
+- Superfície com **gloss**: verniz com reflexo visível.
+- Kanji **entalhado** (sulco com a tinta no fundo), na fonte **Kaisei Tokumin ExtraBold**
+  (OFL): pesada e legível, com os traços abertos. A Potta One do PWA ficou ilegível na peça.
+- **Botão "Movimentos"** (só nos níveis iniciais): setas saem da borda de cada peça de quem
+  joga, mostrando como ela anda. Seta curta = uma casa; seta longa com ponta dupla = qualquer
+  distância; o cavalo aponta para a casa do salto. Tocar numa peça do adversário mostra as
+  setas dela em **vermelho**. Vermelho significa sempre perigo (xeque, lance proibido, ameaça).
+  A onda de luz automática foi descartada: com todas as peças pulsando, ficava ilegível.
 
 ## Efeitos ("gordos", referência Hearthstone)
 
@@ -56,7 +59,7 @@ força fáceis de ajustar; opção "efeitos reduzidos" para celulares fracos.
 ## Escopo da v1 (primeiro APK jogável)
 
 Partida contra a IA nos 5 níveis (recalibrados no aparelho), regras completas, mentor com as
-explicações, onda de movimento, desfazer/dica no menu, salvamento automático.
+explicações, setas de movimento (botão), desfazer/dica no menu, salvamento automático.
 Depois: curso de 32 lições, handicaps, declaração de impasse pelo jogador, exportar SFEN/USI.
 
 ## Pastas
@@ -73,7 +76,7 @@ godot/
 ## Como trabalhamos
 
 - **Duas frentes em paralelo**, cada uma no seu branch:
-  1. **Visual**: uma peça + pedaço do tabuleiro em paisagem, onda dourada e três efeitos
+  1. **Visual**: uma peça + pedaço do tabuleiro em paisagem, onda dourada (depois trocada pelas setas) e três efeitos
      (pegar, jogar com impacto, promover).
   2. **Motor**: Fairy-Stockfish como GDExtension para Android; cena simples com lances legais
      e uma jogada da IA.

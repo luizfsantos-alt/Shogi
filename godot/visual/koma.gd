@@ -10,6 +10,24 @@ const KANJI := {
 }
 const SHADER := preload("res://visual/koma.gdshader")
 
+## One small tiling noise texture shared by every piece (sheen, scratches).
+static var noise_texture: NoiseTexture2D
+
+
+static func shared_noise() -> NoiseTexture2D:
+	if noise_texture == null:
+		var n := FastNoiseLite.new()
+		n.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+		n.frequency = 0.02
+		n.fractal_octaves = 4
+		noise_texture = NoiseTexture2D.new()
+		noise_texture.width = 256
+		noise_texture.height = 256
+		noise_texture.seamless = true
+		noise_texture.generate_mipmaps = true
+		noise_texture.noise = n
+	return noise_texture
+
 var kind := "P"
 var colour := 0          ## 0 Sente (near side), 1 Gote
 var promoted := false
@@ -43,6 +61,8 @@ func setup(p_kind: String, p_colour: int, seed: int) -> void:
 	if faces[1] != "":
 		material.set_shader_parameter("kanji_back", load("res://visual/textures/kanji/%s.png" % faces[1]))
 	material.set_shader_parameter("seed", float(seed % 997))
+	material.set_shader_parameter("noise_tex", shared_noise())
+	material.set_shader_parameter("team", float(colour))
 	# Set now so tweens can animate them.
 	material.set_shader_parameter("glow", 0.0)
 	material.set_shader_parameter("gold_edge", 0.0)
@@ -60,6 +80,11 @@ func setup(p_kind: String, p_colour: int, seed: int) -> void:
 func set_colour(c: int) -> void:
 	colour = c
 	rotation.y = PI if colour == 1 else 0.0
+
+
+## Changes the lacquer to the new owner's (pearl or red) over `seconds`.
+func fade_to_team(c: int, seconds: float) -> void:
+	create_tween().tween_property(material, "shader_parameter/team", float(c), seconds).set_trans(Tween.TRANS_SINE)
 
 
 func set_glow(amount: float, colour_tint: Color = Color(1.0, 0.75, 0.3), seconds: float = 0.15) -> void:
