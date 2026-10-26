@@ -3,11 +3,11 @@ import type { VariantDefinition } from "../core/variants";
 import type { Color, Piece } from "../core/types";
 import { movementDiagram } from "./diagram";
 import { element } from "./dialogs";
-import type { PieceStyle } from "./pieceView";
+import type { PieceLook } from "./pieceView";
 import { sideName } from "./text";
 
 /** Learning card for a piece: names, movement diagram and promotion. */
-export function pieceCard(piece: Piece, variant: VariantDefinition, style: PieceStyle, viewer: Color | null): HTMLElement {
+export function pieceCard(piece: Piece, variant: VariantDefinition, look: PieceLook, viewer: Color | null): HTMLElement {
   const info = pieceInfo(piece);
   const owner = viewer === null ? sideName(piece.color) : piece.color === viewer ? `${sideName(piece.color)} (sua)` : `${sideName(piece.color)} (do adversário)`;
   const card = element(
@@ -20,7 +20,7 @@ export function pieceCard(piece: Piece, variant: VariantDefinition, style: Piece
       element("span", {}, `${info.romaji} · ${pieceFace(piece)}`),
       element("small", {}, `Peça de ${owner}`),
     ),
-    element("div", { class: "piece-card-row" }, movementDiagram(piece, style), element("p", {}, info.movePt)),
+    element("div", { class: "piece-card-row" }, movementDiagram(piece, look), element("p", {}, info.movePt)),
   );
 
   if (piece.promoted) {
@@ -34,7 +34,7 @@ export function pieceCard(piece: Piece, variant: VariantDefinition, style: Piece
       : "";
     card.append(
       element("h3", {}, `Promovida: ${pieceInfo(promoted).namePt}`),
-      element("div", { class: "piece-card-row" }, movementDiagram(promoted, style), element("p", {}, `${pieceInfo(promoted).movePt}${rule}`)),
+      element("div", { class: "piece-card-row" }, movementDiagram(promoted, look), element("p", {}, `${pieceInfo(promoted).movePt}${rule}`)),
     );
   } else {
     card.append(element("p", { class: "piece-card-note" }, piece.type === "K" ? "O rei não promove." : `${info.namePt} não promove.`));

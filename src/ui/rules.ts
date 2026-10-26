@@ -2,7 +2,7 @@ import { pieceInfo } from "../core/pieces";
 import type { VariantDefinition } from "../core/variants";
 import { diagramLegend, movementDiagram } from "./diagram";
 import { element, showDialog } from "./dialogs";
-import type { PieceStyle } from "./pieceView";
+import type { PieceLook } from "./pieceView";
 
 function section(title: string, ...content: (Node | string)[]): HTMLElement {
   return element("section", { class: "rules-section" }, element("h3", {}, title), ...content);
@@ -26,7 +26,7 @@ function zoneBoard(variant: VariantDefinition): HTMLElement {
   return board;
 }
 
-function piecesSection(variant: VariantDefinition, style: PieceStyle): HTMLElement {
+function piecesSection(variant: VariantDefinition, look: PieceLook): HTMLElement {
   const rows = variant.pieceTypes.map((type) => {
     const info = pieceInfo({ type, promoted: false });
     const promotes = variant.promotable.includes(type)
@@ -35,14 +35,14 @@ function piecesSection(variant: VariantDefinition, style: PieceStyle): HTMLEleme
     return element(
       "div",
       { class: "rules-piece" },
-      movementDiagram({ type, promoted: false }, style),
+      movementDiagram({ type, promoted: false }, look),
       element("div", {}, element("strong", {}, info.namePt), element("small", {}, ` ${info.romaji} · ${info.kanjiName}`), element("p", {}, `${info.movePt} ${promotes}`)),
     );
   });
   return section("As peças", diagramLegend(), element("p", {}, "Diagramas vistos do lado do dono da peça (para cima = em direção ao adversário)."), ...rows);
 }
 
-export function showRules(variant: VariantDefinition, style: PieceStyle): Promise<null> {
+export function showRules(variant: VariantDefinition, look: PieceLook): Promise<null> {
   const zone = variant.promotionZoneRanks;
   const body = element(
     "div",
@@ -51,7 +51,7 @@ export function showRules(variant: VariantDefinition, style: PieceStyle): Promis
       "Objetivo",
       element("p", {}, "Dar xeque-mate no rei do adversário: atacá-lo de um jeito que ele não consiga escapar. Sente (☗) joga primeiro, depois as jogadas se alternam."),
     ),
-    piecesSection(variant, style),
+    piecesSection(variant, look),
     section(
       "Promoção",
       element(
@@ -63,7 +63,7 @@ export function showRules(variant: VariantDefinition, style: PieceStyle): Promis
           {},
           list(
             `As ${zone} últimas fileiras do lado do adversário são a zona de promoção (o campo inimigo). Na figura: em cima a zona de Sente, embaixo a de Gote.`,
-            "Quando uma peça entra, sai ou se move dentro dessa zona, você pode virá-la: ela fica promovida (nome em vermelho) e muda de movimento.",
+            "Quando uma peça entra, sai ou se move dentro dessa zona, você pode virá-la: ela fica promovida (ganha ouro: moldura dourada no kanji, faixa dourada no modo leitura) e muda de movimento.",
             "A promoção é opcional, exceto quando a peça ficaria sem jogadas: peão e lança na última fileira, cavalo nas duas últimas.",
             "Ouro e rei não promovem. Uma peça promovida continua promovida até ser capturada.",
           ),

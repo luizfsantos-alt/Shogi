@@ -1,7 +1,15 @@
+/* Bundled subsets with only the characters drawn on the pieces (see fonts/README.md). */
 @font-face {
-  font-family: "Koma";
-  src: url("./fonts/koma.woff2") format("woff2");
-  font-weight: 700;
+  font-family: "Koma Kanji";
+  src: url("./fonts/koma-kanji.woff2") format("woff2");
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Koma Label";
+  src: url("./fonts/koma-label.woff2") format("woff2");
+  font-weight: 900;
+  font-stretch: 62% 125%;
   font-display: block;
 }
 
@@ -14,17 +22,14 @@
   --accent: #9b3d12;
   --accent-text: #fff;
   --danger: #b3261e;
-  --board: #e2b764;
-  --board-line: #5a3a12;
-  --piece: #f7e3b5;
-  --piece-edge: #8a6a3a;
-  --piece-text: #1d1408;
-  --piece-promoted: #c0261c;
-  --marks: #6e5a3a;
-  --last: rgba(255, 214, 92, 0.55);
-  --selected: rgba(46, 125, 50, 0.45);
-  --target: rgba(46, 125, 50, 0.75);
-  --check: rgba(211, 47, 47, 0.6);
+  /* Charred wood with gold lines; the same in both themes, like a real board. */
+  --board: #1b1210;
+  --board-line: #5a4522;
+  --board-coord: #b0904f;
+  --last: rgba(214, 166, 58, 0.24);
+  --selected: rgba(212, 42, 28, 0.3);
+  --target: #ff4b37;
+  --check: rgba(255, 36, 36, 0.5);
   --overlay: rgba(20, 14, 8, 0.55);
   --hint: rgba(30, 136, 229, 0.45);
   --attacked: rgba(229, 57, 53, 0.22);
@@ -43,9 +48,6 @@
     --accent: #e0814f;
     --accent-text: #1b1712;
     --danger: #ff8a80;
-    --board: #b98d45;
-    --board-line: #3d2a10;
-    --marks: #6e5a3a;
     --warning-bg: #3a2418;
     --info-bg: #1f2e1d;
     color-scheme: dark;
@@ -198,10 +200,16 @@ select:focus-visible {
   display: grid;
   grid-template-columns: repeat(var(--files, 9), var(--sq)) var(--coord);
   grid-template-rows: var(--coord) repeat(var(--ranks, 9), var(--sq));
-  background: var(--board);
+  background:
+    radial-gradient(120% 90% at 30% 20%, rgba(90, 40, 20, 0.35), transparent 60%),
+    var(--board);
   padding: 4px;
-  border-radius: 6px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+  border-radius: 2px;
+  box-shadow:
+    0 0 0 2px #6b5326,
+    0 0 0 5px #0b0807,
+    0 0 0 6px #3a2a18,
+    0 12px 28px rgba(0, 0, 0, 0.45);
 }
 
 .coord {
@@ -209,7 +217,7 @@ select:focus-visible {
   align-items: center;
   justify-content: center;
   font-size: 0.75rem;
-  color: var(--board-line);
+  color: var(--board-coord);
   font-weight: 600;
 }
 
@@ -242,6 +250,7 @@ select:focus-visible {
 
 .sq.selected {
   background: var(--selected);
+  box-shadow: inset 0 0 0 2px var(--target);
 }
 
 .sq.check {
@@ -250,10 +259,11 @@ select:focus-visible {
 
 .sq.target::after {
   content: "";
-  width: 28%;
-  height: 28%;
-  border-radius: 50%;
+  width: 26%;
+  height: 26%;
+  transform: rotate(45deg);
   background: var(--target);
+  box-shadow: 0 0 8px rgba(255, 75, 55, 0.7);
 }
 
 .sq.target-capture::after {
@@ -272,6 +282,7 @@ select:focus-visible {
 
 /* ------------------------------------------------------------ pieces */
 
+/* Sente's pieces are pearl, Gote's red lacquer; gold marks a promotion (see pieceView.ts). */
 .piece {
   width: 92%;
   height: 92%;
@@ -283,38 +294,239 @@ select:focus-visible {
   transform: rotate(180deg);
 }
 
-.piece-body {
-  fill: url(#koma-wood);
-  stroke: #9a6f36;
-  stroke-width: 1.2;
+.piece-shadow {
+  fill: #000;
+  opacity: 0.55;
 }
 
-.piece-edge {
-  fill: url(#koma-edge);
-  opacity: 0.85;
+.piece-body {
+  stroke-width: 1.6;
+}
+
+.sente .piece-body {
+  fill: url(#koma-perola);
+  stroke: #8f8597;
+}
+
+.gote .piece-body {
+  fill: url(#koma-laca);
+  stroke: #3a0805;
+}
+
+.piece-nacar {
+  fill: url(#koma-nacar);
+}
+
+.piece-volume {
+  fill: url(#koma-volume);
+}
+
+.piece-gloss {
+  fill: url(#koma-brilho);
+}
+
+.gote .piece-gloss {
+  opacity: 0.32;
+}
+
+.piece-bevel {
+  fill: none;
+  stroke-width: 1.3;
+  opacity: 0.6;
+}
+
+.sente .piece-bevel {
+  stroke: #fff;
+}
+
+.gote .piece-bevel {
+  stroke: #ff8a70;
+}
+
+.piece-gold-rim {
+  fill: none;
+  stroke: url(#koma-ouro);
+  stroke-width: 3.6;
+}
+
+/* Heavy brush kanji (Potta One), with system Japanese fonts as fallback. */
+.piece-kanji {
+  font-family: "Koma Kanji", "Hiragino Sans", "Yu Gothic", "Noto Sans CJK JP", sans-serif;
+  paint-order: stroke;
+}
+
+.sente .piece-kanji {
+  fill: #15100e;
+}
+
+.gote .piece-kanji {
+  fill: #f8ecd2;
+  stroke: rgba(40, 4, 2, 0.55);
+  stroke-width: 1.4;
+}
+
+.sente.promoted .piece-kanji {
+  fill: #a8150c;
+}
+
+.gote.promoted .piece-kanji {
+  fill: url(#koma-ouro-texto);
+  stroke: #3a0802;
+  stroke-width: 1.6;
+}
+
+/* Reading mode: movement marks and the name band. */
+.piece-ink {
+  fill: #15100e;
+}
+
+.gote .piece-ink {
+  fill: #170807;
+}
+
+.piece-ink-line {
+  fill: none;
+  stroke: #15100e;
+}
+
+.gote .piece-ink-line {
+  stroke: #170807;
+}
+
+.piece-king-cut {
+  fill: #f6f1f3;
+}
+
+.gote .piece-king-cut {
+  fill: #c42a1e;
+}
+
+.piece-band {
+  fill: #120d0b;
+}
+
+.promoted .piece-band {
+  fill: url(#koma-ouro-faixa);
 }
 
 .piece-label {
-  fill: var(--piece-text);
-  font-weight: 700;
+  font-family: "Koma Label", "Arial Narrow", sans-serif;
+  font-weight: 900;
+  font-stretch: 62%;
+  letter-spacing: 0.6px;
+  fill: #f3e8d0;
 }
 
-/* Bundled subset of Noto Serif JP Bold (only the characters on the pieces), with system Mincho fallbacks. */
-.piece-label.kanji {
-  font-family: "Koma", "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif CJK JP", serif;
+.gote .piece-label {
+  fill: #ff4b37;
 }
 
-.piece-label.latin {
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+.promoted .piece-label {
+  fill: #120d0b;
 }
 
-.piece.promoted .piece-label {
-  fill: var(--piece-promoted);
+/* Glints: a looping sweep on the selected piece, one gold sweep and rim pulse on promotion. */
+.glint-move {
+  transform: translateX(-30px);
 }
 
-.piece-marks {
-  fill: var(--marks);
-  stroke: var(--marks);
+.glint-select .glint-move {
+  animation: koma-glint-select 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.glint-promote .glint-move {
+  animation: koma-glint-promote 1.4s cubic-bezier(0.4, 0, 0.2, 1) 1 forwards;
+}
+
+.piece-pulse {
+  fill: none;
+  stroke: url(#koma-ouro);
+  stroke-width: 3.4;
+  opacity: 0;
+  animation: koma-pulse 1.6s ease-out 1 forwards;
+}
+
+@keyframes koma-glint-select {
+  0% {
+    transform: translateX(-30px);
+  }
+  32%,
+  100% {
+    transform: translateX(170px);
+  }
+}
+
+@keyframes koma-glint-promote {
+  from {
+    transform: translateX(-30px);
+  }
+  to {
+    transform: translateX(170px);
+  }
+}
+
+@keyframes koma-pulse {
+  0% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .piece-glint,
+  .piece-pulse {
+    display: none;
+  }
+}
+
+/* "Leitura" switch in the top bar. */
+.reading-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reading-toggle .switch {
+  display: inline-flex;
+  width: 36px;
+  height: 20px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+}
+
+.reading-toggle .switch::before {
+  content: "";
+  width: 15px;
+  border-radius: 2px;
+  background: var(--muted);
+  transition: transform 0.15s ease;
+}
+
+.reading-toggle[aria-pressed="true"] {
+  border-color: #d42a1c;
+}
+
+.reading-toggle[aria-pressed="true"] .switch {
+  background: #7a0d14;
+  border-color: #ff4b37;
+}
+
+.reading-toggle[aria-pressed="true"] .switch::before {
+  background: #f4ede0;
+  transform: translateX(15px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reading-toggle .switch::before {
+    transition: none;
+  }
 }
 
 /* ------------------------------------------------------------ players and hands */
@@ -741,7 +953,7 @@ select:focus-visible {
 
 .diagram-cell {
   position: relative;
-  border: 0.5px solid rgba(110, 75, 28, 0.35);
+  border: 0.5px solid var(--board-line);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -763,7 +975,7 @@ select:focus-visible {
 
 .diagram-cell.slide,
 .legend.slide::before {
-  background: rgba(46, 125, 50, 0.35);
+  background: rgba(255, 75, 55, 0.3);
 }
 
 .diagram-cell.jump::after,
@@ -862,15 +1074,15 @@ select:focus-visible {
 
 .zone-cell {
   height: 14px;
-  border: 0.5px solid rgba(110, 75, 28, 0.35);
+  border: 0.5px solid var(--board-line);
 }
 
 .zone-cell.zone-black {
-  background: rgba(46, 125, 50, 0.45);
+  background: rgba(244, 239, 246, 0.55);
 }
 
 .zone-cell.zone-white {
-  background: rgba(155, 61, 18, 0.4);
+  background: rgba(212, 42, 28, 0.6);
 }
 
 /* ------------------------------------------------------------ phones in landscape */

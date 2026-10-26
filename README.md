@@ -17,8 +17,12 @@ compilado para WebAssembly. Funciona no computador e no celular; não precisa de
   - **Dica**: o computador sugere uma jogada e explica em palavras simples (captura, xeque, promoção…);
   - botão **Regras** com um resumo ilustrado;
   - opção para mostrar as casas atacadas pelo adversário.
-- Peças em forma de cunha, em três estilos: **português com marcas de movimento** (padrão),
-  inglês, ou **kanji** tradicional.
+- Peças com cara de material: o **Sente é pérola** e o **Gote é laca vermelha**, então se vê o time
+  de longe; promovidas ganham **ouro**. Por padrão mostram o **kanji** em pincel pesado. O botão
+  **Leitura** troca o kanji por marcas que mostram o movimento (talho = qualquer distância,
+  dente = uma casa, losango = salto) e o nome da peça, em português ou inglês.
+- Brilho na peça selecionada e na peça que acabou de promover (desligado quando o sistema pede
+  menos movimento). Tabuleiro de madeira queimada com linhas douradas.
 - Destaque da última jogada e do xeque, lista de jogadas, desfazer, virar o tabuleiro, desistir,
   declarar impasse, fim de partida com o motivo.
 - Salvamento automático, partidas salvas no navegador, exportar/importar em **SFEN** e **USI**.
@@ -73,7 +77,7 @@ src/
   ui/
     session.ts          # partida em andamento: turnos, IA, desfazer, dicas (sem DOM, testado)
     App.ts              # tela do jogo
-    pieceView.ts        # desenho das peças (cunha)
+    pieceView.ts        # desenho das peças: materiais, kanji, modo leitura, brilho
     pieceCard.ts, diagram.ts, rules.ts   # painel da peça, diagramas, regras
     interaction.ts      # seleção → casas destacadas → jogada / pergunta de promoção
     storage.ts          # salvar/carregar no localStorage
@@ -238,8 +242,9 @@ Este projeto é software livre sob a **GNU General Public License v3.0 ou poster
   Fairy-Stockfish em WebAssembly (Fabian Fichter, Johannes Czech).
 - [fairy-stockfish-nnue.wasm](https://github.com/fairy-stockfish/fairy-stockfish.wasm): motor
   Fairy-Stockfish em WebAssembly.
-- [Noto Serif JP](https://fonts.google.com/noto/specimen/Noto+Serif+JP) (SIL OFL 1.1): recorte com
-  os caracteres das peças em `src/ui/fonts/`.
+- [Potta One](https://fonts.google.com/specimen/Potta+One) e
+  [Archivo](https://fonts.google.com/specimen/Archivo) (SIL OFL 1.1): recortes com os caracteres
+  das peças em `src/ui/fonts/`.
 
 **Aviso GPL:** quem distribuir este programa, inclusive publicando-o na web, deve oferecer o
 código-fonte completo sob a mesma licença. O rodapé do jogo já mostra a licença, os créditos e
