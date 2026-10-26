@@ -37,6 +37,7 @@ func _ready() -> void:
 	table = Table.new()
 	add_child(table)
 	table.reduced_effects_changed.connect(func(on: bool) -> void: App.set_setting("reduced_effects", on))
+	table.pixel_look_changed.connect(func(on: bool) -> void: App.set_setting("pixel_look", on))
 	table.add_menu_action("Mapa do curso", App.open_course)
 	table.add_menu_action("Início", App.go_home)
 	table.add_menu_action("Recomeçar a lição", func() -> void: _restart(0))

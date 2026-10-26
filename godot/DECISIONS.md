@@ -41,6 +41,21 @@ Do Hearthstone vêm só a **sensação 3D** e os **efeitos gordos**; o resto da 
   setas dela em **vermelho**. Vermelho significa sempre perigo (xeque, lance proibido, ameaça).
   A onda de luz automática foi descartada: com todas as peças pulsando, ficava ilegível.
 
+### Visual pixel (proposta em teste, out/2026)
+
+A mesa continua 3D e quase de cima; o pixel entra como **textura**, na mesma família do tengu.
+Liga em Ajustes › "Visual pixel (teste)" (ou `look=pixel` na linha de comando).
+
+- Peças **60% mais grossas**, com bordas mais redondas, luz em **faixas** (sem degradê), um
+  brilho duro e **contorno escuro** como num sprite: o 3D fica acentuado.
+- **Um kanji só**, em pixel (DotGothic16, OFL), com as **marcas de movimento** gravadas em volta:
+  um ponto = uma casa, dois pontos em linha = qualquer distância, cruzinha = o salto do cavalo.
+  Máscaras de 32×36 em `visual/textures/kanji_px/` (`tools/make_pixel_kanji.mjs`).
+- Gote com kanji **creme** (ouro sobre vermelho some); promovida com kanji vermelho no Sente e
+  ouro no Gote, mais a borda dourada.
+- Tabuleiro e komadai em **pedra** pixelada (quatro cinzas com dither, rachaduras, a grade
+  entalhada com o lábio iluminado).
+
 ## Efeitos ("gordos", referência Hearthstone)
 
 Pegar (sobe, sombra se afasta, inclina), jogar (peso, pausa no impacto, poeira, leve tremor),

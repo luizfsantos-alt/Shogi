@@ -22,6 +22,8 @@ signal illegal_attempt(from: Vector2i, kind: String, to: Vector2i)
 signal _promotion_answered
 ## The "Efeitos reduzidos" switch of the menu changed.
 signal reduced_effects_changed(on: bool)
+## The "Visual pixel" switch of the menu changed.
+signal pixel_look_changed(on: bool)
 
 var sandbox := true                  ## no rules attached: the visual test
 var legal_moves := PackedStringArray()
@@ -62,9 +64,18 @@ var _stars := {}                     ## square -> star mesh to walk over (lesson
 static var _star_mesh_cache: ArrayMesh
 ## "Efeitos reduzidos" for new tables (the app's saved setting).
 static var reduced_default := false
+## The pixel look for new tables (the app's saved setting; `look=pixel` on the command line).
+static var pixel_default := false
+## Texel size of the board in the pixel look (cm): twice the pieces' texels, so the wood reads
+## as chunkier pixels than the finer kanji.
+const PIXEL_SIZE := 0.21
+var _wood: Array[ShaderMaterial] = []
 
 
 func _ready() -> void:
+	if "look=pixel" in OS.get_cmdline_user_args():
+		pixel_default = true
+	Koma.pixel = pixel_default
 	_build_world()
 	fx = TableFx.new()
 	fx.reduced = reduced_default
@@ -187,6 +198,7 @@ func _build_board() -> void:
 	bm.set_shader_parameter("cell", CELL)
 	bm.set_shader_parameter("noise_tex", Koma.shared_noise())
 	board.material_override = bm
+	_wood.append(bm)
 	board.position.y = -BOARD_SIZE.y * 0.5
 	add_child(board)
 
@@ -200,6 +212,7 @@ func _build_board() -> void:
 		sm.set_shader_parameter("draw_grid", false)
 		sm.set_shader_parameter("noise_tex", Koma.shared_noise())
 		stand.material_override = sm
+		_wood.append(sm)
 		# Sente's stand is on its right, near side; Gote's mirrors it.
 		var side := 1.0 if c == 0 else -1.0
 		var x := side * (BOARD_SIZE.x * 0.5 + 2.2 + KOMADAI_SIZE.x * 0.5)
@@ -207,6 +220,25 @@ func _build_board() -> void:
 		stand.position = Vector3(x, KOMADAI_TOP - KOMADAI_SIZE.y * 0.5, z)
 		add_child(stand)
 		_komadai_pos[c] = Vector3(x, KOMADAI_TOP, z)
+	_apply_wood_look()
+
+
+func _apply_wood_look() -> void:
+	for m in _wood:
+		m.set_shader_parameter("pixel_size", PIXEL_SIZE if Koma.pixel else 0.0)
+
+
+## Switches between the lacquer look and the pixel look, in place.
+func set_pixel_look(on: bool) -> void:
+	pixel_default = on
+	Koma.pixel = on
+	_apply_wood_look()
+	for p in pieces:
+		p.restyle()
+	for c in 2:
+		for p in hands[c]:
+			if not pieces.has(p):
+				p.restyle()
 
 
 func _build_squares() -> void:
@@ -894,6 +926,9 @@ func _build_menu() -> void:
 		fx.reduced = v
 		reduced_default = v
 		reduced_effects_changed.emit(v))
+	add_toggle.call("Visual pixel (teste)", Koma.pixel, func(v: bool) -> void:
+		set_pixel_look(v)
+		pixel_look_changed.emit(v))
 	add_slider.call("Tremor no impacto", fx.impact_shake, 0.0, 1.0, func(v: float) -> void: fx.impact_shake = v)
 	add_slider.call("Pausa no impacto (s)", fx.hitstop, 0.0, 0.15, func(v: float) -> void: fx.hitstop = v)
 	add_slider.call("Poeira", fx.impact_dust, 0.0, 2.0, func(v: float) -> void: fx.impact_dust = v)
