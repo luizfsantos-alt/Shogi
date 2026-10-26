@@ -15,6 +15,8 @@ export interface GameSettings {
   level: number;
   /** Handicap given by Gote (the computer, against a person); "none" for an even game. */
   handicap?: string;
+  /** The game is a lesson of the course (its id): the coach comments on it. */
+  coach?: string;
 }
 
 /** Everything needed to restore a game (saved to localStorage). */

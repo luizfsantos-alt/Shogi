@@ -73,10 +73,10 @@ const SHOGI: VariantDefinition = {
   pawnDropMateIllegal: true,
   maxPieceCounts: { K: 2, R: 2, B: 2, G: 4, S: 4, N: 4, L: 4, P: 18 },
   handicaps: [
-    { id: "lance", label: "Lança (kyō-ochi)", sfen: "lnsgkgsn1/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1" },
-    { id: "bishop", label: "Bispo (kaku-ochi)", sfen: "lnsgkgsnl/1r7/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1" },
-    { id: "rook", label: "Torre (hisha-ochi)", sfen: "lnsgkgsnl/7b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1" },
-    { id: "two", label: "Torre e Bispo (nimai-ochi)", sfen: "lnsgkgsnl/9/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1" },
+    { id: "lance", label: "Lança (kyō-ochi 香落ち)", sfen: "lnsgkgsn1/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1" },
+    { id: "bishop", label: "Bispo (kaku-ochi 角落ち)", sfen: "lnsgkgsnl/1r7/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1" },
+    { id: "rook", label: "Torre (hisha-ochi 飛車落ち)", sfen: "lnsgkgsnl/7b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1" },
+    { id: "two", label: "Torre e Bispo (nimai-ochi 二枚落ち)", sfen: "lnsgkgsnl/9/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1" },
   ],
   impasse: {
     blackPoints: 28,

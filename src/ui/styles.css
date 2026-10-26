@@ -92,8 +92,9 @@
   --warning-bg: #2a0c08;
   --info-bg: #1a1411;
 
-  --display: "Archivo", "Arial Narrow", system-ui, sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  /* Kanji in any text fall back to the bundled brush font. */
+  --display: "Archivo", "Koma Kanji", "Arial Narrow", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", "Koma Kanji", ui-monospace, Menlo, Consolas, monospace;
   /* Chamfered corners for buttons and controls. */
   --chamfer: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
   color-scheme: dark;
@@ -1621,4 +1622,469 @@ a {
 
 .topbar-actions button[hidden] {
   display: none;
+}
+
+/* ------------------------------------------------------------ Japanese terms */
+
+/* Kanji and kana inside text (terms of the course, side names): the brush font. */
+.jp {
+  font-family: "Koma Kanji", "Hiragino Sans", "Yu Gothic", "Noto Sans CJK JP", sans-serif;
+  font-weight: 400;
+  font-stretch: normal;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.with-term {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.term {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: none;
+  color: var(--gold);
+}
+
+.term .jp {
+  font-size: 1.15rem;
+  color: var(--text);
+}
+
+/* ------------------------------------------------------------ screens */
+
+#app > .update-banner {
+  max-width: calc(1200px - 2 * var(--pad, 12px));
+  margin: 10px auto 0;
+}
+
+/* ------------------------------------------------------------ start screen */
+
+.home {
+  min-height: calc(100dvh - 40px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 28px;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 24px 0;
+}
+
+.home-hero {
+  text-align: center;
+}
+
+.home-mark {
+  display: block;
+  font-size: clamp(4.5rem, 22vw, 7.5rem);
+  line-height: 1;
+  color: var(--blood);
+  text-shadow: 0 0 40px rgba(212, 42, 28, 0.5);
+}
+
+.home-hero h1 {
+  margin: 6px 0 4px;
+  font-family: var(--display);
+  font-weight: 900;
+  font-stretch: 62%;
+  font-size: 3rem;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.home-hero p {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.home-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.home-choice {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 88px;
+  padding: 14px 18px;
+  text-align: left;
+  text-transform: none;
+  letter-spacing: normal;
+  font-stretch: normal;
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+}
+
+.home-kanji {
+  flex: 0 0 3.6rem;
+  text-align: center;
+  font-size: 2.1rem;
+  line-height: 1;
+  color: var(--gold);
+}
+
+.home-choice.primary .home-kanji {
+  color: var(--accent-text);
+}
+
+.home-choice-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.home-choice strong {
+  font-family: var(--display);
+  font-weight: 900;
+  font-stretch: 62%;
+  font-size: 1.7rem;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.home-choice small {
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.home-choice.primary small {
+  color: #f1d6cf;
+}
+
+.home-extra {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.home-extra button[hidden] {
+  display: none;
+}
+
+/* ------------------------------------------------------------ course map */
+
+.course {
+  display: grid;
+  gap: 18px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.course-intro,
+.track {
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow:
+    inset 0 0 0 3px var(--surface),
+    inset 0 0 0 4px var(--frame);
+}
+
+.course-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.course-intro h2,
+.track-head h2 {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 900;
+  font-stretch: 62%;
+  font-size: 1.8rem;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.course-intro p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.course-done {
+  color: var(--gold);
+}
+
+.track-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.track-head h2 {
+  flex: 1 1 auto;
+}
+
+.track-head > small {
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.track-letter {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  background: var(--accent-deep);
+  border: 1px solid var(--accent);
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: 1.3rem;
+}
+
+.track > .muted {
+  margin: 8px 0 12px;
+}
+
+.lesson-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 8px;
+}
+
+.lesson-item {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 4px 10px;
+  padding: 12px 14px;
+  text-align: left;
+  text-transform: none;
+  letter-spacing: normal;
+  font-stretch: normal;
+  font-weight: 500;
+}
+
+.lesson-title {
+  font-weight: 800;
+  font-stretch: 75%;
+  font-size: 1.1rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.lesson-item .term {
+  grid-column: 1 / 3;
+}
+
+.lesson-item small {
+  grid-column: 1 / 3;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.lesson-stars {
+  grid-row: 1;
+  grid-column: 2;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.lesson-item.done .lesson-stars {
+  color: var(--gold);
+}
+
+.lesson-item.recommended {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+/* ------------------------------------------------------------ lesson */
+
+.lesson-panel {
+  gap: 10px;
+}
+
+.lesson-head h2 {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 900;
+  font-stretch: 62%;
+  font-size: 1.7rem;
+  line-height: 1.05;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.step-dots {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+}
+
+.step-dot {
+  width: 30px;
+  min-height: 30px;
+  height: 30px;
+  padding: 0;
+  clip-path: none;
+  background: var(--surface-2);
+}
+
+.step-dot.exercise {
+  transform: rotate(45deg) scale(0.78);
+}
+
+.step-dot.passed {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+.step-dot.current {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 10px rgba(255, 75, 55, 0.6);
+}
+
+.step-title {
+  margin: 4px 0 0;
+  font-family: var(--display);
+  font-weight: 800;
+  font-stretch: 75%;
+  font-size: 1.2rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.step-text {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.5;
+}
+
+.step-text .jp,
+.lesson-feedback .jp,
+.notice .jp,
+.coach-tip .jp {
+  font-size: 1.08em;
+  color: #ffe9c9;
+}
+
+.lesson-feedback {
+  padding: 12px 14px;
+  line-height: 1.45;
+  background: var(--info-bg);
+  border: 1px solid var(--border);
+}
+
+.lesson-feedback.success {
+  border-color: var(--gold);
+  background: #241a0c;
+  color: #ffe7b0;
+}
+
+.lesson-feedback.error {
+  border-color: var(--accent);
+  background: var(--warning-bg);
+  color: #ffb3a6;
+}
+
+.lesson-done {
+  text-align: center;
+}
+
+.overlay-card .lesson-done-stars {
+  margin: 0 0 6px;
+  font-size: 2.6rem;
+  letter-spacing: 0.15em;
+  color: var(--gold);
+  text-shadow: 0 0 18px rgba(214, 166, 58, 0.5);
+}
+
+.lesson-done .dialog-actions {
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Lesson goals and the squares the text talks about. */
+.sq .star {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--sq) * 0.55);
+  color: var(--gold);
+  text-shadow: 0 0 12px rgba(214, 166, 58, 0.8);
+  pointer-events: none;
+}
+
+.sq.focus {
+  box-shadow: inset 0 0 0 2px var(--gold);
+  background: rgba(214, 166, 58, 0.14);
+}
+
+/* ------------------------------------------------------------ guided game */
+
+.guided-label {
+  margin-bottom: 6px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.coach-tip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #241a0c;
+  border: 1px solid var(--gold);
+  line-height: 1.45;
+}
+
+.coach-tip strong {
+  font-family: var(--display);
+  font-weight: 900;
+  font-stretch: 70%;
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.coach {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }

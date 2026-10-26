@@ -57,7 +57,7 @@ const PROMOTED: Record<string, PieceInfo> = {
   S: { labelPt: "Prata+", labelEn: "+Silver", kanji: "全", namePt: "Prata promovida", nameEn: "Promoted silver", romaji: "Narigin", kanjiName: "成銀", movePt: "Passa a andar como o Ouro.", movement: GOLD },
   N: { labelPt: "Cavalo+", labelEn: "+Knight", kanji: "圭", namePt: "Cavalo promovido", nameEn: "Promoted knight", romaji: "Narikei", kanjiName: "成桂", movePt: "Passa a andar como o Ouro.", movement: GOLD },
   L: { labelPt: "Lança+", labelEn: "+Lance", kanji: "杏", namePt: "Lança promovida", nameEn: "Promoted lance", romaji: "Narikyō", kanjiName: "成香", movePt: "Passa a andar como o Ouro.", movement: GOLD },
-  P: { labelPt: "Tokin", labelEn: "Tokin", kanji: "と", namePt: "Peão promovido (Tokin)", nameEn: "Tokin", romaji: "Tokin", kanjiName: "と金", movePt: "Passa a andar como o Ouro.", movement: GOLD },
+  P: { labelPt: "Tokin", labelEn: "Tokin", kanji: "と", namePt: "Peão promovido (Tokin と金)", nameEn: "Tokin", romaji: "Tokin", kanjiName: "と金", movePt: "Passa a andar como o Ouro.", movement: GOLD },
 };
 
 export function pieceInfo(piece: Pick<Piece, "type" | "promoted">): PieceInfo {
