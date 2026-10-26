@@ -1,0 +1,11 @@
+[configuration]
+
+entry_symbol = "shogi_engine_library_init"
+compatibility_minimum = "4.5"
+reloadable = false
+
+[libraries]
+
+linux.x86_64 = "res://bin/libshogi_engine.linux.template_release.x86_64.so"
+android.arm64 = "res://bin/libshogi_engine.android.template_release.arm64.so"
+android.x86_64 = "res://bin/libshogi_engine.android.template_release.x86_64.so"

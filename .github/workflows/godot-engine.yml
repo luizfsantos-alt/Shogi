@@ -1,0 +1,142 @@
+# Builds the Fairy-Stockfish GDExtension (godot/engine), runs its headless tests with Godot,
+# exports a debug APK with the demo scene and runs it on an x86_64 emulator.
+name: Godot engine
+
+on:
+  push:
+    paths:
+      - "godot/**"
+      - ".github/workflows/godot-engine.yml"
+  workflow_dispatch:
+
+env:
+  GODOT_VERSION: 4.7.2
+  GODOT_URL: https://github.com/godotengine/godot/releases/download/4.7.2-stable
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: nttld/setup-ndk@v1
+        id: ndk
+        with:
+          ndk-version: r28c
+          add-to-path: false
+
+      - name: Build libraries (linux x86_64, android arm64 + x86_64)
+        env:
+          ANDROID_NDK_ROOT: ${{ steps.ndk.outputs.ndk-path }}
+        run: godot/engine/build.sh all
+
+      - name: Check 16 KB ELF alignment
+        run: |
+          for f in godot/bin/*android*.so; do
+            echo "$f"; readelf -lW "$f" | grep LOAD
+            if readelf -lW "$f" | awk '/LOAD/ && $NF != "0x4000" { bad = 1 } END { exit !bad }'; then
+              echo "::error::$f is not 16 KB aligned"; exit 1
+            fi
+          done
+
+      - name: Install Godot ${{ env.GODOT_VERSION }}
+        run: |
+          curl -fsSL -o /tmp/godot.zip "$GODOT_URL/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q /tmp/godot.zip -d /tmp/godot
+          echo "GODOT=/tmp/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64" >> "$GITHUB_ENV"
+
+      - name: Headless tests
+        run: |
+          # The editor may crash on exit the first time it registers a new GDExtension (the
+          # import itself completes); a second pass must succeed.
+          "$GODOT" --headless --path godot --import || "$GODOT" --headless --path godot --import
+          "$GODOT" --headless --path godot -s res://engine/test/test_engine.gd
+
+      - uses: actions/cache@v4
+        id: templates
+        with:
+          path: ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
+          key: godot-android-templates-${{ env.GODOT_VERSION }}
+
+      - name: Install Android export templates
+        if: steps.templates.outputs.cache-hit != 'true'
+        run: |
+          curl -fsSL -o /tmp/templates.tpz "$GODOT_URL/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          dir=~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          mkdir -p "$dir"
+          unzip -q -j /tmp/templates.tpz 'templates/android_*' 'templates/version.txt' -d "$dir"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Export debug APK (demo scene)
+        run: |
+          keytool -genkeypair -noprompt -keystore /tmp/debug.keystore -storepass android -keypass android \
+            -alias androiddebugkey -keyalg RSA -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          export GODOT_ANDROID_KEYSTORE_DEBUG_PATH=/tmp/debug.keystore
+          export GODOT_ANDROID_KEYSTORE_DEBUG_USER=androiddebugkey
+          export GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD=android
+          cp godot/engine/export/export_presets.cfg godot/
+          # The spike has no main scene of its own yet: run the engine demo.
+          printf '\n[application]\nrun/main_scene="res://engine/test/engine_demo.tscn"\n' >> godot/project.godot
+          "$GODOT" --headless --path godot --import || true
+          "$GODOT" --headless --path godot --export-debug Android "$PWD/shogi-engine-spike-debug.apk"
+          ls -l shogi-engine-spike-debug.apk godot/bin/*.so
+          unzip -l shogi-engine-spike-debug.apk | grep -E "\.so$"
+          zipalign=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)zipalign
+          "$zipalign" -c -P 16 -v 4 shogi-engine-spike-debug.apk | grep -E "\.so|Verification" || true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shogi-engine-spike
+          path: |
+            shogi-engine-spike-debug.apk
+            godot/bin/*.so
+            godot/bin/*.gdextension
+
+  emulator:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: shogi-engine-spike
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Write the emulator script
+        run: |
+          cat > run-on-emulator.sh <<'SCRIPT'
+          set -u
+          adb install -r shogi-engine-spike-debug.apk
+          adb logcat -c
+          adb shell monkey -p io.github.luizfsantosalt.shogi -c android.intent.category.LAUNCHER 1
+          for i in $(seq 1 90); do adb logcat -d | grep -q "SELFTEST done" && break; sleep 2; done
+          adb logcat -d | grep -E "SELFTEST|godot|GDExtension|FATAL|AndroidRuntime" | tail -150 > emulator-log.txt
+          cat emulator-log.txt
+          adb exec-out screencap -p > emulator-screenshot.png
+          grep -q "SELFTEST done" emulator-log.txt
+          SCRIPT
+
+      - name: Run the APK on an x86_64 emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: bash run-on-emulator.sh
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: emulator-run
+          path: |
+            emulator-log.txt
+            emulator-screenshot.png
