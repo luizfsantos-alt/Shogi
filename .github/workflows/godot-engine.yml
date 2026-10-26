@@ -87,12 +87,17 @@ jobs:
           unzip -l shogi-engine-spike-debug.apk | grep -E "\.so$"
           zipalign=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)zipalign
           "$zipalign" -c -P 16 -v 4 shogi-engine-spike-debug.apk | grep -E "\.so|Verification" || true
+          # The emulator has no GPU and SwiftShader's Vulkan cannot present Godot's frames:
+          # a second APK with the Compatibility (OpenGL) renderer is used there.
+          sed -i 's/^\[rendering\]$/[rendering]\n\nrenderer\/rendering_method.mobile="gl_compatibility"/' godot/project.godot
+          "$GODOT" --headless --path godot --export-debug Android "$PWD/shogi-engine-spike-emulator.apk"
 
       - uses: actions/upload-artifact@v4
         with:
           name: shogi-engine-spike
           path: |
             shogi-engine-spike-debug.apk
+            shogi-engine-spike-emulator.apk
             godot/bin/*.so
             godot/bin/*.gdextension
 
@@ -114,11 +119,11 @@ jobs:
         run: |
           cat > run-on-emulator.sh <<'SCRIPT'
           set -u
-          adb install -r shogi-engine-spike-debug.apk
+          adb install -r shogi-engine-spike-emulator.apk
           adb logcat -c
           adb shell monkey -p io.github.luizfsantosalt.shogi -c android.intent.category.LAUNCHER 1
           for i in $(seq 1 90); do adb logcat -d | grep -q "SELFTEST done" && break; sleep 2; done
-          adb logcat -d | grep -E "SELFTEST|godot|GDExtension|FATAL|AndroidRuntime" | tail -150 > emulator-log.txt
+          adb logcat -d | grep -E "SELFTEST|godot|GDExtension|FATAL|AndroidRuntime|DEBUG" | tail -150 > emulator-log.txt
           cat emulator-log.txt
           adb exec-out screencap -p > emulator-screenshot.png
           grep -q "SELFTEST done" emulator-log.txt

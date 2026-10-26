@@ -36,21 +36,24 @@ func _ready() -> void:
 ## Measures the engine on this device; results go to the screen and to the log (logcat "godot").
 func _self_test() -> void:
 	var probe := ShogiEngine.new()
-	var lines := [ShogiEngine.engine_info(), "%s %s, %d núcleos" % [OS.get_name(), Engine.get_architecture_name(), OS.get_processor_count()]]
+	var lines := []
+	var log_line := func(line: String) -> void:
+		lines.append(line)
+		print("SELFTEST ", line)  # one by one, so the log shows how far it got
+	log_line.call(ShogiEngine.engine_info())
+	log_line.call("%s %s, %d núcleos" % [OS.get_name(), Engine.get_architecture_name(), OS.get_processor_count()])
 	var t := Time.get_ticks_usec()
 	var nodes := probe.perft(3)
-	lines.append("perft 3 = %d em %.1f ms" % [nodes, (Time.get_ticks_usec() - t) / 1000.0])
+	log_line.call("perft 3 = %d em %.1f ms" % [nodes, (Time.get_ticks_usec() - t) / 1000.0])
 	t = Time.get_ticks_usec()
 	nodes = probe.perft(4)
-	lines.append("perft 4 = %d em %.1f ms" % [nodes, (Time.get_ticks_usec() - t) / 1000.0])
+	log_line.call("perft 4 = %d em %.1f ms" % [nodes, (Time.get_ticks_usec() - t) / 1000.0])
 	for level in [[3, 0, 10], [0, 1000, 20]]:
 		t = Time.get_ticks_usec()
 		if not probe.start_search(level[0], level[1], level[2]):
 			break
 		var move: String = await probe.best_move
-		lines.append("busca depth=%d movetime=%d skill=%d -> %s em %.0f ms" % [level[0], level[1], level[2], move, (Time.get_ticks_usec() - t) / 1000.0])
-	for line in lines:
-		print("SELFTEST ", line)
+		log_line.call("busca depth=%d movetime=%d skill=%d -> %s em %.0f ms" % [level[0], level[1], level[2], move, (Time.get_ticks_usec() - t) / 1000.0])
 	print("SELFTEST done")
 	self_test_text = "\n".join(lines)
 	_refresh("Autoteste concluído.")
