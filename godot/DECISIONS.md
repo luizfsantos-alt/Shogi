@@ -55,6 +55,11 @@ Liga em Ajustes › "Visual pixel (teste)" (ou `look=pixel` na linha de comando)
   ouro no Gote, mais a borda dourada.
 - Tabuleiro e komadai em **pedra** pixelada (quatro cinzas com dither, rachaduras, a grade
   entalhada com o lábio iluminado).
+- Fundo: **lajes de pedra escura** em texels maiores, e a vinheta em degraus com dither.
+- Efeitos em pixel: poeira de pedra em blocos que se desfaz em dither, anel de impacto em
+  5 quadros, faíscas como cruzinhas em três tons de ouro, casas marcadas com borda de um texel
+  e preenchimento quadriculado, setas pixeladas, tremor em passos inteiros, sem bloom.
+  Um uniform global (`pixel_look`, em `project.godot`) liga tudo de uma vez.
 
 ## Efeitos ("gordos", referência Hearthstone)
 

@@ -14,6 +14,8 @@ uniform vec3 outline_color : source_color = vec3(0.12, 0.05, 0.02);
 uniform float shaft = 0.16;     // half width of the shaft, cm
 uniform float head_len = 0.6;   // cm
 uniform float outline = 0.09;   // cm
+global uniform float pixel_look;
+uniform float texel = 0.105;    // cm, the pieces' texel: arrows drawn in the same pixels
 
 // Rough signed distance to a triangular head whose tip is at `tip`.
 float head(vec2 p, float tip, float half_w) {
@@ -26,6 +28,10 @@ void fragment() {
 	// The quad's UV.y runs from the tip (0) back to the start (1).
 	float len = length_cm * grow;
 	vec2 p = vec2((UV.x - 0.5) * width_cm, (1.0 - UV.y) * length_cm);
+	bool pixel = pixel_look > 0.5;
+	if (pixel) {
+		p = (floor(p / texel) + 0.5) * texel;
+	}
 	float half_w = width_cm * 0.5 - outline;
 	float shaft_end = heads > 0.5 ? len - head_len * 0.6 : len;
 	float d = max(max(abs(p.x) - shaft, -p.y), p.y - shaft_end);
@@ -35,8 +41,9 @@ void fragment() {
 	if (heads > 1.5) {
 		d = min(d, head(p, len - head_len * 0.75, half_w));
 	}
-	float fill = 1.0 - smoothstep(-0.02, 0.02, d);
-	float edge = 1.0 - smoothstep(outline - 0.02, outline + 0.02, d);
+	float soft = pixel ? 0.0 : 0.02;
+	float fill = 1.0 - smoothstep(-soft, soft + 0.0001, d);
+	float edge = 1.0 - smoothstep(outline - soft, outline + soft + 0.0001, d);
 	vec3 col = mix(outline_color, tint.rgb, fill);
 	ALBEDO = col;
 	ALPHA = edge * tint.a;

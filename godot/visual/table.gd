@@ -70,6 +70,9 @@ static var pixel_default := false
 ## as chunkier pixels than the finer kanji.
 const PIXEL_SIZE := 0.21
 var _wood: Array[ShaderMaterial] = []
+var _env: Environment
+var _vignette: TextureRect
+var _vignette_px: ColorRect
 
 
 func _ready() -> void:
@@ -77,6 +80,7 @@ func _ready() -> void:
 		pixel_default = true
 	Koma.pixel = pixel_default
 	_build_world()
+	_apply_world_look()
 	fx = TableFx.new()
 	fx.reduced = reduced_default
 	add_child(fx)
@@ -115,6 +119,7 @@ func _build_world() -> void:
 	env.glow_intensity = 0.8
 	env.glow_bloom = 0.05
 	env.glow_hdr_threshold = 1.0
+	_env = env
 	var we := WorldEnvironment.new()
 	we.environment = env
 	add_child(we)
@@ -140,11 +145,10 @@ func _build_world() -> void:
 	var plane := PlaneMesh.new()
 	plane.size = Vector2(400, 300)
 	table.mesh = plane
-	var tm := StandardMaterial3D.new()
-	tm.albedo_color = Color(0.16, 0.09, 0.055)
-	tm.roughness = 0.55
-	tm.clearcoat_enabled = true
-	tm.clearcoat = 0.4
+	# Dark varnished wood, or flagstones in the pixel look (ground.gdshader).
+	var tm := ShaderMaterial.new()
+	tm.shader = preload("res://visual/ground.gdshader")
+	tm.set_shader_parameter("noise_tex", Koma.shared_noise())
 	table.material_override = tm
 	table.position.y = -BOARD_SIZE.y
 	add_child(table)
@@ -180,11 +184,21 @@ func _build_world() -> void:
 	gt.fill_from = Vector2(0.5, 0.5)
 	gt.fill_to = Vector2(1.05, 0.5)
 	vig.texture = gt
+	_vignette = vig
+	# The pixel look's vignette: the same darkening in dithered steps.
+	var vpx := ColorRect.new()
+	vpx.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vpx.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var vm := ShaderMaterial.new()
+	vm.shader = preload("res://visual/vignette_pixel.gdshader")
+	vpx.material = vm
+	_vignette_px = vpx
 	# Drawn on top of the 3D view.
 	var top := CanvasLayer.new()
 	top.layer = 1
 	add_child(top)
 	top.add_child(vig)
+	top.add_child(vpx)
 
 
 func _build_board() -> void:
@@ -228,10 +242,20 @@ func _apply_wood_look() -> void:
 		m.set_shader_parameter("pixel_size", PIXEL_SIZE if Koma.pixel else 0.0)
 
 
+## The parts of the look shared by every material (a global shader uniform) and the scene.
+func _apply_world_look() -> void:
+	RenderingServer.global_shader_parameter_set("pixel_look", 1.0 if Koma.pixel else 0.0)
+	# Bloom would blur the pixel sparks into soft halos.
+	_env.glow_enabled = not Koma.pixel
+	_vignette.visible = not Koma.pixel
+	_vignette_px.visible = Koma.pixel
+
+
 ## Switches between the lacquer look and the pixel look, in place.
 func set_pixel_look(on: bool) -> void:
 	pixel_default = on
 	Koma.pixel = on
+	_apply_world_look()
 	_apply_wood_look()
 	for p in pieces:
 		p.restyle()
@@ -259,6 +283,7 @@ func _build_squares() -> void:
 	var m := ShaderMaterial.new()
 	m.shader = preload("res://visual/fx.gdshader")
 	m.set_shader_parameter("mode", 1)
+	m.set_shader_parameter("quad_cm", CELL * 0.96)
 	_squares.material_override = m
 	_squares.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_squares)
