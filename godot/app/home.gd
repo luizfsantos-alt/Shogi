@@ -169,9 +169,9 @@ func _greet() -> void:
 		return
 	var next := Course.recommended_lesson(Course.load_progress())
 	if not next.is_empty() and Course.completed_count(Course.load_progress()).done > 0:
-		mentor.say("Bem-vindo de volta! A próxima lição é \"%s\"." % next.title, 6.0)
+		mentor.say("Bem-vindo de volta! A próxima lição é \"%s\"." % next.title, 6.0, "point")
 	else:
-		mentor.say("Bem-vindo de volta! Vamos jogar?", 5.0)
+		mentor.say("Bem-vindo de volta! Vamos jogar?", 5.0, "laugh")
 
 
 func _show_settings() -> void:

@@ -9,6 +9,7 @@ run/main_scene="res://app/home.tscn"
 config/quit_on_go_back=false
 config/version="0.3.0"
 config/features=PackedStringArray("4.7", "Mobile")
+config/icon="res://app/icon/icon.png"
 
 [autoload]
 

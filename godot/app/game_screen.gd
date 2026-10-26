@@ -17,6 +17,9 @@ var table: Table
 var mentor: Mentor
 
 var _status: Label
+var _status_layer: CanvasLayer
+var _rival: Control                  ## the computer's face and name, top right
+var _rival_level := 0
 var _animating := false              ## the table is showing a move; the next waits for it
 var _queue: Array = []               ## computer moves to animate, in order
 var _coach_seen := {}                ## coach tips already shown in this guided game
@@ -33,14 +36,14 @@ func _ready() -> void:
 	add_child(session)
 	_build_status()
 	if not session.engine_available():
-		mentor.say("O motor de regras não carregou neste aparelho. Avise o desenvolvedor.", 30.0)
+		mentor.say("O motor de regras não carregou neste aparelho. Avise o desenvolvedor.", 30.0, "startled")
 		return
 	session.move_played.connect(_on_move_played)
 	session.position_reset.connect(_on_position_reset)
 	session.game_over.connect(_on_game_over)
 	session.ai_thinking.connect(func(on: bool) -> void: _set_status("O computador está pensando…" if on else ""))
 	session.hint_ready.connect(_on_hint)
-	session.engine_failed.connect(func(msg: String) -> void: mentor.say("O computador parou de jogar: " + msg, 10.0))
+	session.engine_failed.connect(func(msg: String) -> void: mentor.say("O computador parou de jogar: " + msg, 10.0, "startled"))
 	table.move_chosen.connect(_on_player_move)
 	table.illegal_attempt.connect(_on_illegal)
 	table.reduced_effects_changed.connect(func(on: bool) -> void: App.set_setting("reduced_effects", on))
@@ -62,7 +65,7 @@ func _start_requested(req: Dictionary) -> void:
 			start(int(req.level), req.human_color)
 		"continue":
 			if not session.load_game():
-				mentor.say("Não consegui abrir a partida salva. Comece uma nova.")
+				mentor.say("Não consegui abrir a partida salva. Comece uma nova.", 0.0, "startled")
 				_show_new_game()
 		"guided":
 			start_guided(req.lesson)
@@ -83,7 +86,7 @@ func start(level: int, human: String) -> void:
 	var beginner := level <= BEGINNER_LEVELS
 	mentor.say("Vamos lá! Você joga com as peças %s. %s" % [
 		"peroladas e começa" if human == "black" else "vermelhas; o computador começa",
-		"Toque numa peça para ver para onde ela pode ir." if beginner else "Boa partida."])
+		"Toque numa peça para ver para onde ela pode ir." if beginner else "Boa partida."], 0.0, "explain")
 
 
 ## A game lesson of the course: Sente against the weakest level, with the coach.
@@ -101,6 +104,7 @@ func _guided() -> String:
 ## Rebuilds the table from the session (new game, undo, continuing a saved game).
 func _on_position_reset() -> void:
 	_queue.clear()
+	_show_rival(int(session.settings.level))
 	var human := _colour(session.settings.human_color)
 	table.set_view_side(human)
 	table.set_moves_button(int(session.settings.level) <= BEGINNER_LEVELS)
@@ -117,7 +121,7 @@ func _refresh_turn() -> void:
 		table.set_legal_moves(session.rules.legal_moves(), side, true)
 		var help := session.check_help_text()
 		if help != "":
-			mentor.say(help)
+			mentor.say(help, 0.0, "startled")
 		elif _guided() != "":
 			_coach_tip()
 	else:
@@ -134,7 +138,7 @@ func _coach_tip() -> void:
 	for sq: Vector2i in tip.squares:
 		marks[sq] = Table.GOLD
 	table.set_marks(marks)
-	mentor.note(tip.text, tip.title.to_upper())
+	mentor.note(tip.text, tip.title.to_upper(), "point")
 
 
 func _on_player_move(usi: String) -> void:
@@ -183,17 +187,20 @@ func _on_game_over(result: Dictionary) -> void:
 		var loser := 1 if winner == "black" else 0
 		await table.checkmate_effect(table.king_square(loser))
 	_set_status(text)
+	if winner == human and _rival != null:
+		Rivals.set_defeated(_rival.get_child(0), _rival_level, true)
 	session.save_game()
 	var lesson := _guided()
 	if lesson == "":
-		mentor.say(text, 8.0)
+		mentor.say(text, 8.0, "laugh" if winner == human else ("stern" if winner != "draw" else ""))
 		return
 	# The guided game is a lesson: 3 stars for a win, 2 for a draw, 1 for playing it to the end.
 	var stars := 3 if winner == human else (2 if winner == "draw" else 1)
 	Course.save_result(lesson, stars)
 	var following := Course.next_lesson(lesson)
 	mentor.speak([text, "Partida guiada concluída. Agora é com você: escolha um nível em Nova partida, ou siga no curso%s." % (
-		(": a próxima lição é \"%s\"" % following.title) if not following.is_empty() else "")], "FIM DA PARTIDA")
+		(": a próxima lição é \"%s\"" % following.title) if not following.is_empty() else "")], "FIM DA PARTIDA",
+		"laugh" if winner == human else "explain")
 	mentor.dialog_finished.connect(func() -> void:
 		if not following.is_empty():
 			App.open_lesson(following.id)
@@ -212,7 +219,7 @@ func _on_illegal(from: Vector2i, kind: String, to: Vector2i) -> void:
 		move = GameRules.board_move(from, to)
 	var text := Explain.explain_text(session.rules, move)
 	if text != "":
-		mentor.say(text)
+		mentor.say(text, 0.0, "stern")
 
 
 func _hint() -> void:
@@ -229,7 +236,7 @@ func _on_hint(hint: Dictionary) -> void:
 	table.flash_square(hint.to, Table.GOLD, 3.0)
 	var facts: PackedStringArray = hint.get("facts", PackedStringArray())
 	var why := (" Assim você " + ", ".join(facts) + ".") if not facts.is_empty() else ""
-	mentor.say("Que tal %s?%s" % [_move_in_words(hint.move), why])
+	mentor.say("Que tal %s?%s" % [_move_in_words(hint.move), why], 0.0, "point")
 
 
 ## "mover o General de Ouro de 6i para 6h", "colocar um Peão da mão em 5e": plain words for
@@ -260,7 +267,7 @@ func _declare_impasse() -> void:
 		missing.append("você tem %d pontos de %d" % [i.points, i.required_points])
 	if i.in_check:
 		missing.append("não pode estar em xeque")
-	mentor.say("Ainda não dá para declarar impasse: " + "; ".join(missing) + ".")
+	mentor.say("Ainda não dá para declarar impasse: " + "; ".join(missing) + ".", 0.0, "stern")
 
 
 # --- New game ------------------------------------------------------------------------------
@@ -275,6 +282,7 @@ func _build_status() -> void:
 	var layer := CanvasLayer.new()
 	layer.layer = 2
 	add_child(layer)
+	_status_layer = layer
 	_status = Label.new()
 	_status.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	_status.grow_horizontal = Control.GROW_DIRECTION_BOTH
@@ -289,6 +297,35 @@ func _build_status() -> void:
 
 func _set_status(text: String) -> void:
 	_status.text = text
+
+
+## The computer's rival in the top right corner: its face (two screen pixels per art pixel) and
+## name; rebuilt when the level changes.
+func _show_rival(level: int) -> void:
+	if _rival != null and _rival_level == level:
+		Rivals.set_defeated(_rival.get_child(0), level, false)
+		return
+	if _rival != null:
+		_rival.queue_free()
+	_rival_level = level
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var face := Rivals.portrait(level, 280)
+	face.size_flags_horizontal = Control.SIZE_SHRINK_END
+	box.add_child(face)
+	var rival := Rivals.of_level(level)
+	var name_label := UiTheme.label("%s %s" % [rival.name, rival.kanji], "", 32)
+	name_label.add_theme_font_override("font", UiTheme.display())
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	box.add_child(name_label)
+	var level_label := UiTheme.label("NÍVEL %d · %s" % [level, Levels.get_level(level).name.to_upper()], "Caption", 18)
+	level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	box.add_child(level_label)
+	_status_layer.add_child(box)
+	box.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 40)
+	box.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_rival = box
 
 
 # --- Screenshots for development -----------------------------------------------------------

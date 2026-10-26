@@ -61,6 +61,15 @@ Liga em Ajustes › "Visual pixel (teste)" (ou `look=pixel` na linha de comando)
   e preenchimento quadriculado, setas pixeladas, tremor em passos inteiros, sem bloom.
   Um uniform global (`pixel_look`, em `project.godot`) liga tudo de uma vez.
 
+### Personagens (out/2026)
+
+- O tengu ganha **expressões**: seis poses que reagem ao jogo (explica, aponta, se assusta no
+  xeque, ri, fica bravo no lance proibido). A respiração continua.
+- **Rivais**, um por nível, do mundo da lenda de Yoshitsune: Kappa, Ashigaru, Kitsune, Benkei
+  (o duelo da ponte Gojō) e Kiyomori. Rosto calmo e rosto derrotado.
+- **O jogador não tem rosto.**
+- Emblemas das trilhas do curso e o ícone do app, na mesma pixel art.
+
 ## Efeitos ("gordos", referência Hearthstone)
 
 Pegar (sobe, sombra se afasta, inclina), jogar (peso, pausa no impacto, poeira, leve tremor),
@@ -73,8 +82,8 @@ força fáceis de ajustar; opção "efeitos reduzidos" para celulares fracos.
 - As mensagens de aprendizado (lance inválido explicado, ajuda no xeque, treinador) são ditas
   por um **personagem mentor**, que aparece num canto só quando fala.
 - O mentor é um **tengu (天狗)**, o mestre da montanha que, na lenda, ensinou Minamoto no
-  Yoshitsune. Arte em pixel art do dono do projeto (gerador de imagens), **sem expressões** por
-  enquanto, com uma **respiração sutil só no corpo**.
+  Yoshitsune. Arte em pixel art do dono do projeto (gerador de imagens), com uma
+  **respiração sutil só no corpo**; desde out/2026, seis poses (ver "Personagens").
 - **Dois tamanhos**: o tengu **inteiro e grande** nos diálogos que precisam ser lidos até o fim
   (avança tocando no balão); só a **cabeça**, num medalhão, nas falas enquanto o jogador pode
   mexer as peças.

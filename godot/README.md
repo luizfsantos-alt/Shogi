@@ -25,17 +25,31 @@ O visual segue o Genpei do PWA (`ui/ui_theme.gd`): fundo queimado, Archivo conde
 IBM Plex Mono, botões chanfrados, vermelho para ação e ouro para valor; os kanji da interface vêm
 da Potta One reduzida aos caracteres usados (`node scripts/make-kanji-font.mjs --godot`).
 
-### O mentor (tengu 天狗)
+### O mentor (tengu 天狗) e os rivais
 
-`app/mentor.gd`, com a arte de `app/mentor/art/tengu.png`. O PNG é recortado do fundo preto de
-`app/mentor/source/tengu.jpg` por `python3 -I godot/app/mentor/tools/cut_background.py`. O tengu
-respira devagar (`mentor/breath.gdshader`): só o corpo se move, e o tapete fica parado. Dois tamanhos:
+`app/mentor.gd` e `app/mentor/mascot.gd`. O tengu é pixel art em seis poses
+(`app/mentor/art/tengu_<pose>.png`, todas na mesma tela, para uma trocar a outra no lugar):
+calmo, explicando (mão erguida), apontando com o leque (objetivo, dica, treinador), assustado
+(xeque), rindo (acerto, vitória) e bravo (lance proibido). Quem fala escolhe a pose:
+`say(text, seconds, pose)`, `note(text, title, pose)`, `speak(pages, title, pose)`. Ele respira
+devagar (`mentor/breath.gdshader`): o corpo sobe um pixel e volta; o tapete fica parado. Dois
+tamanhos:
 
-- **grande** (`speak(pages, title)`): o que precisa ser lido até o fim (boas-vindas, explicações
-  das lições, fim da partida guiada). O tengu inteiro, a tela escurece e cada toque no balão mostra
-  a próxima página. Nas lições, o tabuleiro desliza para a direita enquanto ele fala;
-- **pequeno** (`say(text)`, `note(text, title)`): falas enquanto o jogador mexe as peças (objetivo
-  do exercício, lance errado, dica, treinador), com só a cabeça do tengu num medalhão.
+- **grande** (`speak`): o que precisa ser lido até o fim (boas-vindas, explicações das lições,
+  fim da partida guiada). O tengu inteiro (3 pixels de tela por pixel da arte), a tela escurece e
+  cada toque no balão mostra a próxima página. Nas lições, o tabuleiro desliza para a direita;
+- **pequeno** (`say`, `note`): falas enquanto o jogador mexe as peças, com só a cabeça da pose
+  num medalhão.
+
+Os **rivais** (`app/rivals/rivals.gd`), um por nível: Kappa, Ashigaru, Kitsune, Benkei e Kiyomori.
+O rosto aparece em Nova partida e no canto da partida, e troca pelo rosto derrotado quando você
+vence. Sem a arte (Kitsune, por enquanto), aparece o kanji.
+
+**A arte.** As imagens geradas ficam em `art_source/` (JPEG sobre preto).
+`python3 -I godot/art_source/prepare_art.py` acha a grade de pixels de cada uma (3×3 nos
+retratos), recorta o fundo, reduz a um pixel por bloco, fecha a paleta e grava os PNG em `app/`
+(tengu, rivais, emblemas das trilhas em `app/course_art/`, ícone em `app/icon/`). Tudo é
+desenhado com filtro *nearest*.
 
 ### O curso (`learn/`)
 

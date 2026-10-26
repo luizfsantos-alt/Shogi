@@ -7,8 +7,8 @@ shader_type canvas_item;
 uniform float breath = 0.0;   // 0 out .. 1 in
 uniform float rise = 0.006;
 uniform float widen = 0.006;
-uniform float neck = 0.36;
-uniform float base = 0.86;
+uniform float neck = 0.3;
+uniform float base = 0.8;
 
 void fragment() {
 	float a = rise * breath;

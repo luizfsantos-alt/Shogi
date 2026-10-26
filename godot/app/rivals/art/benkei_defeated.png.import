@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dqe8mucdf565b"
-path="res://.godot/imported/tengu.png-1248fe8972060854297fb9956339cd76.ctex"
+uid="uid://cewj4grlvssdy"
+path="res://.godot/imported/benkei_defeated.png-1c79374aec5a70e0261ac7241f6f298f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://app/mentor/art/tengu.png"
-dest_files=["res://.godot/imported/tengu.png-1248fe8972060854297fb9956339cd76.ctex"]
+source_file="res://app/rivals/art/benkei_defeated.png"
+dest_files=["res://.godot/imported/benkei_defeated.png-1c79374aec5a70e0261ac7241f6f298f.ctex"]
 
 [params]
 
@@ -23,7 +23,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""

@@ -85,7 +85,7 @@ func _show_step() -> void:
 ## The exercise's explanation and goal, in the small balloon (the pieces can move meanwhile).
 func _show_goal() -> void:
 	var step := session.step()
-	mentor.note("\n\n".join(step.text), step.title.to_upper())
+	mentor.note("\n\n".join(step.text), step.title.to_upper(), "point")
 
 
 func _on_changed() -> void:
@@ -114,15 +114,15 @@ func _show_feedback() -> void:
 	_last_feedback = fb.duplicate()
 	match fb.kind:
 		"error":
-			mentor.note(fb.text, "AINDA NÃO")
+			mentor.note(fb.text, "AINDA NÃO", "stern")
 		"success":
 			var text: String = fb.text
 			if _illegal_text != "":
 				text = _illegal_text + "\n\n" + text
-			mentor.note(text + "\n\nToque aqui para seguir.", "MUITO BEM!")
+			mentor.note(text + "\n\nToque aqui para seguir.", "MUITO BEM!", "laugh")
 			table.fx.promotion_burst(table.square_pos(Vector2i(4, 4)) + Vector3(0, 3, 0))
 		_:
-			mentor.note(fb.text, session.step().title.to_upper())
+			mentor.note(fb.text, session.step().title.to_upper(), "explain")
 	_illegal_text = ""
 
 
@@ -162,7 +162,7 @@ func _on_illegal(from: Vector2i, kind: String, to: Vector2i) -> void:
 		return
 	_illegal_text = ""
 	if text != "":
-		mentor.note(text, "LANCE PROIBIDO")
+		mentor.note(text, "LANCE PROIBIDO", "stern")
 
 
 func _on_balloon_tapped() -> void:
