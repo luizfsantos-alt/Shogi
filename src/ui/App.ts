@@ -11,7 +11,7 @@ import { formatUsiRecord, parseUsiRecord, RecordFormatError } from "../core/usiR
 import { IllegalMoveError } from "../core/GameBackend";
 import { element, showDialog } from "./dialogs";
 import { chooseMove, targetsFor, type Selection } from "./interaction";
-import { describePiece, PIECE_STYLES, renderPiece, type PieceStyle } from "./pieceView";
+import { describePiece, renderPiece, type Glint, type PieceLook } from "./pieceView";
 import { pieceCard } from "./pieceCard";
 import { showRules } from "./rules";
 import { playSound } from "./sound";
@@ -41,6 +41,11 @@ export class App {
   /** Piece shown in the learning panel. */
   private infoPiece: Piece | null = null;
   private overlayHidden = false;
+  /** When the current selection was made, so its glint keeps running across redraws. */
+  private selectedAt = 0;
+  private selectionKey = "";
+  /** The ply at which a piece last promoted, and when: its gold glint plays once. */
+  private promotionGlint: { ply: number; at: number } | null = null;
   private preferences = storage.loadPreferences();
   private readonly els: Record<"board" | "top" | "bottom" | "status" | "coach" | "notice" | "moves" | "actions" | "overlay" | "pieceInfo", HTMLElement>;
 
@@ -67,6 +72,10 @@ export class App {
   /** Called by the session whenever the game changes. */
   onGameChange(): void {
     this.overlayHidden = false;
+    const plies = this.session.backend.history().length;
+    if (this.soundsReady && plies === this.lastPlies + 1 && this.session.lastMove()?.endsWith("+")) {
+      this.promotionGlint = { ply: plies, at: performance.now() };
+    }
     storage.saveCurrentGame(this.session.toSaved());
     this.playSounds();
     this.render();
@@ -111,11 +120,23 @@ export class App {
 
   private buildLayout(): HTMLElement {
     const button = (id: string, label: string) => element("button", { id, type: "button" }, label);
+    const readingToggle = element(
+      "button",
+      { id: "btn-reading", type: "button", class: "reading-toggle", "aria-pressed": String(this.preferences.reading), title: "Mostrar como cada peça anda, no lugar do kanji" },
+      element("span", {}, "Leitura"),
+      element("span", { class: "switch", "aria-hidden": "true" }),
+    );
+    readingToggle.addEventListener("click", () => {
+      this.preferences.reading = !this.preferences.reading;
+      readingToggle.setAttribute("aria-pressed", String(this.preferences.reading));
+      storage.savePreferences(this.preferences);
+      this.render();
+    });
     const header = element(
       "header",
       { class: "topbar" },
       element("h1", {}, "Shogi"),
-      element("div", { class: "topbar-actions" }, button("btn-install", "Instalar app"), button("btn-rules", "Regras"), button("btn-new", "Nova partida")),
+      element("div", { class: "topbar-actions" }, button("btn-install", "Instalar app"), readingToggle, button("btn-rules", "Regras"), button("btn-new", "Nova partida")),
     );
     const play = element(
       "section",
@@ -143,15 +164,7 @@ export class App {
       storage.savePreferences(this.preferences);
       if (soundToggle.checked) playSound("move");
     });
-    const marksToggle = element("input", { type: "checkbox", id: "show-marks" });
-    marksToggle.checked = this.preferences.showMarks;
-    marksToggle.addEventListener("change", () => {
-      this.preferences.showMarks = marksToggle.checked;
-      storage.savePreferences(this.preferences);
-      this.render();
-    });
-    const styleSelect = element("select", { id: "piece-style" });
-    for (const style of PIECE_STYLES) styleSelect.append(element("option", { value: style.id }, style.label));
+    const labelsSelect = element("select", { id: "piece-labels" }, element("option", { value: "pt" }, "Português"), element("option", { value: "en" }, "English"));
     const panel = element(
       "aside",
       { class: "panel" },
@@ -162,8 +175,7 @@ export class App {
       element("section", { id: "piece-info", class: "piece-info", "aria-live": "polite" }),
       element("h2", {}, "Jogadas"),
       element("ol", { id: "moves", class: "move-list" }),
-      element("label", { class: "field" }, "Estilo das peças ", styleSelect),
-      element("label", { class: "choice" }, marksToggle, " Mostrar os movimentos nas peças"),
+      element("label", { class: "field" }, "Nomes das peças no modo leitura ", labelsSelect),
       element("label", { class: "choice" }, attacksToggle, " Mostrar as casas atacadas pelo adversário"),
       element("label", { class: "choice" }, soundToggle, " Sons"),
       element(
@@ -188,13 +200,13 @@ export class App {
     const layout = element("div", { class: "app" }, updateBanner, header, element("main", { class: "layout" }, play, panel), footer);
     this.setupPwaControls(layout);
 
-    styleSelect.value = this.preferences.pieceStyle;
-    styleSelect.addEventListener("change", () => {
-      this.preferences.pieceStyle = styleSelect.value as PieceStyle;
+    labelsSelect.value = this.preferences.labels;
+    labelsSelect.addEventListener("change", () => {
+      this.preferences.labels = labelsSelect.value === "en" ? "en" : "pt";
       storage.savePreferences(this.preferences);
       this.render();
     });
-    layout.querySelector("#btn-rules")!.addEventListener("click", () => void showRules(this.session.backend.variant, this.preferences.pieceStyle));
+    layout.querySelector("#btn-rules")!.addEventListener("click", () => void showRules(this.session.backend.variant, this.look()));
     layout.querySelector("#btn-new")!.addEventListener("click", () => void this.askNewGame());
     layout.querySelector("#btn-save")!.addEventListener("click", () => void this.saveGame());
     layout.querySelector("#btn-load")!.addEventListener("click", () => void this.loadGame());
@@ -218,6 +230,20 @@ export class App {
     this.renderOverlay();
   }
 
+  private look(): PieceLook {
+    return { reading: this.preferences.reading, labels: this.preferences.labels };
+  }
+
+  /** Glint for the selected piece; the selection's start time survives redraws. */
+  private selectionGlint(): Glint {
+    const key = JSON.stringify(this.selection);
+    if (key !== this.selectionKey) {
+      this.selectionKey = key;
+      this.selectedAt = performance.now();
+    }
+    return { kind: "select", since: this.selectedAt };
+  }
+
   private bottomColor(): Color {
     return this.flipped ? "white" : "black";
   }
@@ -225,7 +251,7 @@ export class App {
   private renderBoard(): void {
     const backend = this.session.backend;
     const { files, ranks } = backend.variant.dims;
-    const style = this.preferences.pieceStyle;
+    const look = this.look();
     const legal = this.session.canHumanMove() ? backend.legalMoves() : [];
     const targets = this.selection ? targetsFor(this.selection, legal) : [];
     const last = this.session.lastMove();
@@ -235,6 +261,10 @@ export class App {
     const hint = this.session.hint ? parseUsiMove(this.session.hint.move) : null;
     const attacks = this.preferences.showAttacks && !backend.result().over ? attackMap(backend.position(), this.opponentColor(), backend.variant.dims) : null;
     const attackers = this.session.canHumanMove() ? (checkHelp(backend)?.attackers ?? []) : [];
+    // The gold sweep of a promotion lasts 1.6 s; later redraws leave it out.
+    const promotion = this.promotionGlint;
+    const promoted =
+      promotion && promotion.ply === backend.history().length && performance.now() - promotion.at < 1600 ? lastMove?.to : null;
 
     const cells: HTMLElement[] = [];
     // Column labels (file numbers) above the board.
@@ -251,7 +281,13 @@ export class App {
         if (col === 0) cell.classList.add("edge-left");
         cell.setAttribute("aria-label", `${formatSquare(square)}${piece ? `, ${describePiece(piece)}` : ""}`);
         if (piece) {
-          cell.append(renderPiece(piece, style, piece.color !== this.bottomColor(), this.preferences.showMarks));
+          const selected = this.selection?.kind === "board" && same(this.selection.square, square);
+          const glint: Glint | undefined = selected
+            ? this.selectionGlint()
+            : promotion && same(promoted, square)
+              ? { kind: "promote", since: promotion.at }
+              : undefined;
+          cell.append(renderPiece(piece, look, piece.color !== this.bottomColor(), glint));
           this.pressAndHold(cell, piece);
         }
         if (this.selection?.kind === "board" && same(this.selection.square, square)) cell.classList.add("selected");
@@ -301,12 +337,11 @@ export class App {
     for (const type of types) {
       const piece: Piece = { color, type, promoted: false };
       const button = element("button", { type: "button", class: "hand-piece", "aria-label": `${describePiece(piece)}, ${hand[type]}` });
-      button.append(renderPiece(piece, this.preferences.pieceStyle, color !== this.bottomColor(), this.preferences.showMarks));
+      const selected = this.selection?.kind === "hand" && this.selection.type === type && backend.sideToMove() === color;
+      button.append(renderPiece(piece, this.look(), color !== this.bottomColor(), selected ? this.selectionGlint() : undefined));
       this.pressAndHold(button, piece);
       if (hand[type] > 1) button.append(element("span", { class: "count" }, String(hand[type])));
-      if (this.selection?.kind === "hand" && this.selection.type === type && backend.sideToMove() === color) {
-        button.classList.add("selected");
-      }
+      if (selected) button.classList.add("selected");
       button.addEventListener("click", () => this.clickHand(color, type));
       pieces.append(button);
     }
@@ -364,7 +399,7 @@ export class App {
       this.infoPiece = null;
       this.render();
     });
-    container.replaceChildren(close, pieceCard(this.infoPiece, this.session.backend.variant, this.preferences.pieceStyle, this.viewer()));
+    container.replaceChildren(close, pieceCard(this.infoPiece, this.session.backend.variant, this.look(), this.viewer()));
   }
 
   private renderActions(): void {
@@ -611,7 +646,7 @@ export class App {
     const piece = this.session.backend.pieceAt(from)!;
     const option = (promoted: boolean, label: string) => {
       const box = element("div", { class: "promotion-option" });
-      box.append(renderPiece({ ...piece, promoted }, this.preferences.pieceStyle, false, this.preferences.showMarks), element("span", {}, label));
+      box.append(renderPiece({ ...piece, promoted }, this.look(), false), element("span", {}, label));
       return box;
     };
     const body = element("div", { class: "promotion-choice" }, option(true, "Promover"), option(false, "Não promover"));
