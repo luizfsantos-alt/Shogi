@@ -64,8 +64,9 @@ var _stars := {}                     ## square -> star mesh to walk over (lesson
 static var _star_mesh_cache: ArrayMesh
 ## "Efeitos reduzidos" for new tables (the app's saved setting).
 static var reduced_default := false
-## The pixel look for new tables (the app's saved setting; `look=pixel` on the command line).
-static var pixel_default := false
+## The pixel look for new tables: the default (the app's saved setting; `look=classic` on the
+## command line brings back the lacquer and wood).
+static var pixel_default := true
 ## Texel size of the board in the pixel look (cm): twice the pieces' texels, so the wood reads
 ## as chunkier pixels than the finer kanji.
 const PIXEL_SIZE := 0.21
@@ -76,7 +77,9 @@ var _vignette_px: ColorRect
 
 
 func _ready() -> void:
-	if "look=pixel" in OS.get_cmdline_user_args():
+	if "look=classic" in OS.get_cmdline_user_args():
+		pixel_default = false
+	elif "look=pixel" in OS.get_cmdline_user_args():
 		pixel_default = true
 	Koma.pixel = pixel_default
 	_build_world()
@@ -951,7 +954,7 @@ func _build_menu() -> void:
 		fx.reduced = v
 		reduced_default = v
 		reduced_effects_changed.emit(v))
-	add_toggle.call("Visual pixel (teste)", Koma.pixel, func(v: bool) -> void:
+	add_toggle.call("Visual pixel", Koma.pixel, func(v: bool) -> void:
 		set_pixel_look(v)
 		pixel_look_changed.emit(v))
 	add_slider.call("Tremor no impacto", fx.impact_shake, 0.0, 1.0, func(v: float) -> void: fx.impact_shake = v)

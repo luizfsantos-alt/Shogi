@@ -41,10 +41,11 @@ Do Hearthstone vêm só a **sensação 3D** e os **efeitos gordos**; o resto da 
   setas dela em **vermelho**. Vermelho significa sempre perigo (xeque, lance proibido, ameaça).
   A onda de luz automática foi descartada: com todas as peças pulsando, ficava ilegível.
 
-### Visual pixel (proposta em teste, out/2026)
+### Visual pixel (padrão desde out/2026)
 
 A mesa continua 3D e quase de cima; o pixel entra como **textura**, na mesma família do tengu.
-Liga em Ajustes › "Visual pixel (teste)" (ou `look=pixel` na linha de comando).
+É o visual padrão. Ajustes › "Visual pixel" desligado volta à laca e à madeira (ou `look=classic`
+na linha de comando).
 
 - Peças **60% mais grossas**, com bordas mais redondas, luz em **faixas** (sem degradê), um
   brilho duro e **contorno escuro** como num sprite: o 3D fica acentuado.
@@ -96,6 +97,10 @@ Depois: handicaps, exportar SFEN/USI.
 
 **v0.3** (out/2026): tela inicial e interface no visual Genpei do PWA, o mentor tengu e o curso
 completo (as 32 lições exportadas do PWA, com a partida guiada e o treinador).
+
+**v0.4** (out/2026): visual pixel como padrão (peças grossas com um kanji em pixel e as marcas de
+movimento, mesa de pedra, efeitos em pixel), o tengu com seis poses, os cinco rivais, os emblemas
+das trilhas e o ícone do app.
 
 ## Pastas
 

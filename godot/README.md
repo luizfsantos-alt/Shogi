@@ -82,8 +82,15 @@ Teste da mesa: tabuleiro em 3D com a câmera quase de cima, as 40 peças, toque 
 efeitos e as setas de movimento. As jogadas seguem só o padrão de cada peça (sem xeque nem
 outras regras: isso vem com o motor). Os lados se alternam, para testar os dois num aparelho.
 
+Dois visuais (`DECISIONS.md`, "Visual pixel"). O **pixel**, padrão: peças grossas com luz em
+faixas e contorno (`koma_pixel.gdshader`, `koma_outline.gdshader`), um kanji em pixel com as marcas
+de movimento (`textures/kanji_px/`, de `tools/make_pixel_kanji.mjs` com a DotGothic16), mesa de
+pedra, chão de lajes (`ground.gdshader`), vinheta em degraus e efeitos em pixel. O **clássico**, de
+laca e madeira, volta com Ajustes › "Visual pixel" desligado. O uniform global `pixel_look`
+(`project.godot`) troca os efeitos de uma vez; `Table.set_pixel_look` troca tudo sem recarregar.
+
 - `koma_mesh.gd`: a cunha gerada por código, com leves defeitos (semente diferente por peça).
-- `koma.gdshader`: laca perolada (Sente) ou vermelha (Gote), kanji entalhado com tinta preta ou
+- `koma.gdshader`: (clássico) laca perolada (Sente) ou vermelha (Gote), kanji entalhado com tinta preta ou
   ouro no fundo, verniz com brilho, desgaste. O ruído vem de uma textura pequena compartilhada.
 - `textures/kanji/`: máscaras do entalhe, geradas por `tools/make_kanji_textures.mjs` com a
   Kaisei Tokumin ExtraBold (`fonts/`, OFL, reduzida aos caracteres das peças).
@@ -97,6 +104,7 @@ Captura de tela para desenvolvimento (precisa de um display; no container, `xvfb
 ```bash
 godot --path godot --fixed-fps 30 res://visual/table.tscn -- shot=/tmp/a.png demo=promote at=0.8
 # demo: start, lift, arrows, enemy, impact, promote, capture; count=6 every=0.05 para uma sequência
+# look=classic para o visual de laca e madeira
 ```
 
 ## APK de teste

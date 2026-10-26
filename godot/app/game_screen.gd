@@ -47,7 +47,7 @@ func _ready() -> void:
 	table.move_chosen.connect(_on_player_move)
 	table.illegal_attempt.connect(_on_illegal)
 	table.reduced_effects_changed.connect(func(on: bool) -> void: App.set_setting("reduced_effects", on))
-	table.pixel_look_changed.connect(func(on: bool) -> void: App.set_setting("pixel_look", on))
+	table.pixel_look_changed.connect(func(on: bool) -> void: App.set_setting("classic_look", not on))
 	table.add_menu_action("Início", App.go_home)
 	table.add_menu_action("Nova partida", _show_new_game)
 	table.add_menu_action("Desfazer", func() -> void: session.undo())

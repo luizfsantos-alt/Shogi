@@ -1,4 +1,4 @@
-// The pixel look of a koma (proposal, see DECISIONS.md "Visual pixel"): the same lacquer as
+// The pixel look of a koma (the default, see DECISIONS.md "Visual pixel"): the same lacquer as
 // koma.gdshader, but everything on its surface is drawn in whole texels, like a 16-bit sprite.
 // The kanji and the movement marks come from a 32×36 mask (textures/kanji_px/) sampled with
 // nearest filtering, the sheen is posterized, and the light falls in a few hard bands with one

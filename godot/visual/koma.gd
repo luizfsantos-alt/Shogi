@@ -12,9 +12,9 @@ const SHADER := preload("res://visual/koma.gdshader")
 const PIXEL_SHADER := preload("res://visual/koma_pixel.gdshader")
 const OUTLINE_SHADER := preload("res://visual/koma_outline.gdshader")
 
-## The pixel look (proposal): thick pieces, one pixel kanji with movement marks, banded light and
-## a dark outline. Set before the table is built, or call `restyle()` on every piece.
-static var pixel := false
+## The pixel look (the default): thick pieces, one pixel kanji with movement marks, banded light
+## and a dark outline. Set before the table is built, or call `restyle()` on every piece.
+static var pixel := true
 
 ## One small tiling noise texture shared by every piece (sheen, scratches).
 static var noise_texture: NoiseTexture2D
