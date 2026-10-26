@@ -24,8 +24,13 @@ especificação (lições e vetores de teste exportados em JSON).
 
 ## Peças
 
-- Cunha 3D gerada por código, com pequenos defeitos (semente diferente por peça) e textura por
-  cima; kanji gravado com laca ou ouro; ouro na borda das promovidas.
+Do Hearthstone vêm só a **sensação 3D** e os **efeitos gordos**; o resto da estética é nossa.
+
+- Cunha 3D gerada por código, com **leves defeitos** (cantos gastos, faces não perfeitamente
+  planas, lascas e arranhões finos; semente diferente por peça, nenhuma igual à outra).
+- Kanji **entalhado** na peça: sulco de verdade (relevo/normal map), com tinta no fundo do
+  sulco; ouro no kanji e na borda das promovidas.
+- Superfície com **um certo gloss**: verniz com reflexo especular visível, não fosco.
 - **Modo de ajuda ao movimento** (desligável): a cada 2,5 s uma onda curta e discreta de luz
   sai das **suas** peças, em cascata, na direção em que cada uma anda. Peças de alcance longo
   mandam a onda até onde realmente chegam. Ao **tocar numa peça do adversário**, ela emite a
@@ -53,6 +58,17 @@ força fáceis de ajustar; opção "efeitos reduzidos" para celulares fracos.
 Partida contra a IA nos 5 níveis (recalibrados no aparelho), regras completas, mentor com as
 explicações, onda de movimento, desfazer/dica no menu, salvamento automático.
 Depois: curso de 32 lições, handicaps, declaração de impasse pelo jogador, exportar SFEN/USI.
+
+## Pastas
+
+```
+godot/
+  project.godot         # projeto (paisagem, renderizador Mobile)
+  DECISIONS.md          # este arquivo
+  visual/               # frente visual: peça, tabuleiro, shaders, efeitos
+  engine/               # frente do motor: fonte do GDExtension (C++), build com NDK
+  bin/                  # bibliotecas compiladas (.so) e o .gdextension
+```
 
 ## Como trabalhamos
 
