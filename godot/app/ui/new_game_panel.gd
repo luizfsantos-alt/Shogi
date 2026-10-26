@@ -32,7 +32,24 @@ static func open(parent: Node, on_start: Callable, level := 1) -> void:
 	about.custom_minimum_size = Vector2(1100, 70)
 	var level_group := ButtonGroup.new()
 	for lv: Dictionary in Levels.LEVELS:
-		var b := UiTheme.button("%d\n%s" % [lv.id, lv.name], "", 28, 112)
+		# Each level is its rival: the face, then the level's number and name.
+		var b := UiTheme.button("", "", 28, 250)
+		var card := VBoxContainer.new()
+		card.alignment = BoxContainer.ALIGNMENT_CENTER
+		card.add_theme_constant_override("separation", 8)
+		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		card.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		b.add_child(card)
+		var face := Rivals.portrait(lv.id, 140)
+		face.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		card.add_child(face)
+		var caption := UiTheme.label("%d · %s" % [lv.id, Rivals.of_level(lv.id).name], "", 26)
+		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		caption.add_theme_font_override("font", UiTheme.display())
+		card.add_child(caption)
+		var level_name := UiTheme.label(lv.name.to_upper(), "Caption", 18)
+		level_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		card.add_child(level_name)
 		b.toggle_mode = true
 		b.button_group = level_group
 		b.button_pressed = lv.id == chosen.level

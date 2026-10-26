@@ -13,8 +13,9 @@ const LESSON := "res://app/lesson.tscn"
 const SETTINGS_PATH := "user://ajustes.json"
 
 var request := {}
-## {reduced_effects: bool, welcomed: bool}
-var settings := {"reduced_effects": false, "welcomed": false}
+## {reduced_effects: bool, welcomed: bool, classic_look: bool}. The pixel look is the default;
+## "classic_look" brings back the lacquer and wood.
+var settings := {"reduced_effects": false, "welcomed": false, "classic_look": false}
 
 var _fade: ColorRect
 
@@ -22,6 +23,7 @@ var _fade: ColorRect
 func _ready() -> void:
 	_load_settings()
 	Table.reduced_default = settings.reduced_effects
+	Table.pixel_default = not settings.classic_look
 	var layer := CanvasLayer.new()
 	layer.layer = 100
 	add_child(layer)
@@ -65,6 +67,8 @@ func set_setting(key: String, value: Variant) -> void:
 	settings[key] = value
 	if key == "reduced_effects":
 		Table.reduced_default = value
+	if key == "classic_look":
+		Table.pixel_default = not value
 	var f := FileAccess.open(SETTINGS_PATH, FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify(settings))

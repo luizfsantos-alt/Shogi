@@ -38,9 +38,16 @@ const SIZE_JITTER := 0.008 ## pieces of the same kind differ by up to ~1%
 ## The pieces are drawn a little larger than a real set, so they read well on a phone.
 const SCALE := 1.1
 
+## The pixel look (Koma.pixel) uses thicker pieces with rounder edges: more side wall to shade.
+static var thickness := 1.0
+static var bevel := BEVEL
+## Uneven faces; off in the pixel look, where the banded light would turn them into seams.
+static var warp := WARP
+
 
 static func size_of(kind: String) -> Vector4:
-	return SIZES[kind] * SCALE
+	var s: Vector4 = SIZES[kind] * SCALE
+	return Vector4(s.x, s.y, s.z * thickness, s.w * thickness)
 
 
 ## Angle (radians, about X) that lays the wedge flat on its back face.
@@ -97,10 +104,10 @@ static func build(kind: String, seed: int) -> ArrayMesh:
 	var profile: Array[Vector3] = [] # (inset, which face: -1 back / +1 front, angle 0..1)
 	for i in BEVEL_STEPS + 1:
 		var a := -PI * 0.5 + (PI * 0.5) * i / BEVEL_STEPS
-		profile.append(Vector3(BEVEL * (1.0 - cos(a)), -1.0, sin(a))) # back bevel, sin from -1 to 0
+		profile.append(Vector3(bevel * (1.0 - cos(a)), -1.0, sin(a))) # back bevel, sin from -1 to 0
 	for i in BEVEL_STEPS + 1:
 		var a := (PI * 0.5) * i / BEVEL_STEPS
-		profile.append(Vector3(BEVEL * (1.0 - cos(a)), 1.0, sin(a)))  # front bevel, sin from 0 to 1
+		profile.append(Vector3(bevel * (1.0 - cos(a)), 1.0, sin(a)))  # front bevel, sin from 0 to 1
 
 	var n := outline.size()
 	var rows: Array = []
@@ -117,13 +124,13 @@ static func build(kind: String, seed: int) -> ArrayMesh:
 			var half := float(thickness.call(pt.y)) * 0.5
 			var y := 0.0
 			if p.y < 0.0:
-				y = -half + BEVEL + BEVEL * p.z
+				y = -half + bevel + bevel * p.z
 			else:
-				y = half - BEVEL + BEVEL * p.z
+				y = half - bevel + bevel * p.z
 			# Uneven edges: push along the outline normal and a little in height.
 			var e := noise.get_noise_3d(pt.x * 3.0, y * 3.0, pt.y * 3.0) * EDGE_NOISE * edge_weight
 			pt += normals[i] * e
-			y += noise.get_noise_2d(pt.x * 2.0 + 17.0, pt.y * 2.0) * WARP
+			y += noise.get_noise_2d(pt.x * 2.0 + 17.0, pt.y * 2.0) * warp
 			row.append(Vector3(pt.x, y, -pt.y))
 			# Analytic normal of the rounded profile (corrected later for the wedge slope).
 			var c := cos(asin(clampf(p.z, -1.0, 1.0)))
@@ -159,7 +166,7 @@ static func build(kind: String, seed: int) -> ArrayMesh:
 				var half := float(thickness.call(p2.y)) * 0.5
 				var y: float = face * half
 				if k > 0:
-					y += noise.get_noise_2d(p2.x * 1.3 + face * 31.0, p2.y * 1.3) * WARP * 1.5
+					y += noise.get_noise_2d(p2.x * 1.3 + face * 31.0, p2.y * 1.3) * warp * 1.5
 				else:
 					y = e.y
 				row.append(Vector3(p2.x, y, -p2.y))

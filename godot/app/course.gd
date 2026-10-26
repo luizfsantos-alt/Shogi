@@ -3,6 +3,8 @@ extends Node
 ## lesson with its stars; the recommended one stands out.
 
 const TRACK_LETTERS := ["A", "B", "C"]
+## Pixel emblem of each track (app/course_art/<name>.png).
+const EMBLEMS := {"A": "basics", "B": "tactics", "C": "strategy"}
 
 var mentor: Mentor
 
@@ -63,7 +65,7 @@ func _ready() -> void:
 	mentor.balloon_width = 520.0
 	add_child(mentor)
 	if count.done == 0:
-		mentor.say("Siga as trilhas em ordem: os Fundamentos ensinam todas as regras, até a primeira partida.", 7.0)
+		mentor.say("Siga as trilhas em ordem: os Fundamentos ensinam todas as regras, até a primeira partida.", 7.0, "explain")
 	_run_cmdline_demo()
 
 
@@ -79,14 +81,28 @@ func _track_column(track: Dictionary, letter: String, progress: Dictionary, reco
 	box.add_child(UiTheme.label("TRILHA %s · %d/%d" % [letter, count.done, count.total], "Caption", 22))
 	var name := HBoxContainer.new()
 	name.add_theme_constant_override("separation", 16)
+	name.custom_minimum_size.y = 98  # the emblem's height, so the three columns line up
 	box.add_child(name)
-	name.add_child(UiTheme.label(track.title, "Title", 46))
+	# The track's pixel emblem, two screen pixels per art pixel (only the ones already drawn).
+	var emblem_path := "res://app/course_art/%s.png" % EMBLEMS.get(letter, "")
+	if ResourceLoader.exists(emblem_path):
+		var emblem := TextureRect.new()
+		emblem.texture = load(emblem_path)
+		emblem.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		emblem.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		emblem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		emblem.custom_minimum_size = Vector2(96, 98)
+		name.add_child(emblem)
+	var title := UiTheme.label(track.title, "Title", 46)
+	title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	name.add_child(title)
 	# "Kihon 基本": the kanji in brush, gold.
 	var term: String = track.get("term", "")
 	var kanji := term.substr(term.find(" ") + 1)
 	var k := UiTheme.label(kanji, "", 40)
 	k.add_theme_font_override("font", UiTheme.kanji_font())
 	k.add_theme_color_override("font_color", UiTheme.GOLD)
+	k.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	name.add_child(k)
 	var desc := UiTheme.label(track.description, "Muted", 24)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

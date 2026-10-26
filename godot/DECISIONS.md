@@ -41,6 +41,36 @@ Do Hearthstone vêm só a **sensação 3D** e os **efeitos gordos**; o resto da 
   setas dela em **vermelho**. Vermelho significa sempre perigo (xeque, lance proibido, ameaça).
   A onda de luz automática foi descartada: com todas as peças pulsando, ficava ilegível.
 
+### Visual pixel (padrão desde out/2026)
+
+A mesa continua 3D e quase de cima; o pixel entra como **textura**, na mesma família do tengu.
+É o visual padrão. Ajustes › "Visual pixel" desligado volta à laca e à madeira (ou `look=classic`
+na linha de comando).
+
+- Peças **60% mais grossas**, com bordas mais redondas, luz em **faixas** (sem degradê), um
+  brilho duro e **contorno escuro** como num sprite: o 3D fica acentuado.
+- **Um kanji só**, em pixel (DotGothic16, OFL), com as **marcas de movimento** gravadas em volta:
+  um ponto = uma casa, dois pontos em linha = qualquer distância, cruzinha = o salto do cavalo.
+  Máscaras de 32×36 em `visual/textures/kanji_px/` (`tools/make_pixel_kanji.mjs`).
+- Gote com kanji **creme** (ouro sobre vermelho some); promovida com kanji vermelho no Sente e
+  ouro no Gote, mais a borda dourada.
+- Tabuleiro e komadai em **pedra** pixelada (quatro cinzas com dither, rachaduras, a grade
+  entalhada com o lábio iluminado).
+- Fundo: **lajes de pedra escura** em texels maiores, e a vinheta em degraus com dither.
+- Efeitos em pixel: poeira de pedra em blocos que se desfaz em dither, anel de impacto em
+  5 quadros, faíscas como cruzinhas em três tons de ouro, casas marcadas com borda de um texel
+  e preenchimento quadriculado, setas pixeladas, tremor em passos inteiros, sem bloom.
+  Um uniform global (`pixel_look`, em `project.godot`) liga tudo de uma vez.
+
+### Personagens (out/2026)
+
+- O tengu ganha **expressões**: seis poses que reagem ao jogo (explica, aponta, se assusta no
+  xeque, ri, fica bravo no lance proibido). A respiração continua.
+- **Rivais**, um por nível, do mundo da lenda de Yoshitsune: Kappa, Ashigaru, Kitsune, Benkei
+  (o duelo da ponte Gojō) e Kiyomori. Rosto calmo e rosto derrotado.
+- **O jogador não tem rosto.**
+- Emblemas das trilhas do curso e o ícone do app, na mesma pixel art.
+
 ## Efeitos ("gordos", referência Hearthstone)
 
 Pegar (sobe, sombra se afasta, inclina), jogar (peso, pausa no impacto, poeira, leve tremor),
@@ -53,8 +83,8 @@ força fáceis de ajustar; opção "efeitos reduzidos" para celulares fracos.
 - As mensagens de aprendizado (lance inválido explicado, ajuda no xeque, treinador) são ditas
   por um **personagem mentor**, que aparece num canto só quando fala.
 - O mentor é um **tengu (天狗)**, o mestre da montanha que, na lenda, ensinou Minamoto no
-  Yoshitsune. Arte em pixel art do dono do projeto (gerador de imagens), **sem expressões** por
-  enquanto, com uma **respiração sutil só no corpo**.
+  Yoshitsune. Arte em pixel art do dono do projeto (gerador de imagens), com uma
+  **respiração sutil só no corpo**; desde out/2026, seis poses (ver "Personagens").
 - **Dois tamanhos**: o tengu **inteiro e grande** nos diálogos que precisam ser lidos até o fim
   (avança tocando no balão); só a **cabeça**, num medalhão, nas falas enquanto o jogador pode
   mexer as peças.
@@ -67,6 +97,10 @@ Depois: handicaps, exportar SFEN/USI.
 
 **v0.3** (out/2026): tela inicial e interface no visual Genpei do PWA, o mentor tengu e o curso
 completo (as 32 lições exportadas do PWA, com a partida guiada e o treinador).
+
+**v0.4** (out/2026): visual pixel como padrão (peças grossas com um kanji em pixel e as marcas de
+movimento, mesa de pedra, efeitos em pixel), o tengu com seis poses, os cinco rivais, os emblemas
+das trilhas e o ícone do app.
 
 ## Pastas
 

@@ -10,6 +10,9 @@ extends CanvasLayer
 ##   exercise's goal, a refused move, a hint, the coach). Only the tengu's head, in a medallion
 ##   in the corner, so the board stays free. `say` goes away by itself; `note` stays until
 ##   replaced or hidden.
+##
+## Every way of talking takes a `pose` for the tengu (Mascot.POSES): "explain", "point",
+## "startled", "laugh", "stern", or "" for the calm one.
 
 signal dialog_finished
 ## A tap on a small balloon that stays (the controller may react).
@@ -22,9 +25,8 @@ const CHARS_PER_SECOND := 55.0
 const BALLOON := Color(0.97, 0.93, 0.85, 0.97)
 const BALLOON_BORDER := Color(0.75, 0.55, 0.2)
 const INK := Color(0.15, 0.08, 0.04)
-## The head in the art (pixels of app/mentor/art/tengu.png).
-const HEAD_REGION := Rect2(285, 0, 220, 200)
-const BIG_HEIGHT := 540.0
+## The big tengu's height: a whole multiple of the art's, so every art pixel is the same size.
+const BIG_HEIGHT := 633.0
 
 ## Layout of the small balloon, set before adding the node: bottom left corner of the screen,
 ## offset upward by `bottom`; the width of the balloon and the size of the head.
@@ -50,6 +52,8 @@ var _pages: Array = []
 var _page := -1                  ## page of the big dialogue on screen; -1 for none
 var _dialog_title := ""
 var _typed := 0.0
+var _head: TextureRect
+var _tengu: Mascot
 
 
 func _ready() -> void:
@@ -98,13 +102,11 @@ func _build_small() -> void:
 	medallion.clip_children = CanvasItem.CLIP_CHILDREN_AND_DRAW
 	_small.add_child(medallion)
 	var head := TextureRect.new()
-	var atlas := AtlasTexture.new()
-	atlas.atlas = Mascot.ART
-	atlas.region = HEAD_REGION
-	head.texture = atlas
+	head.texture = Mascot.head("")
 	head.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	head.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	head.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	head.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_head = head
 	head.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	medallion.add_child(head)
 
@@ -147,6 +149,7 @@ func _build_big() -> void:
 	tengu.custom_minimum_size = Vector2(tengu_width, BIG_HEIGHT)
 	tengu.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	column.add_child(tengu)
+	_tengu = tengu
 	_big.modulate.a = 0.0
 	_big.visible = false
 
@@ -202,8 +205,8 @@ func _balloon(width: float, text_size: int, tail_side: String, tail_at: float) -
 # --- Talking -------------------------------------------------------------------------------
 
 ## A short remark (small): stays long enough to read it, or until tapped.
-func say(text: String, seconds := 0.0) -> void:
-	note(text)
+func say(text: String, seconds := 0.0, pose := "") -> void:
+	note(text, "", pose)
 	if seconds <= 0.0:
 		seconds = 3.0 + text.length() / 14.0
 	var timer := get_tree().create_timer(seconds)
@@ -214,16 +217,18 @@ func say(text: String, seconds := 0.0) -> void:
 
 
 ## Words that stay (small) while the player moves the pieces: an exercise's goal, feedback.
-func note(text: String, title := "") -> void:
+func note(text: String, title := "", pose := "") -> void:
 	_hide_timer = null
 	_page = -1
+	_head.texture = Mascot.head(pose)
 	_show(_small, _small_text, title, text)
 	_small_text.footer.visible = false
 
 
 ## Something to read to the end (big), page by page; `dialog_finished` after the last tap.
-func speak(pages: Array, title := "") -> void:
+func speak(pages: Array, title := "", pose := "explain") -> void:
 	_hide_timer = null
+	_tengu.set_pose(pose)
 	_pages = pages
 	_page = 0
 	_dialog_title = title

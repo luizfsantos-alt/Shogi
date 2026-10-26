@@ -32,6 +32,9 @@ func _process(delta: float) -> void:
 	_shake_time += real
 	var s := _shake * _shake
 	var off := Vector3(sin(_shake_time * 61.0), sin(_shake_time * 47.0 + 1.3), 0.0) * s
+	if Koma.pixel:
+		# The pixel look shakes in whole steps, like a sprite jumping a pixel at a time.
+		off = (off / 0.12).round() * 0.12
 	camera.transform = _cam_base.translated_local(off)
 
 
@@ -66,7 +69,7 @@ func promotion_burst(pos: Vector3) -> void:
 	p.gravity = Vector3(0, -70.0, 0)
 	p.damping_min = 10.0
 	p.damping_max = 24.0
-	p.particle_flag_align_y = true # streaks point along their flight
+	p.particle_flag_align_y = not Koma.pixel # streaks point along their flight
 	p.scale_amount_min = 0.6
 	p.scale_amount_max = 1.3
 	var curve := Curve.new()
@@ -74,7 +77,8 @@ func promotion_burst(pos: Vector3) -> void:
 	curve.add_point(Vector2(1, 0))
 	p.scale_amount_curve = curve
 	p.color_ramp = _ramp([Color(1.0, 0.88, 0.5), Color(1.0, 0.6, 0.12), Color(0.9, 0.25, 0.02, 0.0)])
-	p.mesh = _streak_mesh()
+	# In the pixel look the sparks are little pixel crosses instead of streaks.
+	p.mesh = _mote_mesh(4.0) if Koma.pixel else _streak_mesh()
 	p.restart() # created in code: a restart makes the one-shot burst actually fire
 	_free_later(p, 1.5)
 
@@ -151,6 +155,7 @@ func _ring(pos: Vector3, size: float, colour: Color, seconds: float, intensity: 
 	m.set_shader_parameter("color", colour)
 	m.set_shader_parameter("intensity", intensity)
 	m.set_shader_parameter("progress", 0.0)
+	m.set_shader_parameter("quad_cm", Vector2(size, size))
 	mi.material_override = m
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(mi)
@@ -190,7 +195,11 @@ func _dust(pos: Vector3, strength: float) -> void:
 	curve.add_point(Vector2(0, 0.35))
 	curve.add_point(Vector2(1, 1.0))
 	p.scale_amount_curve = curve
-	p.color_ramp = _ramp([Color(1.0, 0.9, 0.72, 0.55), Color(0.93, 0.8, 0.6, 0.28), Color(0.9, 0.75, 0.55, 0.0)])
+	if Koma.pixel:
+		# Stone dust: light grey chips.
+		p.color_ramp = _ramp([Color(0.78, 0.76, 0.74, 0.55), Color(0.6, 0.58, 0.57, 0.3), Color(0.5, 0.48, 0.47, 0.0)])
+	else:
+		p.color_ramp = _ramp([Color(1.0, 0.9, 0.72, 0.55), Color(0.93, 0.8, 0.6, 0.28), Color(0.9, 0.75, 0.55, 0.0)])
 	var mat := ShaderMaterial.new()
 	mat.shader = preload("res://visual/dust.gdshader")
 	var q := QuadMesh.new()

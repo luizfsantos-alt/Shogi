@@ -9,6 +9,12 @@ const KANJI := {
 	"L": ["lance", "lance_p"], "P": ["pawn", "pawn_p"],
 }
 const SHADER := preload("res://visual/koma.gdshader")
+const PIXEL_SHADER := preload("res://visual/koma_pixel.gdshader")
+const OUTLINE_SHADER := preload("res://visual/koma_outline.gdshader")
+
+## The pixel look (the default): thick pieces, one pixel kanji with movement marks, banded light
+## and a dark outline. Set before the table is built, or call `restyle()` on every piece.
+static var pixel := true
 
 ## One small tiling noise texture shared by every piece (sheen, scratches).
 static var noise_texture: NoiseTexture2D
@@ -40,40 +46,62 @@ var lift_pivot: Node3D   ## height above the resting place and tilt while carrie
 var flip_pivot: Node3D   ## the promotion flip
 
 var _glow_tween: Tween
+var _seed := 0
 
 
 func setup(p_kind: String, p_colour: int, seed: int) -> void:
 	kind = p_kind
 	colour = p_colour
+	_seed = seed
 	lift_pivot = Node3D.new()
 	add_child(lift_pivot)
 	flip_pivot = Node3D.new()
 	lift_pivot.add_child(flip_pivot)
 	mesh_instance = MeshInstance3D.new()
-	mesh_instance.mesh = KomaMesh.build(kind, seed)
+	flip_pivot.add_child(mesh_instance)
+	_build_look(float(colour))
+	# Gote's pieces point toward Sente.
+	rotation.y = PI if colour == 1 else 0.0
+
+
+## Rebuilds the mesh and the material for the current look (`Koma.pixel`), keeping the state.
+func restyle() -> void:
+	var team: float = material.get_shader_parameter("team")
+	_build_look(team)
+	if promoted:
+		show_promoted()
+
+
+func _build_look(team: float) -> void:
+	KomaMesh.thickness = 1.6 if pixel else 1.0
+	KomaMesh.bevel = 0.17 if pixel else KomaMesh.BEVEL
+	KomaMesh.warp = 0.0 if pixel else KomaMesh.WARP
+	mesh_instance.mesh = KomaMesh.build(kind, _seed)
 	material = ShaderMaterial.new()
-	material.shader = SHADER
+	material.shader = PIXEL_SHADER if pixel else SHADER
+	var folder := "kanji_px" if pixel else "kanji"
 	var faces: Array = KANJI[kind]
 	var front: String = faces[0]
 	if kind == "K" and colour == 1:
 		front = "king_gote"
-	material.set_shader_parameter("kanji_front", load("res://visual/textures/kanji/%s.png" % front))
+	material.set_shader_parameter("kanji_front", load("res://visual/textures/%s/%s.png" % [folder, front]))
 	if faces[1] != "":
-		material.set_shader_parameter("kanji_back", load("res://visual/textures/kanji/%s.png" % faces[1]))
-	material.set_shader_parameter("seed", float(seed % 997))
+		material.set_shader_parameter("kanji_back", load("res://visual/textures/%s/%s.png" % [folder, faces[1]]))
+	material.set_shader_parameter("seed", float(_seed % 997))
 	material.set_shader_parameter("noise_tex", shared_noise())
-	material.set_shader_parameter("team", float(colour))
+	material.set_shader_parameter("team", team)
 	# Set now so tweens can animate them.
 	material.set_shader_parameter("glow", 0.0)
 	material.set_shader_parameter("gold_edge", 0.0)
+	if pixel:
+		var outline := ShaderMaterial.new()
+		outline.shader = OUTLINE_SHADER
+		material.next_pass = outline
 	mesh_instance.material_override = material
-	flip_pivot.add_child(mesh_instance)
 	# Lying flat: rest on the back face, which tilts the piece slightly toward its tip.
 	# The flip pivot sits at the piece's centre so promotion turns it over in place.
 	flip_pivot.position.y = KomaMesh.rest_height(kind)
 	mesh_instance.rotation.x = -KomaMesh.rest_tilt(kind)
-	# Gote's pieces point toward Sente.
-	rotation.y = PI if colour == 1 else 0.0
 
 
 ## Facing for a new owner (after a capture the piece changes sides).
