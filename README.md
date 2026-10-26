@@ -26,7 +26,9 @@ compilado para WebAssembly. Funciona no computador e no celular; não precisa de
 - Destaque da última jogada e do xeque, lista de jogadas, desfazer, virar o tabuleiro, desistir,
   declarar impasse, fim de partida com o motivo.
 - Salvamento automático, partidas salvas no navegador, exportar/importar em **SFEN** e **USI**.
-- Sons opcionais (desligáveis), tema claro/escuro automático, layout para celular (retrato e paisagem).
+- Visual **Genpei**: escuro, com tipografia condensada pesada, rótulos em fonte mono, cantos retos e
+  botões chanfrados; vermelho para ação, ouro para valor. Fontes incluídas no app (funciona offline).
+- Sons opcionais (desligáveis), layout para celular (retrato e paisagem).
 - **PWA**: dá para instalar como aplicativo (celular e computador) e **jogar offline, inclusive
   contra o computador**. Quando sai uma versão nova, o app avisa e atualiza com um toque.
 
@@ -242,9 +244,10 @@ Este projeto é software livre sob a **GNU General Public License v3.0 ou poster
   Fairy-Stockfish em WebAssembly (Fabian Fichter, Johannes Czech).
 - [fairy-stockfish-nnue.wasm](https://github.com/fairy-stockfish/fairy-stockfish.wasm): motor
   Fairy-Stockfish em WebAssembly.
-- [Potta One](https://fonts.google.com/specimen/Potta+One) e
-  [Archivo](https://fonts.google.com/specimen/Archivo) (SIL OFL 1.1): recortes com os caracteres
-  das peças em `src/ui/fonts/`.
+- [Potta One](https://fonts.google.com/specimen/Potta+One),
+  [Archivo](https://fonts.google.com/specimen/Archivo) e
+  [IBM Plex Mono](https://fonts.google.com/specimen/IBM+Plex+Mono) (SIL OFL 1.1): fontes incluídas
+  em `src/ui/fonts/` (detalhes no README da pasta).
 
 **Aviso GPL:** quem distribuir este programa, inclusive publicando-o na web, deve oferecer o
 código-fonte completo sob a mesma licença. O rodapé do jogo já mostra a licença, os créditos e

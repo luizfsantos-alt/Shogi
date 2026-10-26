@@ -135,7 +135,7 @@ export class App {
     const header = element(
       "header",
       { class: "topbar" },
-      element("h1", {}, "Shogi"),
+      element("h1", {}, element("span", { class: "mark", "aria-hidden": "true" }, "将棋"), "Shogi"),
       element("div", { class: "topbar-actions" }, button("btn-install", "Instalar app"), readingToggle, button("btn-rules", "Regras"), button("btn-new", "Nova partida")),
     );
     const play = element(
@@ -328,9 +328,16 @@ export class App {
   private renderPlayer(container: HTMLElement, color: Color): void {
     const backend = this.session.backend;
     const hand = backend.hand(color);
-    const who = this.session.settings.mode === "ai" ? (this.session.isComputer(color) ? " — Computador" : " — Você") : "";
+    const team = color === "black" ? "Brancas" : "Vermelhas";
+    const who = this.session.settings.mode === "ai" ? (this.session.isComputer(color) ? "Computador" : "Você") : team;
     const toMove = !backend.result().over && backend.sideToMove() === color;
-    const name = element("div", { class: `player-name${toMove ? " to-move" : ""}` }, `${sideName(color)}${who}`);
+    const name = element(
+      "div",
+      { class: `player-name${toMove ? " to-move" : ""}` },
+      element("span", { class: `team-mark ${color === "black" ? "sente" : "gote"}`, "aria-hidden": "true" }),
+      element("strong", {}, sideName(color)),
+      element("small", {}, who),
+    );
     const pieces = element("div", { class: "hand", "aria-label": `Peças na mão de ${sideName(color)}` });
     const types = backend.variant.pieceTypes.filter((type) => (hand[type] ?? 0) > 0);
     if (types.length === 0) pieces.append(element("span", { class: "hand-empty" }, "sem peças na mão"));
