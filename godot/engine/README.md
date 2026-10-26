@@ -96,3 +96,17 @@ imprime as linhas `SELFTEST` no log (logcat, tag `godot`), para medir no aparelh
 | busca depth 1 skill −15 / depth 3 skill 10 | 7 ms / 7–25 ms |
 | busca movetime 1000 ms | 1009 ms |
 | `stop()` após 300 ms | volta em 301 ms |
+
+## Medidas no Android (CI, emulador x86_64 API 35, 2 núcleos)
+
+| | |
+| --- | --- |
+| `.so` arm64-v8a / x86_64 (strip, `libc++` estática) | 1,79 MB / 1,82 MB; segmentos LOAD alinhados a 0x4000, `zipalign -P 16` OK |
+| APK de debug (template do Godot, arm64 + x86_64) | 60,6 MB |
+| perft 3 / perft 4 nativo | 2,5 ms / 109 ms |
+| busca depth 3 skill 10 | 58 ms |
+| busca movetime 1000 ms | 1025 ms |
+
+O emulador não tem GPU: com o renderizador Mobile o Vulkan do SwiftShader não apresenta os quadros,
+então o CI roda no emulador um segundo APK com o renderizador Compatibility. O APK principal continua
+com o Mobile (decisão do projeto) e precisa de um aparelho real.
