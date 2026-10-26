@@ -14,7 +14,8 @@ const ROSTER := {
 const HEAD_SIZE := 140
 ## Top left corner of the head in each bust.
 const HEADS := {
-	"kappa": Vector2(19, 30), "ashigaru": Vector2(46, 0), "benkei": Vector2(82, 0), "kiyomori": Vector2(60, 8),
+	"kappa": Vector2(19, 30), "ashigaru": Vector2(46, 0), "kitsune": Vector2(22, 48),
+	"benkei": Vector2(82, 0), "kiyomori": Vector2(60, 8),
 }
 
 
@@ -22,8 +23,8 @@ static func of_level(level: int) -> Dictionary:
 	return ROSTER.get(level, ROSTER[1])
 
 
-## The rival's head, calm or defeated; null while its art is not made yet (the screens then
-## show its kanji instead).
+## The rival's head, calm or defeated; null when its art is missing (the screens then show its
+## kanji instead).
 static func head(level: int, defeated := false) -> AtlasTexture:
 	var id: String = of_level(level).id
 	var path := "res://app/rivals/art/%s%s.png" % [id, "_defeated" if defeated else ""]

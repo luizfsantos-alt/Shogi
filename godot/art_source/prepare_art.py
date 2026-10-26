@@ -43,6 +43,9 @@ JOBS = {
     "rival_benkei_defeated": ("rivals/art/benkei_defeated.png", 3, 40, "benkei"),
     "rival_kiyomori": ("rivals/art/kiyomori.png", 3, 40, "kiyomori"),
     "rival_kiyomori_defeated": ("rivals/art/kiyomori_defeated.png", 3, 40, "kiyomori"),
+    "rival_kitsune": ("rivals/art/kitsune.png", 3, 40, "kitsune"),
+    "rival_kitsune_defeated": ("rivals/art/kitsune_defeated.png", 3, 40, "kitsune"),
+    "emblem_basics": ("course_art/basics.png", 16, 24, None),
     "emblem_tactics": ("course_art/tactics.png", 16, 24, None),
     "emblem_strategy": ("course_art/strategy.png", 16, 24, None),
     "icon_tengu": ("icon/tengu.png", 16, 32, None),  # then the launcher sizes: see icons()
