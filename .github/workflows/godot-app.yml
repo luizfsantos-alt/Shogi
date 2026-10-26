@@ -1,0 +1,107 @@
+# Builds the Android test APK of the whole game (godot/) and publishes it as a GitHub
+# pre-release, so it can be installed straight from the phone.
+name: Godot app
+
+on:
+  push:
+    branches-ignore: [godot-engine-spike]
+    paths:
+      - "godot/**"
+      - ".github/workflows/godot-app.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  GODOT_VERSION: 4.7.2
+  GODOT_URL: https://github.com/godotengine/godot/releases/download/4.7.2-stable
+
+jobs:
+  apk:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: nttld/setup-ndk@v1
+        id: ndk
+        with:
+          ndk-version: r28c
+          add-to-path: false
+
+      - name: Build the engine (linux for the tests, android arm64)
+        env:
+          ANDROID_NDK_ROOT: ${{ steps.ndk.outputs.ndk-path }}
+        run: godot/engine/build.sh all
+
+      - name: Install Godot ${{ env.GODOT_VERSION }}
+        run: |
+          curl -fsSL -o /tmp/godot.zip "$GODOT_URL/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q /tmp/godot.zip -d /tmp/godot
+          echo "GODOT=/tmp/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64" >> "$GITHUB_ENV"
+
+      - name: Headless tests
+        run: |
+          "$GODOT" --headless --path godot --import || "$GODOT" --headless --path godot --import
+          "$GODOT" --headless --path godot -s res://engine/test/test_engine.gd
+
+      - uses: actions/cache@v4
+        id: templates
+        with:
+          path: ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
+          key: godot-android-templates-${{ env.GODOT_VERSION }}
+
+      - name: Install Android export templates
+        if: steps.templates.outputs.cache-hit != 'true'
+        run: |
+          curl -fsSL -o /tmp/templates.tpz "$GODOT_URL/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          dir=~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          mkdir -p "$dir"
+          unzip -q -j /tmp/templates.tpz 'templates/android_*' 'templates/version.txt' -d "$dir"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # The test signing key lives in the Actions cache, not in the repository: generated once,
+      # reused by every build so each APK installs over the previous one.
+      - uses: actions/cache@v4
+        id: keystore
+        with:
+          path: ~/.shogi-test-keystore
+          key: shogi-test-keystore-v1
+
+      - name: Create the test signing key
+        if: steps.keystore.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/.shogi-test-keystore
+          keytool -genkeypair -noprompt -keystore ~/.shogi-test-keystore/test.keystore -storepass android \
+            -keypass android -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=Shogi test builds,C=BR"
+
+      - name: Export the test APK
+        run: |
+          version=$(sed -n 's/^config\/version="\(.*\)"/\1/p' godot/project.godot)
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          # Signed with the cached test key (same signature every build); the version code grows
+          # with every run so each APK installs over the last.
+          sed -i "s/^package\/signed=.*/package\/signed=true/; s/^version\/code=.*/version\/code=$((100 + GITHUB_RUN_NUMBER))/; s/^version\/name=.*/version\/name=\"$version\"/" godot/export_presets.cfg
+          export GODOT_ANDROID_KEYSTORE_DEBUG_PATH="$HOME/.shogi-test-keystore/test.keystore"
+          export GODOT_ANDROID_KEYSTORE_DEBUG_USER=androiddebugkey
+          export GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD=android
+          "$GODOT" --headless --path godot --import || true
+          "$GODOT" --headless --path godot --export-debug Android "$PWD/shogi-$version.apk"
+          unzip -l "shogi-$version.apk" | grep -E "\.so$"
+
+      - name: Publish the pre-release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: teste-v${{ env.VERSION }}-${{ github.run_number }}
+          name: Teste ${{ env.VERSION }} (build ${{ github.run_number }})
+          target_commitish: ${{ github.sha }}
+          prerelease: true
+          body: |
+            APK de teste do branch `${{ github.ref_name }}` (commit ${{ github.sha }}).
+            No celular: baixe o arquivo `.apk` abaixo e instale. Ele atualiza por cima do anterior.
+          files: shogi-${{ env.VERSION }}.apk

@@ -5,8 +5,8 @@ config_version=5
 [application]
 
 config/name="Shogi"
-run/main_scene="res://visual/table.tscn"
-config/version="0.1.2"
+run/main_scene="res://app/game.tscn"
+config/version="0.2.0"
 config/features=PackedStringArray("4.7", "Mobile")
 
 [display]

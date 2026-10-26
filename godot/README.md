@@ -3,6 +3,20 @@
 Versão nativa para Android, em construção. As decisões estão em [`DECISIONS.md`](DECISIONS.md).
 O PWA na raiz do repositório fica congelado como referência.
 
+## Partida (`app/`)
+
+`app/game.tscn` é a cena principal: partida contra o computador nos 5 níveis do PWA, escolhendo o
+lado. O motor (`engine/`, `ShogiEngine`) decide o que é legal (com o filtro de uchifuzume) e joga
+pelo computador; a mesa anima; o mentor (`app/mentor.gd`, retrato provisório 師) explica lances
+recusados, avisa do xeque e dá dicas. No menu ☰: nova partida, desfazer, dica, desistir e os
+ajustes dos efeitos. A partida é salva sozinha em `user://partida.json` e pode ser continuada.
+
+As explicações completas (porte de `explain.ts`, `coach.ts`, `impasse.ts`, `session.ts`) estão
+sendo escritas em `game/` no branch do motor; por enquanto `game_screen.gd` tem uma versão curta.
+
+Captura de tela: `godot --path godot --fixed-fps 30 res://app/game.tscn -- shot=/tmp/a.png
+demo=reply at=3` (demos: `dialog`, `reply`, `illegal`, `hint`).
+
 ## Frente visual (`visual/`)
 
 Teste da mesa: tabuleiro em 3D com a câmera quase de cima, as 40 peças, toque e arrasto,
@@ -28,6 +42,7 @@ godot --path godot --fixed-fps 30 res://visual/table.tscn -- shot=/tmp/a.png dem
 
 ## APK de teste
 
-`export_presets.cfg` tem o preset "Android" (arm64, ID `io.github.luizfsantosalt.shogi`,
-paisagem). Com o Android SDK configurado no editor: `godot --headless --path godot
---export-debug Android ../build/shogi.apk`.
+O workflow **Godot app** (`.github/workflows/godot-app.yml`) compila o motor para Android, roda
+os testes, exporta o APK (arm64, ID `io.github.luizfsantosalt.shogi`, paisagem), assina com a
+chave de teste de `ci/` e publica uma **pre-release** no GitHub a cada push. A versão vem de
+`config/version` no `project.godot` e aparece na tela, ao lado do ☰.

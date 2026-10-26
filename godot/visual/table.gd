@@ -1,8 +1,8 @@
 class_name Table
 extends Node3D
-## Visual test of the table: board, komadai, the 40 pieces, touch and drag, the effects and the
-## movement arrows. Moves follow the pieces' patterns only (no check or other rules yet: the
-## engine branch brings those). Sides alternate, so both can be tried on one phone.
+## The table: board, komadai, the 40 pieces, touch and drag, the effects and the movement
+## arrows. A game controller attaches the rules (see "Rules interface"); without one it runs as
+## a sandbox for the visual test (patterns only, sides alternate).
 ##
 ## Units are centimetres; the board top is at y = 0, centred on the origin.
 
@@ -10,21 +10,20 @@ const CELL := Vector2(3.33, 3.64)
 const BOARD_SIZE := Vector3(33.4, 6.0, 36.4)
 const KOMADAI_SIZE := Vector3(11.5, 2.6, 12.0)
 const KOMADAI_TOP := -2.6
-const START := [
-	"lnsgkgsnl",
-	".r.....b.",
-	"ppppppppp",
-	".........",
-	".........",
-	".........",
-	"PPPPPPPPP",
-	".B.....R.",
-	"LNSGKGSNL",
-]
+const START_SFEN := "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1"
 const HAND_ORDER := ["R", "B", "G", "S", "N", "L", "P"]
 const GOLD := Color(1.0, 0.72, 0.28)
 const ARROW_GOLD := Color(1.0, 0.78, 0.25)
 const ARROW_RED := Color(0.95, 0.12, 0.06)
+
+signal move_chosen(usi: String)
+## A move the rules refuse: from the square (or (-1,-1) and `kind` from the hand) to `to`.
+signal illegal_attempt(from: Vector2i, kind: String, to: Vector2i)
+signal _promotion_answered
+
+var sandbox := true                  ## no rules attached: the visual test
+var legal_moves := PackedStringArray()
+var interactive := true              ## false while the computer is thinking
 
 ## Tuning (menu).
 var lift_height := 2.4
@@ -48,6 +47,14 @@ var _enemy_arrows: Koma = null      ## opponent's piece whose arrows are shown
 var arrows: MoveArrows
 var _time := 0.0
 var _last_move: Array = []           ## squares of the last move
+var _asking := false                 ## the promotion question is open
+var _ui_layer: CanvasLayer
+var _flashes := {}                   ## square -> [colour, time left]
+var _menu_panel: PanelContainer
+var _menu_actions: VBoxContainer
+var _moves_button: Button
+var _sandbox_reset: Button
+var _cam_home: Transform3D
 
 
 func _ready() -> void:
@@ -220,27 +227,7 @@ func _build_squares() -> void:
 # --- Position ------------------------------------------------------------------------------
 
 func _setup_position() -> void:
-	for p in pieces:
-		p.queue_free()
-	pieces.clear()
-	hands = [[], []]
-	side_to_move = 0
-	_last_move = []
-	var n := 0
-	for row in 9:
-		var line: String = START[row]
-		for col in 9:
-			var ch := line[col]
-			if ch == ".":
-				continue
-			var colour := 0 if ch == ch.to_upper() else 1
-			var k := Koma.new()
-			add_child(k)
-			k.setup(ch.to_upper(), colour, 7919 * (n + 1))
-			k.square = Vector2i(col, row)
-			k.position = square_pos(k.square)
-			pieces.append(k)
-			n += 1
+	show_sfen(START_SFEN)
 
 
 func square_pos(sq: Vector2i) -> Vector3:
@@ -269,20 +256,143 @@ func _hand_slot(colour: int, kind: String, index: int) -> Vector3:
 	return _komadai_pos[colour] + local + Vector3(0, index * 0.02, 0)
 
 
-func _relayout_hand(colour: int) -> void:
+func _relayout_hand(colour: int, instant := false) -> void:
 	var counts := {}
 	for p: Koma in hands[colour]:
 		var i: int = counts.get(p.kind, 0)
 		counts[p.kind] = i + 1
 		var to := _hand_slot(colour, p.kind, i)
-		if p.position.distance_to(to) > 0.01:
+		if instant:
+			p.position = to
+		elif p.position.distance_to(to) > 0.01:
 			p.create_tween().tween_property(p, "position", to, 0.25).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+
+# --- Rules interface -----------------------------------------------------------------------
+# With `sandbox` on (the visual test) moves follow the pieces' patterns and the sides alternate.
+# A game controller turns it off and drives the table: it passes the legal moves (USI) with
+# set_legal_moves(), hears move_chosen / illegal_attempt, and animates the opponent's moves
+# with play_usi().
+
+## Squares in USI: "7g" is file 7, rank g -> Vector2i(col 2, row 6).
+static func usi_square(s: String) -> Vector2i:
+	return Vector2i(9 - int(s[0]), s.unicode_at(1) - 97)
+
+
+static func square_usi(sq: Vector2i) -> String:
+	return str(9 - sq.x) + char(97 + sq.y)
+
+
+func set_legal_moves(moves: PackedStringArray, side: int, can_touch: bool) -> void:
+	sandbox = false
+	legal_moves = moves
+	side_to_move = side
+	interactive = can_touch
+	_refresh_arrows()
+
+
+## Where a piece starts from in USI: "7g" on the board, "P*" from the hand.
+func _origin(p: Koma) -> String:
+	return square_usi(p.square) if p.square.x >= 0 else p.kind + "*"
+
+
+func _targets_for(p: Koma) -> Array:
+	if sandbox:
+		if p.square.x >= 0:
+			return KomaMoves.reach(p.kind, p.promoted, p.colour, p.square, occupant).map(func(r: Array) -> Vector2i: return r[0])
+		return KomaMoves.drops(p.kind, p.colour, occupant)
+	var origin := _origin(p)
+	var out := []
+	for m in legal_moves:
+		if m.begins_with(origin):
+			var to := usi_square(m.substr(2, 2))
+			if not to in out:
+				out.append(to)
+	return out
+
+
+## Rebuilds the pieces from a SFEN (no animation): new game, undo, loading a saved game.
+func show_sfen(sfen: String) -> void:
+	_selected = null
+	_targets = []
+	_enemy_arrows = null
+	for p in pieces:
+		p.queue_free()
+	pieces.clear()
+	hands = [[], []]
+	_last_move = []
+	var parts := sfen.split(" ")
+	var row := 0
+	var col := 0
+	var promoted := false
+	var n := 0
+	for ch in parts[0]:
+		if ch == "/":
+			row += 1
+			col = 0
+		elif ch == "+":
+			promoted = true
+		elif ch.is_valid_int():
+			col += int(ch)
+		else:
+			var k := _new_piece(ch.to_upper(), 0 if ch == ch.to_upper() else 1, n)
+			k.square = Vector2i(col, row)
+			k.position = square_pos(k.square)
+			if promoted:
+				k.show_promoted()
+			promoted = false
+			col += 1
+			n += 1
+	side_to_move = 0 if parts.size() < 2 or parts[1] == "b" else 1
+	if parts.size() > 2 and parts[2] != "-":
+		var count := 0
+		for ch in parts[2]:
+			if ch.is_valid_int():
+				count = count * 10 + int(ch)
+				continue
+			var colour := 0 if ch == ch.to_upper() else 1
+			for i in maxi(count, 1):
+				var k := _new_piece(ch.to_upper(), colour, n)
+				n += 1
+				k.square = Vector2i(-1, -1)
+				hands[colour].append(k)
+			count = 0
+		for c in 2:
+			_relayout_hand(c, true)
+	_refresh_arrows()
+
+
+func _new_piece(kind: String, colour: int, n: int) -> Koma:
+	var k := Koma.new()
+	add_child(k)
+	k.setup(kind, colour, 7919 * (n + 1))
+	pieces.append(k)
+	return k
+
+
+## Animates a move decided elsewhere (the computer, or a replay): "7g7f", "8h2b+", "P*5e".
+func play_usi(usi: String) -> void:
+	var p: Koma = null
+	if usi[1] == "*":
+		for h: Koma in hands[side_to_move]:
+			if h.kind == usi[0]:
+				p = h
+				break
+	else:
+		p = piece_at(usi_square(usi.substr(0, 2)))
+	if p == null:
+		push_error("play_usi: no piece for " + usi)
+		return
+	_busy = true
+	arrows.clear()
+	await p.lift(lift_height).finished
+	await _perform(p, usi_square(usi.substr(2, 2)), false, usi.ends_with("+"))
 
 
 # --- Input ---------------------------------------------------------------------------------
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _busy:
+	if _busy or _asking:
 		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
@@ -300,7 +410,8 @@ func _on_press(screen: Vector2) -> void:
 	_press_screen = screen
 	var hit := _piece_under(screen)
 	if _selected != null:
-		# A second tap: on a target moves there, on another own piece switches, else drops it.
+		# A second tap: on a target moves there, on another own piece switches, on the piece
+		# itself starts a drag; anywhere else on the board is an attempt to be explained.
 		var sq := _square_under(screen)
 		if sq in _targets and (hit == null or hit.colour != side_to_move or hit == _selected):
 			_move_selected(sq, false)
@@ -308,13 +419,16 @@ func _on_press(screen: Vector2) -> void:
 		if hit == _selected:
 			_dragging = false
 			return
+		if sq.x >= 0 and (hit == null or hit.colour != side_to_move):
+			_refuse(sq)
+			return
 		_deselect()
 	if hit == null:
 		if _enemy_arrows != null:
 			_enemy_arrows = null
 			_refresh_arrows()
 		return
-	if hit.colour != side_to_move:
+	if hit.colour != side_to_move or not interactive:
 		# The opponent's piece shows how it moves, in red. Tap again to hide.
 		_enemy_arrows = null if _enemy_arrows == hit or hit.square.x < 0 else hit
 		_refresh_arrows()
@@ -329,8 +443,20 @@ func _on_release(screen: Vector2) -> void:
 	var sq := _square_under(screen)
 	if sq in _targets:
 		_move_selected(sq, true)
+	elif sq.x >= 0 and sq != _selected.square:
+		_refuse(sq)
 	else:
 		_return_selected()
+
+
+## A move the rules don't allow: the square flashes red, the piece goes back, and the game
+## controller is told so the mentor can explain why.
+func _refuse(sq: Vector2i) -> void:
+	var p := _selected
+	flash_square(sq, ARROW_RED)
+	fx.shake(0.15)
+	_return_selected()
+	illegal_attempt.emit(p.square, p.kind, sq)
 
 
 func _piece_under(screen: Vector2) -> Koma:
@@ -370,10 +496,7 @@ func _select(p: Koma) -> void:
 	arrows.clear()
 	_dragging = false
 	_carry_prev = p.position
-	if p.square.x >= 0:
-		_targets = KomaMoves.reach(p.kind, p.promoted, p.colour, p.square, occupant).map(func(r: Array) -> Vector2i: return r[0])
-	else:
-		_targets = KomaMoves.drops(p.kind, p.colour, occupant)
+	_targets = _targets_for(p)
 	p.lift(lift_height)
 
 
@@ -404,39 +527,64 @@ func _process(delta: float) -> void:
 
 func _return_selected() -> void:
 	var p := _selected
-	var home := square_pos(p.square) if p.square.x >= 0 else p.position
 	if p.square.x < 0:
 		_relayout_hand(p.colour)
 	else:
-		p.create_tween().tween_property(p, "position", home, 0.18).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		p.create_tween().tween_property(p, "position", square_pos(p.square), 0.18).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	_deselect()
 
 
+## The player's move: decide the promotion (asking if it is optional), then animate and report.
 func _move_selected(to: Vector2i, dragged: bool) -> void:
 	var p := _selected
-	var from := p.square
-	var from_hand := from.x < 0
+	var origin := _origin(p)
 	_selected = null
 	_targets = []
 	_enemy_arrows = null
 	_busy = true
+	var promote := false
+	if sandbox:
+		promote = p.square.x >= 0 and not p.promoted and KomaMoves.can_promote(p.kind, p.colour, p.square, to)
+	elif p.square.x >= 0:
+		var plain := origin + square_usi(to) in legal_moves
+		var plus := origin + square_usi(to) + "+" in legal_moves
+		if plain and plus:
+			# Hover over the square while the player chooses.
+			var t := p.create_tween()
+			t.tween_property(p, "position", square_pos(to), 0.14).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+			promote = await _ask_promotion(to, p)
+		else:
+			promote = plus
+	var usi := origin + square_usi(to) + ("+" if promote else "")
+	await _perform(p, to, dragged, promote)
+	if sandbox:
+		side_to_move = 1 - side_to_move
+		_busy = false
+		_refresh_arrows()
+	else:
+		_busy = false
+		move_chosen.emit(usi)
+
+
+## Moves a lifted piece to `to`: travel, then a slam or the promotion flip, capturing on landing.
+func _perform(p: Koma, to: Vector2i, dragged: bool, promote: bool) -> void:
+	var from := p.square
+	var from_hand := from.x < 0
 	var victim := piece_at(to)
 	var dest := square_pos(to)
-
 	var trail: CPUParticles3D = null
 	if from_hand:
 		hands[p.colour].erase(p)
 		trail = fx.trail(p)
 	# Travel to the square while lifted (a short arc when tapped, a snap when dragged).
-	var travel := 0.1 if dragged else clampf(p.position.distance_to(dest) / 60.0, 0.16, 0.32)
-	var t := p.create_tween()
-	t.tween_property(p, "position", dest, travel).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
-	await t.finished
+	if p.position.distance_to(dest) > 0.05:
+		var travel := 0.1 if dragged else clampf(p.position.distance_to(dest) / 60.0, 0.16, 0.32)
+		var t := p.create_tween()
+		t.tween_property(p, "position", dest, travel).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+		await t.finished
 	p.square = to
 	if from_hand:
 		_relayout_hand(p.colour)
-
-	var promote := not from_hand and not p.promoted and KomaMoves.can_promote(p.kind, p.colour, from, to)
 	var landed := func() -> void:
 		var strength := 1.0 if victim != null else 0.7
 		fx.impact(dest, strength)
@@ -450,9 +598,39 @@ func _move_selected(to: Vector2i, dragged: bool) -> void:
 	else:
 		await p.slam(0.13, landed).finished
 	_last_move = [from, to] if not from_hand else [to]
-	side_to_move = 1 - side_to_move
-	_busy = false
-	_refresh_arrows()
+	if not sandbox:
+		_busy = false
+
+
+## Two buttons over the square: promote (成) or not (不成). Returns the choice.
+func _ask_promotion(sq: Vector2i, p: Koma) -> bool:
+	_asking = true
+	var box := HBoxContainer.new()
+	box.add_theme_constant_override("separation", 18)
+	var yes := Button.new()
+	yes.text = "成  Promover"
+	var no := Button.new()
+	no.text = "不成  Não promover"
+	for b in [yes, no]:
+		b.add_theme_font_size_override("font_size", 34)
+		b.custom_minimum_size = Vector2(0, 92)
+		box.add_child(b)
+	_ui_layer.add_child(box)
+	await get_tree().process_frame
+	var at := camera.unproject_position(square_pos(sq) + Vector3(0, lift_height, 0))
+	var vp := get_viewport().get_visible_rect().size
+	box.position = Vector2(clampf(at.x - box.size.x * 0.5, 16, vp.x - box.size.x - 16), clampf(at.y - box.size.y - 70, 16, vp.y - box.size.y - 16))
+	p.set_glow(0.6)
+	var answer := [false]
+	var done := func(v: bool) -> void:
+		answer[0] = v
+		_promotion_answered.emit()
+	yes.pressed.connect(done.bind(true))
+	no.pressed.connect(done.bind(false))
+	await _promotion_answered
+	box.queue_free()
+	_asking = false
+	return answer[0]
 
 
 ## The captured piece is knocked off the board, spins through the air to the capturer's stand
@@ -495,10 +673,25 @@ func _update_squares() -> void:
 	else:
 		for sq: Vector2i in _last_move:
 			lit[sq] = 0.18
+	var tint := {}
+	for sq: Vector2i in _flashes.keys():
+		var f: Array = _flashes[sq]
+		f[1] -= get_process_delta_time()
+		if f[1] <= 0.0:
+			_flashes.erase(sq)
+			continue
+		lit[sq] = minf(1.0, f[1] * 2.5)
+		tint[sq] = f[0]
 	for row in 9:
 		for col in 9:
-			var v: float = lit.get(Vector2i(col, row), 0.0)
-			mm.set_instance_custom_data(row * 9 + col, Color(GOLD.r, GOLD.g, GOLD.b, v))
+			var sq := Vector2i(col, row)
+			var v: float = lit.get(sq, 0.0)
+			var c: Color = tint.get(sq, GOLD)
+			mm.set_instance_custom_data(row * 9 + col, Color(c.r, c.g, c.b, v))
+
+
+func flash_square(sq: Vector2i, colour: Color, seconds := 0.6) -> void:
+	_flashes[sq] = [colour, seconds]
 
 
 ## Arrows of the mover's pieces (button on) and of a tapped opponent's piece.
@@ -519,6 +712,7 @@ func _build_menu() -> void:
 	var layer := CanvasLayer.new()
 	layer.layer = 2
 	add_child(layer)
+	_ui_layer = layer
 	var button := Button.new()
 	button.text = "☰"
 	button.add_theme_font_size_override("font_size", 40)
@@ -559,9 +753,25 @@ func _build_menu() -> void:
 	panel.visible = false
 	layer.add_child(panel)
 	button.pressed.connect(func() -> void: panel.visible = not panel.visible)
+	var outer := VBoxContainer.new()
+	outer.add_theme_constant_override("separation", 14)
+	panel.add_child(outer)
+	# Game actions (added by the controller) on top, the tuning under "Ajustes".
+	_menu_actions = VBoxContainer.new()
+	_menu_actions.add_theme_constant_override("separation", 10)
+	outer.add_child(_menu_actions)
+	var settings_toggle := Button.new()
+	settings_toggle.text = "Ajustes ▾"
+	settings_toggle.flat = true
+	settings_toggle.add_theme_font_size_override("font_size", 28)
+	outer.add_child(settings_toggle)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 14)
-	panel.add_child(box)
+	box.visible = false
+	outer.add_child(box)
+	settings_toggle.pressed.connect(func() -> void: box.visible = not box.visible)
+	_menu_panel = panel
+	_moves_button = moves
 
 	var add_toggle := func(label: String, value: bool, on_change: Callable) -> void:
 		var c := CheckButton.new()
@@ -590,6 +800,7 @@ func _build_menu() -> void:
 	add_slider.call("Poeira", fx.impact_dust, 0.0, 2.0, func(v: float) -> void: fx.impact_dust = v)
 	add_slider.call("Altura ao pegar", lift_height, 0.8, 5.0, func(v: float) -> void: lift_height = v)
 	var reset := Button.new()
+	_sandbox_reset = reset
 	reset.text = "Recomeçar posição"
 	reset.add_theme_font_size_override("font_size", 30)
 	reset.pressed.connect(func() -> void:
@@ -601,6 +812,55 @@ func _build_menu() -> void:
 	box.add_child(reset)
 
 
+## A game action in the menu (new game, undo, hint…). Closes the menu when pressed.
+func add_menu_action(text: String, action: Callable) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.add_theme_font_size_override("font_size", 32)
+	b.custom_minimum_size = Vector2(460, 80)
+	b.pressed.connect(func() -> void:
+		_menu_panel.visible = false
+		action.call())
+	_menu_actions.add_child(b)
+	_sandbox_reset.visible = false
+	return b
+
+
+## The "Movimentos" button exists only in the beginner levels.
+func set_moves_button(available: bool) -> void:
+	_moves_button.visible = available
+	if not available and arrows_on:
+		_moves_button.button_pressed = false
+
+
+## Puts the player's side at the bottom of the screen (0 Sente, 1 Gote).
+func set_view_side(colour: int) -> void:
+	if _cam_home == Transform3D():
+		_cam_home = camera.transform
+	var t := _cam_home if colour == 0 else Transform3D(Basis(Vector3.UP, PI), Vector3.ZERO) * _cam_home
+	camera.transform = t
+	fx.attach_camera(camera)
+
+
+## Checkmate: the world slows down, the king's square bursts in red and the table shakes.
+func checkmate_effect(king_sq: Vector2i) -> void:
+	var pos := square_pos(king_sq)
+	Engine.time_scale = 0.35
+	fx.promotion_burst(pos + Vector3(0, 2, 0))
+	flash_square(king_sq, ARROW_RED, 2.5)
+	fx.shake(1.0)
+	await get_tree().create_timer(0.9, true, false, true).timeout
+	Engine.time_scale = 1.0
+
+
+## Square of a colour's king, or (-1, -1).
+func king_square(colour: int) -> Vector2i:
+	for p in pieces:
+		if p.kind == "K" and p.colour == colour:
+			return p.square
+	return Vector2i(-1, -1)
+
+
 # --- Screenshots for development -----------------------------------------------------------
 # godot --path godot res://visual/table.tscn -- shot=/tmp/a.png demo=lift at=1.2
 
@@ -610,7 +870,8 @@ func _run_cmdline_demo() -> void:
 		var kv := a.split("=", true, 1)
 		if kv.size() == 2:
 			args[kv[0]] = kv[1]
-	if not args.has("shot"):
+	# Only when the table runs on its own (the sandbox scene), not inside the game screen.
+	if not args.has("shot") or get_tree().current_scene != self:
 		return
 	var demo: String = args.get("demo", "start")
 	var at := float(args.get("at", "1.0"))

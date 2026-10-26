@@ -152,6 +152,14 @@ func promote_flip(height: float, seconds: float, on_apex: Callable, on_impact: C
 	return t
 
 
+## Shows the promoted side at once (setting up a position).
+func show_promoted() -> void:
+	promoted = true
+	flip_pivot.rotation.z = PI
+	mesh_instance.rotation.x = KomaMesh.rest_tilt(kind)
+	material.set_shader_parameter("gold_edge", 1.0)
+
+
 ## Turns a captured piece back to its unpromoted side at once (it goes to the hand).
 func reset_promotion() -> void:
 	promoted = false
