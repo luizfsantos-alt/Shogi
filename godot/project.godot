@@ -5,9 +5,14 @@ config_version=5
 [application]
 
 config/name="Shogi"
-run/main_scene="res://app/game.tscn"
-config/version="0.2.1"
+run/main_scene="res://app/home.tscn"
+config/quit_on_go_back=false
+config/version="0.3.0"
 config/features=PackedStringArray("4.7", "Mobile")
+
+[autoload]
+
+App="*res://app/app.gd"
 
 [display]
 

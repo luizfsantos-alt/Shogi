@@ -125,8 +125,7 @@ o fim. Os testes usam scripts headless como os do motor (não gdUnit4).
 
 ## Fora deste porte (por enquanto)
 
-- Dicas do treinador da partida guiada (`src/learn/coachTips.ts`) e o curso de lições: ficam para
-  depois da v1, junto com o curso.
+- O curso e o treinador da partida guiada estão em `godot/learn/` (ver o README do Godot).
 - Validação completa de SFEN importado (`findSetupProblem`: nifu na posição, peças sem movimento,
   contagem de peças): o motor só confere formato, reis e o lado que acabou de jogar em xeque.
   Importar SFEN/USI é pós-v1.

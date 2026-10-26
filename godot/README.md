@@ -3,17 +3,64 @@
 Versão nativa para Android, em construção. As decisões estão em [`DECISIONS.md`](DECISIONS.md).
 O PWA na raiz do repositório fica congelado como referência.
 
-## Partida (`app/`)
+## Telas (`app/`)
 
-`app/game.tscn` é a cena principal: partida contra o computador nos 5 níveis do PWA, escolhendo o
-lado. A `GameSession` (`game/`, porte de `session.ts` e da camada de regras do PWA) decide o que é
-legal, joga pelo computador e salva a partida; a mesa anima; o mentor (`app/mentor.gd`, retrato
-provisório 師) explica lances recusados com os textos do PWA (`Explain`), diz como sair do xeque
-(`Coach`) e dá dicas em palavras. No menu ☰: nova partida, desfazer, dica, declarar impasse,
-desistir e os ajustes dos efeitos. A partida é salva sozinha em `user://partida.json`.
+`app/home.tscn` é a cena principal. O autoload `App` (`app/app.gd`) troca de tela (com um fade) e
+guarda os ajustes em `user://ajustes.json`; o botão "voltar" do Android sobe uma tela.
 
-Captura de tela: `godot --path godot --fixed-fps 30 res://app/game.tscn -- shot=/tmp/a.png
-demo=reply at=3` (demos: `dialog`, `reply`, `illegal`, `hint`, `gote`).
+- **Início** (`home.gd`): a mesa 3D ao fundo, o menu à esquerda (Continuar partida, Jogar,
+  Aprender a jogar com o progresso, Ajustes) e as boas-vindas do tengu na primeira abertura.
+- **Partida** (`game.tscn`, `game_screen.gd`): contra o computador nos 5 níveis do PWA, escolhendo
+  o lado (painel `ui/new_game_panel.gd`). A `GameSession` (`game/`) decide o que é legal, joga
+  pelo computador e salva a partida (`user://partida.json`); a mesa anima; o mentor explica lances
+  recusados (`Explain`), diz como sair do xeque (`Coach`) e dá dicas em palavras. Na **partida
+  guiada** do curso, o treinador (`learn/coach_tips.gd`) comenta os momentos importantes e marca as
+  casas. No menu ☰: início, nova partida, desfazer, dica, declarar impasse, desistir e os ajustes.
+- **Curso** (`course.gd`): as três trilhas lado a lado, com as estrelas e a próxima lição.
+- **Lição** (`lesson.gd`): a mesa com a posição do passo, estrelas ★ para alcançar, casas em foco,
+  dica, recomeçar e o painel da peça (`ui/piece_card.gd`). Ao terminar: estrelas (1 a 3) e a próxima
+  lição.
+
+O visual segue o Genpei do PWA (`ui/ui_theme.gd`): fundo queimado, Archivo condensada, rótulos em
+IBM Plex Mono, botões chanfrados, vermelho para ação e ouro para valor; os kanji da interface vêm
+da Potta One reduzida aos caracteres usados (`node scripts/make-kanji-font.mjs --godot`).
+
+### O mentor (tengu 天狗)
+
+`app/mentor.gd`, com a arte de `app/mentor/art/tengu.png`. O PNG é recortado do fundo preto de
+`app/mentor/source/tengu.jpg` por `python3 -I godot/app/mentor/tools/cut_background.py`. O tengu
+respira devagar (`mentor/breath.gdshader`): só o corpo se move, e o tapete fica parado. Dois tamanhos:
+
+- **grande** (`speak(pages, title)`): o que precisa ser lido até o fim (boas-vindas, explicações
+  das lições, fim da partida guiada). O tengu inteiro, a tela escurece e cada toque no balão mostra
+  a próxima página. Nas lições, o tabuleiro desliza para a direita enquanto ele fala;
+- **pequeno** (`say(text)`, `note(text, title)`): falas enquanto o jogador mexe as peças (objetivo
+  do exercício, lance errado, dica, treinador), com só a cabeça do tengu num medalhão.
+
+### O curso (`learn/`)
+
+As 32 lições vêm do PWA: `node scripts/export-lessons.mjs` gera `learn/course.json` a partir de
+`src/learn/` (o teste `tests/godotCourse.test.ts` falha se o arquivo ficar desatualizado). Duas
+frases que citam botões do PWA são trocadas no carregamento (`Course.APP_WORDING`).
+
+| Arquivo | Classe | Porte de |
+| --- | --- | --- |
+| `course.gd` | `Course` | `course.ts` + progresso (`user://curso.json`) |
+| `lesson_session.gd` | `LessonSession` | `LessonSession.ts` (passos, objetivos, respostas do adversário, dicas, estrelas) |
+| `coach_tips.gd` | `CoachTips` | `coachTips.ts` (o treinador da partida guiada) |
+
+Testes: `godot --headless --path godot -s res://learn/test/test_learn.gd`. São 843 verificações:
+todos os 48 exercícios resolvidos pela `LessonSession`, mates conferidos por busca, os casos de
+`lessons.test.ts` e `coachTips.test.ts`, progresso salvo e a cobertura da fonte de kanji.
+
+Capturas de tela (demos em `_demo` de cada tela):
+
+```bash
+godot --path godot --fixed-fps 30 res://app/home.tscn -- shot=/tmp/a.png demo=welcome at=3
+godot --path godot --fixed-fps 30 res://app/course.tscn -- shot=/tmp/a.png at=1
+godot --path godot --fixed-fps 30 res://app/lesson.tscn -- shot=/tmp/a.png lesson=rook step=1 demo=move at=2
+godot --path godot --fixed-fps 30 res://app/game.tscn -- shot=/tmp/a.png demo=guided at=3
+```
 
 ## Frente visual (`visual/`)
 

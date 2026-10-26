@@ -44,6 +44,8 @@ jobs:
         run: |
           "$GODOT" --headless --path godot --import || "$GODOT" --headless --path godot --import
           "$GODOT" --headless --path godot -s res://engine/test/test_engine.gd
+          "$GODOT" --headless --path godot -s res://game/test/test_game.gd
+          "$GODOT" --headless --path godot -s res://learn/test/test_learn.gd
 
       - uses: actions/cache@v4
         id: templates

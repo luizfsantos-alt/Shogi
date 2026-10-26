@@ -52,15 +52,21 @@ força fáceis de ajustar; opção "efeitos reduzidos" para celulares fracos.
 
 - As mensagens de aprendizado (lance inválido explicado, ajuda no xeque, treinador) são ditas
   por um **personagem mentor**, que aparece num canto só quando fala.
-- Arte do mentor: **gerador de imagens**, feita pelo dono do projeto a partir de um briefing de
-  prompt fixo (mesmo personagem, várias expressões, fundo transparente). Até lá, um espaço
-  reservado no lugar da imagem.
+- O mentor é um **tengu (天狗)**, o mestre da montanha que, na lenda, ensinou Minamoto no
+  Yoshitsune. Arte em pixel art do dono do projeto (gerador de imagens), **sem expressões** por
+  enquanto, com uma **respiração sutil só no corpo**.
+- **Dois tamanhos**: o tengu **inteiro e grande** nos diálogos que precisam ser lidos até o fim
+  (avança tocando no balão); só a **cabeça**, num medalhão, nas falas enquanto o jogador pode
+  mexer as peças.
 
 ## Escopo da v1 (primeiro APK jogável)
 
 Partida contra a IA nos 5 níveis (recalibrados no aparelho), regras completas, mentor com as
 explicações, setas de movimento (botão), desfazer/dica no menu, salvamento automático.
-Depois: curso de 32 lições, handicaps, declaração de impasse pelo jogador, exportar SFEN/USI.
+Depois: handicaps, exportar SFEN/USI.
+
+**v0.3** (out/2026): tela inicial e interface no visual Genpei do PWA, o mentor tengu e o curso
+completo (as 32 lições exportadas do PWA, com a partida guiada e o treinador).
 
 ## Pastas
 
@@ -68,6 +74,9 @@ Depois: curso de 32 lições, handicaps, declaração de impasse pelo jogador, e
 godot/
   project.godot         # projeto (paisagem, renderizador Mobile)
   DECISIONS.md          # este arquivo
+  app/                  # telas: início, partida, curso, lição; mentor (tengu); tema
+  game/                 # regras e partida em GDScript (porte do PWA)
+  learn/                # o curso: lições exportadas do PWA, sessão da lição, treinador
   visual/               # frente visual: peça, tabuleiro, shaders, efeitos
   engine/               # frente do motor: fonte do GDExtension (C++), build com NDK
   bin/                  # bibliotecas compiladas (.so) e o .gdextension
