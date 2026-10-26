@@ -1,7 +1,7 @@
 import { pieceInfo } from "../core/pieces";
 import type { Piece } from "../core/types";
 import { element } from "./dialogs";
-import { renderPiece, type PieceStyle } from "./pieceView";
+import { renderPiece, type PieceLook } from "./pieceView";
 
 const SIZE = 5;
 const CENTER = 2;
@@ -10,7 +10,7 @@ const CENTER = 2;
  * 5x5 movement diagram, from the owner's point of view (forward = up):
  * dots = one square, shaded line = any distance, diamond = jump.
  */
-export function movementDiagram(piece: Pick<Piece, "type" | "promoted">, style: PieceStyle): HTMLElement {
+export function movementDiagram(piece: Pick<Piece, "type" | "promoted">, look: PieceLook): HTMLElement {
   const { steps, slides, jumps } = pieceInfo(piece).movement;
   const kinds = new Map<string, string>();
   const key = (dx: number, dy: number) => `${CENTER - dy},${CENTER + dx}`;
@@ -24,7 +24,7 @@ export function movementDiagram(piece: Pick<Piece, "type" | "promoted">, style: 
   for (let row = 0; row < SIZE; row++) {
     for (let col = 0; col < SIZE; col++) {
       const cell = element("div", { class: `diagram-cell ${kinds.get(`${row},${col}`) ?? ""}` });
-      if (row === CENTER && col === CENTER) cell.append(renderPiece({ color: "black", ...piece }, style, false));
+      if (row === CENTER && col === CENTER) cell.append(renderPiece({ color: "black", ...piece }, look, false));
       grid.append(cell);
     }
   }

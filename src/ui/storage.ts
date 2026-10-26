@@ -1,5 +1,4 @@
 import type { GameSettings, SavedGame } from "./session";
-import type { PieceStyle } from "./pieceView";
 
 /**
  * localStorage persistence. Every access is guarded: storage may be unavailable
@@ -14,9 +13,10 @@ const MAX_SAVES = 30;
 export interface Preferences {
   /** Bumped when defaults change in a way that should reach existing players. */
   version: number;
-  pieceStyle: PieceStyle;
-  /** Movement marks drawn on the pieces. */
-  showMarks: boolean;
+  /** Reading mode: pieces show how they move and their name instead of kanji. */
+  reading: boolean;
+  /** Language of the piece names in reading mode. */
+  labels: "pt" | "en";
   /** Shade the squares the opponent attacks. */
   showAttacks: boolean;
   sound: boolean;
@@ -67,17 +67,26 @@ export function deleteSave(id: string): void {
   write(SAVES_KEY, listSaves().filter((slot) => slot.id !== id));
 }
 
-const PREFERENCES_VERSION = 2;
+const PREFERENCES_VERSION = 3;
 
-export function loadPreferences(): Preferences {
-  const stored = read<Partial<Preferences>>(PREFS_KEY) ?? {};
-  const preferences: Preferences = { pieceStyle: "kanji", showMarks: false, showAttacks: false, sound: true, ...stored, version: PREFERENCES_VERSION };
-  // Version 2 made traditional kanji pieces the default (the old default was "pt" with marks).
-  if ((stored.version ?? 1) < 2) {
-    preferences.pieceStyle = "kanji";
-    preferences.showMarks = false;
+/** Preferences as stored by older versions, which had piece styles instead of reading mode. */
+type StoredPreferences = Partial<Preferences> & { pieceStyle?: string; showMarks?: boolean };
+
+/** Fills in defaults and upgrades preferences saved by older versions. */
+export function migratePreferences(stored: StoredPreferences): Preferences {
+  const { pieceStyle, showMarks, ...rest } = stored;
+  const preferences: Preferences = { reading: false, labels: "pt", showAttacks: false, sound: true, ...rest, version: PREFERENCES_VERSION };
+  // Version 3 replaced the piece styles (kanji, Portuguese or English names, optional movement
+  // marks) with kanji plus a reading mode. Whoever chose names or marks gets reading mode.
+  if ((stored.version ?? 1) < 3) {
+    preferences.reading = (stored.version ?? 1) >= 2 && (pieceStyle === "pt" || pieceStyle === "en" || showMarks === true);
+    preferences.labels = pieceStyle === "en" ? "en" : "pt";
   }
   return preferences;
+}
+
+export function loadPreferences(): Preferences {
+  return migratePreferences(read<StoredPreferences>(PREFS_KEY) ?? {});
 }
 
 export function savePreferences(preferences: Preferences): void {
