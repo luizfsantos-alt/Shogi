@@ -20,6 +20,8 @@ signal move_chosen(usi: String)
 ## A move the rules refuse: from the square (or (-1,-1) and `kind` from the hand) to `to`.
 signal illegal_attempt(from: Vector2i, kind: String, to: Vector2i)
 signal _promotion_answered
+## The "Efeitos reduzidos" switch of the menu changed.
+signal reduced_effects_changed(on: bool)
 
 var sandbox := true                  ## no rules attached: the visual test
 var legal_moves := PackedStringArray()
@@ -55,11 +57,17 @@ var _menu_actions: VBoxContainer
 var _moves_button: Button
 var _sandbox_reset: Button
 var _cam_home: Transform3D
+var _marks := {}                     ## square -> colour, lit until changed (lessons, hints)
+var _stars := {}                     ## square -> star mesh to walk over (lessons)
+static var _star_mesh_cache: ArrayMesh
+## "Efeitos reduzidos" for new tables (the app's saved setting).
+static var reduced_default := false
 
 
 func _ready() -> void:
 	_build_world()
 	fx = TableFx.new()
+	fx.reduced = reduced_default
 	add_child(fx)
 	fx.attach_camera(camera)
 	_build_board()
@@ -522,6 +530,10 @@ func _process(delta: float) -> void:
 		var v := (_selected.position - _carry_prev) / maxf(delta, 1e-3)
 		_carry_prev = _selected.position
 		_selected.carry_lean(v if _dragging else Vector3.ZERO, delta)
+	for sq: Vector2i in _stars:
+		var star: MeshInstance3D = _stars[sq]
+		star.rotation.y += delta * 1.2
+		star.position.y = 0.9 + sin(_time * 2.4 + sq.x) * 0.25
 	_update_squares()
 
 
@@ -674,6 +686,10 @@ func _update_squares() -> void:
 		for sq: Vector2i in _last_move:
 			lit[sq] = 0.18
 	var tint := {}
+	for sq: Vector2i in _marks:
+		if not lit.has(sq) or lit[sq] < 0.5:
+			lit[sq] = 0.42 + 0.1 * sin(_time * 3.0)
+			tint[sq] = _marks[sq]
 	for sq: Vector2i in _flashes.keys():
 		var f: Array = _flashes[sq]
 		f[1] -= get_process_delta_time()
@@ -692,6 +708,86 @@ func _update_squares() -> void:
 
 func flash_square(sq: Vector2i, colour: Color, seconds := 0.6) -> void:
 	_flashes[sq] = [colour, seconds]
+
+
+## Squares lit steadily until changed: square -> colour (what a lesson talks about, a hint).
+func set_marks(marks: Dictionary) -> void:
+	_marks = marks
+
+
+## Gold stars floating over squares (a lesson's "walk over every ★"). A star that is no longer in
+## the list bursts and goes away.
+func set_stars(squares: Array) -> void:
+	for sq: Vector2i in _stars.keys():
+		if not sq in squares:
+			var star: MeshInstance3D = _stars[sq]
+			_stars.erase(sq)
+			if not fx.reduced:
+				fx.promotion_burst(star.position + Vector3(0, 1, 0))
+			var t := star.create_tween()
+			t.tween_property(star, "scale", Vector3.ONE * 1.8, 0.25).set_trans(Tween.TRANS_BACK)
+			t.tween_property(star, "scale", Vector3.ZERO, 0.15)
+			t.tween_callback(star.queue_free)
+	for sq: Vector2i in squares:
+		if _stars.has(sq):
+			continue
+		var star := MeshInstance3D.new()
+		star.mesh = _star_mesh()
+		star.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(star)
+		star.position = square_pos(sq) + Vector3(0, 0.9, 0)
+		_stars[sq] = star
+
+
+static func _star_mesh() -> ArrayMesh:
+	if _star_mesh_cache:
+		return _star_mesh_cache
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var pts: Array[Vector3] = []
+	for i in 10:
+		var a := -PI / 2.0 + TAU * i / 10.0
+		var r := 1.25 if i % 2 == 0 else 0.52
+		pts.append(Vector3(cos(a) * r, 0, sin(a) * r))
+	# A low pyramid on both faces, so it catches the light as it turns.
+	for face in [1.0, -1.0]:
+		var apex := Vector3(0, 0.28 * face, 0)
+		st.set_normal(Vector3(0, face, 0))
+		for i in 10:
+			var a: Vector3 = pts[i]
+			var b: Vector3 = pts[(i + 1) % 10]
+			if face > 0:
+				st.add_vertex(apex)
+				st.add_vertex(b)
+				st.add_vertex(a)
+			else:
+				st.add_vertex(apex)
+				st.add_vertex(a)
+				st.add_vertex(b)
+	st.generate_normals()
+	var mesh := st.commit()
+	var m := StandardMaterial3D.new()
+	m.albedo_color = Color(1.0, 0.78, 0.25)
+	m.metallic = 0.8
+	m.roughness = 0.25
+	m.emission_enabled = true
+	m.emission = Color(1.0, 0.65, 0.15)
+	m.emission_energy_multiplier = 1.6
+	mesh.surface_set_material(0, m)
+	_star_mesh_cache = mesh
+	return mesh
+
+
+## Shifts the picture sideways by `pixels` (of a 1080-high screen), leaving room for the mentor:
+## positive moves the board to the right.
+func set_view_offset(pixels: float) -> void:
+	var units_per_pixel := 2.0 * 70.0 * tan(deg_to_rad(camera.fov / 2.0)) / 1080.0
+	camera.h_offset = -pixels * units_per_pixel
+
+
+## Shows or hides the menu, the "Movimentos" button and the version (the start screen hides them).
+func show_controls(on: bool) -> void:
+	_ui_layer.visible = on
 
 
 ## Arrows of the mover's pieces (button on) and of a tapped opponent's piece.
@@ -794,7 +890,10 @@ func _build_menu() -> void:
 		s.value_changed.connect(on_change)
 		box.add_child(s)
 
-	add_toggle.call("Efeitos reduzidos", fx.reduced, func(v: bool) -> void: fx.reduced = v)
+	add_toggle.call("Efeitos reduzidos", fx.reduced, func(v: bool) -> void:
+		fx.reduced = v
+		reduced_default = v
+		reduced_effects_changed.emit(v))
 	add_slider.call("Tremor no impacto", fx.impact_shake, 0.0, 1.0, func(v: float) -> void: fx.impact_shake = v)
 	add_slider.call("Pausa no impacto (s)", fx.hitstop, 0.0, 0.15, func(v: float) -> void: fx.hitstop = v)
 	add_slider.call("Poeira", fx.impact_dust, 0.0, 2.0, func(v: float) -> void: fx.impact_dust = v)

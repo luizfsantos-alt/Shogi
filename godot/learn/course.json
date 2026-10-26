@@ -1,0 +1,1819 @@
+{
+ "source": "src/learn (PWA), by scripts/export-lessons.mjs",
+ "tracks": [
+  {
+   "id": "basics",
+   "title": "Fundamentos",
+   "term": "Kihon 基本",
+   "description": "As regras, uma peça de cada vez, até a primeira partida.",
+   "lessons": [
+    {
+     "id": "board",
+     "title": "O tabuleiro e o objetivo",
+     "term": "Shōgi 将棋",
+     "summary": "Os dois lados, as casas e como se vence.",
+     "steps": [
+      {
+       "kind": "info",
+       "title": "Bem-vindo ao shogi (将棋)",
+       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1",
+       "text": [
+        "O shogi (将棋) é o xadrez japonês. Joga-se num tabuleiro de 9 × 9 casas, com 20 peças de cada lado.",
+        "Você joga de Sente (先手), \"quem joga primeiro\": as peças de pérola, embaixo. O adversário é Gote (後手), \"quem joga depois\": as peças de laca vermelha, em cima."
+       ]
+      },
+      {
+       "kind": "info",
+       "title": "Para onde as peças apontam",
+       "text": [
+        "No shogi (将棋) de madeira, as peças dos dois lados têm a mesma cor; o que diz de quem é a peça é a ponta, que aponta para o adversário. Aqui, além disso, Sente (先手) é pérola e Gote (後手) é vermelho.",
+        "Cada peça tem seu nome em kanji. Toque numa peça para ver o nome e o movimento no painel, ou segure o dedo sobre ela para ver o nome rapidamente. O botão Leitura troca o kanji por marcas que mostram como a peça anda."
+       ]
+      },
+      {
+       "kind": "info",
+       "title": "As casas",
+       "text": [
+        "As colunas são numeradas de 1 a 9, da direita para a esquerda (do seu ponto de vista). As fileiras vão de a (em cima) até i (embaixo).",
+        "Uma casa se escreve com a coluna e a fileira: a casa destacada é 5e, o centro do tabuleiro. Seu rei começa em 5i."
+       ],
+       "focus": [
+        "5e",
+        "5i"
+       ]
+      },
+      {
+       "kind": "info",
+       "title": "O objetivo",
+       "text": [
+        "Vence quem der xeque-mate no rei adversário: atacá-lo de um jeito que ele não tenha como escapar. Atacar o rei se chama ōte (王手, xeque); o mate se chama tsumi (詰み).",
+        "A grande diferença para o xadrez: a peça que você captura vai para a sua mão e pode voltar ao tabuleiro do seu lado. Por isso o jogo raramente fica vazio, e o ataque nunca acaba.",
+        "Agora vamos conhecer as peças, uma de cada vez."
+       ]
+      }
+     ]
+    },
+    {
+     "id": "king",
+     "title": "O Rei",
+     "term": "Ōshō 王将 · Gyokushō 玉将",
+     "summary": "Uma casa em qualquer direção.",
+     "steps": [
+      {
+       "kind": "info",
+       "title": "O Rei",
+       "sfen": "4k4/9/9/9/4K4/9/9/9/9 b - 1",
+       "piece": "K",
+       "focus": [
+        "4d",
+        "5d",
+        "6d",
+        "4e",
+        "6e",
+        "4f",
+        "5f",
+        "6f"
+       ],
+       "text": [
+        "O Rei anda uma casa em qualquer direção. Há dois kanji para ele: Sente (先手) usa 玉将 (gyokushō, \"general de jade\") e Gote (後手) usa 王将 (ōshō, \"general rei\"). É a mesma peça.",
+        "Proteger o seu rei é a coisa mais importante do jogo."
+       ]
+      },
+      {
+       "kind": "exercise",
+       "title": "Passeio do Rei",
+       "sfen": "4k4/9/9/9/9/9/9/9/4K4 b - 1",
+       "text": [
+        "Leve o Rei até as estrelas (★). O adversário fica parado. Toque no Rei e depois na casa de destino."
+       ],
+       "goal": {
+        "type": "reach",
+        "stars": [
+         "5g",
+         "4f"
+        ],
+        "solution": [
+         "5i5h",
+         "5h5g",
+         "5g4f"
+        ]
+       },
+       "hint": "Uma casa por vez: suba pela coluna 5 e depois vá na diagonal.",
+       "success": "Isso! O Rei anda devagar, uma casa por vez, mas em qualquer direção."
+      },
+      {
+       "kind": "exercise",
+       "title": "Casas proibidas",
+       "sfen": "k8/9/9/9/9/9/8r/4K4/9 b - 1",
+       "focus": [
+        "4g",
+        "5g",
+        "6g"
+       ],
+       "text": [
+        "A Torre (飛車) vermelha em 1g ataca toda a fileira g. O Rei nunca pode ir para uma casa atacada.",
+        "Tente subir o Rei para a fileira g e veja o que acontece."
+       ],
+       "goal": {
+        "type": "illegal",
+        "code": "king-into-check",
+        "solution": "5h5g"
+       },
+       "hint": "Toque no Rei e depois numa casa da fileira g.",
+       "success": "O jogo não deixa: o Rei se colocaria em xeque. Ele pode ir para qualquer outra casa vizinha."
+      }
+     ]
+    },
+    {
+     "id": "pawn",
+     "title": "O Peão",
+     "term": "Fuhyō 歩兵",
+     "summary": "Uma casa para frente, e captura do mesmo jeito.",
+     "steps": [
+      {
+       "kind": "info",
+       "title": "O Peão",
+       "sfen": "4k4/9/9/9/9/9/4P4/9/4K4 b - 1",
+       "piece": "P",
+       "focus": [
+        "5f"
+       ],
+       "text": [
+        "O Peão (歩兵, fuhyō, ou só fu 歩) anda uma casa para frente. Cada lado tem nove.",
+        "Diferente do xadrez, ele captura do mesmo jeito que anda: só a peça que está bem à sua frente. Ele não captura na diagonal."
+       ]
+      },
+      {
+       "kind": "exercise",
+       "title": "Capture as peças",
+       "sfen": "8k/9/9/9/4g4/4p4/9/4P4/K8 b - 1",
+       "text": [
+        "Avance o Peão e capture as duas peças vermelhas que estão na frente dele."
+       ],
+       "goal": {
+        "type": "capture",
+        "solution": [
+         "5h5g",
+         "5g5f",
+         "5f5e"
+        ]
+       },
+       "hint": "Sempre em frente: o Peão captura a peça que estiver na casa logo à frente.",
+       "success": "Muito bem! As peças capturadas foram para a sua mão (aparecem ao lado do seu nome). Logo você vai aprender a usá-las."
+      }
+     ]
+    },
+    {
+     "id": "lance",
+     "title": "A Lança",
+     "term": "Kyōsha 香車",
+     "summary": "Quantas casas quiser, só para frente.",
+     "steps": [
+      {
+       "kind": "info",
+       "title": "A Lança",
+       "sfen": "4k4/9/9/9/9/9/9/9/L3K4 b - 1",
+       "piece": "L",
+       "focus": [
+        "9h",
+        "9g",
+        "9f",
+        "9e",
+        "9d",
+        "9c",
+        "9b",
+        "9a"
+       ],
+       "text": [
+        "A Lança (香車, kyōsha) anda quantas casas quiser, mas só para frente, e não pula peças. Começa nos cantos do tabuleiro.",
+        "Ela é como uma Torre que só anda para frente."
+       ]
+      },
+      {
+       "kind": "exercise",
+       "title": "Na mira da Lança",
+       "sfen": "4k4/9/9/s8/9/p8/9/9/L3K4 b - 1",
+       "text": [
+        "Capture as duas peças da coluna 9."
+       ],
+       "goal": {
+        "type": "capture",
+        "solution": [
+         "9i9f",
+         "9f9d"
+        ]
+       },
+       "hint": "A Lança vai longe num lance só, mas para na primeira peça que encontrar.",
+       "success": "Isso! Dois lances, duas capturas."
+      },
+      {
+       "kind": "exercise",
+       "title": "Sem marcha a ré",
+       "sfen": "4k4/9/9/9/8L/9/9/9/4K4 b - 1",
+       "text": [
+        "Tente mover a Lança para trás."
+       ],
+       "goal": {
+        "type": "illegal",
+        "code": "cannot-move-like-that",
+        "solution": "1e1f"
+       },
+       "hint": "Toque na Lança e depois na casa logo abaixo dela.",
+       "success": "A Lança nunca volta. Por isso, antes de avançá-la, pense se ela não vai ficar presa lá na frente."
+      }
+     ]
+    },
+    {
+     "id": "rook",
+     "title": "A Torre",
+     "term": "Hisha 飛車",
+     "summary": "Linhas retas, qualquer distância.",
+     "steps": [
+      {
+       "kind": "info",
+       "title": "A Torre",
+       "sfen": "8k/9/9/9/4R4/9/9/9/4K4 b - 1",
+       "piece": "R",
+       "focus": [
+        "5a",
+        "5b",
+        "5c",
+        "5d",
+        "5f",
+        "5g",
+        "5h",
+        "1e",
+        "2e",
+        "3e",
+        "4e",
+        "6e",
+        "7e",
+        "8e",
+        "9e"
+       ],
+       "text": [
+        "A Torre (飛車, hisha, \"carro voador\") anda quantas casas quiser na horizontal ou na vertical, sem pular peças.",
+        "Junto com o Bispo, é a peça mais forte. Perder a Torre costuma decidir a partida."
+       ]
+      },
+      {
+       "kind": "exercise",
+       "title": "Três estrelas",
+       "sfen": "4k4/9/9/9/9/9/9/1R7/4K4 b - 1",
+       "text": [
+        "Passe a Torre pelas três estrelas no menor número de lances."
+       ],
+       "goal": {
+        "type": "reach",
+        "stars": [
+         "8d",
+         "3d",
+         "3h"
+        ],
+        "solution": [
+         "8h8d",
+         "8d3d",
+         "3d3h"
+        ]
+       },
+       "hint": "Cada lance pode ser longo: dá para fazer em três.",
+       "success": "Perfeito: a Torre cruza o tabuleiro num lance."
+      },
+      {
+       "kind": "exercise",
+       "title": "Caçada",
+       "sfen": "4k4/9/9/9/3p3p1/9/9/7R1/4K4 b - 1",
+       "text": [
+        "Capture os dois peões vermelhos."
+       ],
+       "goal": {
+        "type": "capture",
+        "solution": [
+         "2h2e",
+         "2e6e"
+        ]
+       },
+       "hint": "Primeiro suba pela coluna 2; depois atravesse a fileira e.",
+       "success": "Ótimo! Repare que a Torre não pode pular o primeiro peão para pegar o que está atrás."
+      }
+     ]
+    },
+    {
+     "id": "bishop",
+     "title": "O Bispo",
+     "term": "Kakugyō 角行",
+     "summary": "Diagonais, qualquer distância.",
+     "steps": [
+      {
+       "kind": "info",
+       "title": "O Bispo",
+       "sfen": "4k4/9/9/9/4B4/9/9/9/4K4 b - 1",
+       "piece": "B",
+       "focus": [
+        "4d",
+        "3c",
+        "2b",
+        "1a",
+        "6d",
+        "7c",
+        "8b",
+        "9a",
+        "4f",
+        "3g",
+        "2h",
+        "1i",
+        "6f",
+        "7g",
+        "8h",
+        "9i"
+       ],
+       "text": [
+        "O Bispo (角行, kakugyō, ou kaku 角) anda quantas casas quiser nas diagonais, sem pular peças.",
+        "No começo do jogo ele fica preso atrás dos peões: abrir a diagonal dele costuma ser o primeiro lance."
+       ]
+      },
+      {
+       "kind": "exercise",
+       "title": "Pela diagonal",
+       "sfen": "4k4/9/9/9/9/9/9/1B7/4K4 b - 1",
+       "text": [
+        "Passe o Bispo pelas duas estrelas."
+       ],
+       "goal": {
+        "type": "reach",
+        "stars": [
+         "4d",
+         "2f"
+        ],
+        "solution": [
+         "8h4d",
+         "4d2f"
+        ]
+       },
+       "hint": "A primeira estrela está na mesma diagonal do Bispo.",
+       "success": "Isso! Duas diagonais, dois lances."
+      },
+      {
+       "kind": "exercise",
+       "title": "Zigue-zague",
+       "sfen": "4k4/9/9/3g5/9/5p3/9/7B1/4K4 b - 1",
+       "text": [
+        "Capture o peão e depois o Ouro."
+       ],
+       "goal": {
+        "type": "capture",
+        "solution": [
+         "2h4f",
+         "4f6d"
+        ]
+       },
+       "hint": "De 4f, o Ouro está na diagonal de cima, para a esquerda.",
+       "success": "Muito bem! Um Ouro vale bem mais que um peão."
+      }
+     ]
+    },
+    {
+     "id": "gold",
+     "title": "O General de Ouro",
+     "term": "Kinshō 金将",
+     "summary": "Uma casa, menos nas diagonais de trás.",
+     "steps": [
+      {
+       "kind": "info",
+       "title": "O Ouro",
+       "sfen": "4k4/9/9/9/4G4/9/9/9/4K4 b - 1",
+       "piece": "G",
+       "focus": [
+        "4d",
+        "5d",
+        "6d",
+        "4e",
+        "6e",
+        "5f"
+       ],
+       "text": [
+        "O General de Ouro (金将, kinshō, ou kin 金) anda uma casa para frente, para os lados, para trás ou nas duas diagonais da frente.",
+        "Ele não vai nas diagonais de trás. É o melhor defensor do Rei, e várias peças promovidas passam a andar como ele."
+       ]
+      },
+      {
+       "kind": "exercise",
+       "title": "O ponto cego",
+       "sfen": "4k4/9/9/9/9/9/9/4G4/4K4 b - 1",
+       "text": [
+        "Passe o Ouro pelas duas estrelas. Lembre: ele não anda nas diagonais de trás."
+       ],
+       "goal": {
+        "type": "reach",
+        "stars": [
+         "6g",
+         "7h"
+        ],
+        "solution": [
+         "5h6g",
+         "6g7g",
+         "7g7h"
+        ]
+       },
+       "hint": "De 6g, a casa 7h fica na diagonal de trás: são precisos dois lances para chegar lá.",
+       "success": "Isso! Esse \"ponto cego\" nas diagonais de trás é a fraqueza do Ouro, e muitos ataques exploram exatamente isso."
+      },
+      {
+       "kind": "exercise",
+       "title": "Dois peões",
+       "sfen": "4k4/9/9/9/9/3p1p3/4G4/9/4K4 b - 1",
+       "text": [
+        "Capture os dois peões."
+       ],
+       "goal": {
+        "type": "capture",
+        "solution": [
+         "5g4f",
+         "4f5f",
+         "5f6f"
+        ]
+       },
+       "hint": "Capture um deles na diagonal da frente e ande de lado até o outro.",
+       "success": "Muito bem!"
+      }
+     ]
+    },
+    {
+     "id": "silver",
+     "title": "O General de Prata",
+     "term": "Ginshō 銀将",
+     "summary": "Uma casa para frente ou nas diagonais.",
+     "steps": [
+      {
+       "kind": "info",
+       "title": "A Prata",
+       "sfen": "4k4/9/9/9/4S4/9/9/9/4K4 b - 1",
+       "piece": "S",
+       "focus": [
+        "4d",
+        "5d",
+        "6d",
+        "4f",
+        "6f"
+       ],
+       "text": [
+        "O General de Prata (銀将, ginshō, ou gin 銀) anda uma casa para frente ou em qualquer uma das quatro diagonais.",
+        "Ele não anda para os lados nem direto para trás. É uma peça de ataque ágil, que avança e recua em zigue-zague."
+       ]
+      },
+      {
+       "kind": "exercise",
+       "title": "Zigue-zague",
+       "sfen": "4k4/9/9/9/9/9/9/4S4/4K4 b - 1",
+       "text": [
+        "Passe a Prata pelas duas estrelas. Ela não anda para o lado!"
+       ],
+       "goal": {
+        "type": "reach",
+        "stars": [
+         "4g",
+         "6g"
+        ],
+        "solution": [
+         "5h4g",
+         "4g5f",
+         "5f6g"
+        ]
+       },
+       "hint": "Para ir de 4g até 6g, suba na diagonal e desça na outra diagonal.",
+       "success": "Isso! Um provérbio diz: gin wa chidori ni tsukae (銀は千鳥に使え), \"use a Prata em zigue-zague, como o voo do maçarico\"."
+      },
+      {
+       "kind": "exercise",
+       "title": "Para o lado, não",
+       "sfen": "4k4/9/9/9/4S4/9/9/9/4K4 b - 1",
+       "text": [
+        "Tente mover a Prata uma casa para o lado."
+       ],
+       "goal": {
+        "type": "illegal",
+        "code": "cannot-move-like-that",
+        "solution": "5e4e"
+       },
+       "hint": "Toque na Prata e depois na casa ao lado dela.",
+       "success": "Não pode: os lados e a casa de trás são os pontos cegos da Prata."
+      }
+     ]
+    },
+    {
+     "id": "knight",
+     "title": "O Cavalo",
+     "term": "Keima 桂馬",
+     "summary": "Salta duas para frente e uma para o lado.",
+     "steps": [
+      {
+       "kind": "info",
+       "title": "O Cavalo",
+       "sfen": "4k4/9/9/9/4N4/9/9/9/4K4 b - 1",
+       "piece": "N",
+       "focus": [
+        "4c",
+        "6c"
+       ],
+       "text": [
+        "O Cavalo (桂馬, keima, ou kei 桂) salta para uma das duas casas que ficam duas à frente e uma para o lado. Ele pula qualquer peça no caminho.",
+        "Ao contrário do cavalo do xadrez, ele só tem esses dois saltos, e só para frente."
+       ]
+      },
+      {
+       "kind": "exercise",
+       "title": "Saltos",
+       "sfen": "4k4/9/9/9/9/9/9/1PP6/1N2K4 b - 1",
+       "text": [
+        "Leve o Cavalo pelas duas estrelas, pulando os seus peões."
+       ],
+       "goal": {
+        "type": "reach",
+        "stars": [
+         "7g",
+         "8e"
+        ],
+        "solution": [
+         "8i7g",
+         "7g8e"
+        ]
+       },
+       "hint": "De 8i, o Cavalo salta para 7g ou 9g.",
+       "success": "Isso! O Cavalo é a única peça que pula as outras."
+      },
+      {
+       "kind": "exercise",
+       "title": "Ataque de Cavalo",
+       "sfen": "4k4/9/9/9/5g3/9/9/6PP1/4K2N1 b - 1",
+       "text": [
+        "Capture o Ouro com o Cavalo."
+       ],
+       "goal": {
+        "type": "capture",
+        "solution": [
+         "2i3g",
+         "3g4e"
+        ]
+       },
+       "hint": "São dois saltos.",
+       "success": "Muito bem! O Ouro não consegue se defender do Cavalo: o salto não passa por nenhuma das casas que ele controla."
+      },
+      {
+       "kind": "exercise",
+       "title": "Sem volta",
+       "sfen": "4k4/9/9/9/4N4/9/9/9/4K4 b - 1",
+       "text": [
+        "Tente fazer o Cavalo voltar para trás."
+       ],
+       "goal": {
+        "type": "illegal",
+        "code": "cannot-move-like-that",
+        "solution": "5e4g"
+       },
+       "hint": "Toque no Cavalo e depois numa casa atrás dele.",
+       "success": "O Cavalo nunca volta. Um provérbio avisa: keima no takatobi fu no ejiki (桂馬の高跳び歩の餌食), \"o Cavalo que salta alto vira comida de peão\"."
+      }
+     ]
+    },
+    {
+     "id": "hand",
+     "title": "Capturas e drops",
+     "term": "Mochigoma 持ち駒 · Uchi 打ち",
+     "summary": "A peça capturada muda de lado e volta ao jogo.",
+     "steps": [
+      {
+       "kind": "info",
+       "title": "A peça muda de dono",
+       "sfen": "4k4/9/9/7b1/9/9/9/7R1/4K4 b - 1",
+       "text": [
+        "No shogi (将棋), a peça capturada não sai do jogo: ela vai para a sua mão e passa a ser sua. As peças na mão se chamam mochigoma (持ち駒)."
+       ]
+      },
+      {
+       "kind": "exercise",
+       "title": "Capture o Bispo",
+       "sfen": "4k4/9/9/7b1/9/9/9/7R1/4K4 b - 1",
+       "text": [
+        "Capture o Bispo vermelho e veja ele aparecer na sua mão, ao lado do seu nome."
+       ],
+       "goal": {
+        "type": "capture",
+        "solution": [
+         "2h2d"
+        ]
+       },
+       "hint": "A Torre sobe pela coluna 2.",
+       "success": "O Bispo agora é seu: está na sua mão, virado para o adversário."
+      },
+      {
+       "kind": "info",
+       "title": "O drop",
+       "sfen": "4k4/9/9/9/9/9/9/9/4K4 b B 1",
+       "text": [
+        "Na sua vez, em vez de mover uma peça, você pode colocar uma peça da mão em qualquer casa vazia. Isso se chama uchi (打ち), \"drop\" em inglês.",
+        "A peça entra sem promoção, mesmo dentro do campo inimigo. Algumas casas são proibidas para certas peças; você vai ver isso daqui a pouco."
+       ]
+      },
+      {
+       "kind": "exercise",
+       "title": "Seu primeiro drop",
+       "sfen": "4k4/9/9/9/9/9/9/9/4K4 b B 1",
+       "text": [
+        "Toque no Bispo da sua mão e depois na estrela."
+       ],
+       "goal": {
+        "type": "reach",
+        "stars": [
+         "5e"
+        ],
+        "solution": [
+         "B*5e"
+        ]
+       },
+       "hint": "O Bispo está na sua mão, embaixo do tabuleiro.",
+       "success": "Isso! O drop (打ち) é a arma mais poderosa do shogi (将棋): uma peça pode surgir em qualquer lugar."
+      },
+      {
+       "kind": "exercise",
+       "title": "Promovida volta normal",
+       "sfen": "4k4/9/9/7+r1/9/9/9/7R1/4K4 b - 1",
+       "text": [
+        "A peça vermelha em 2d é uma Torre promovida, o Dragão (龍王, ryūō). Capture-a e veja como ela chega à sua mão."
+       ],
+       "goal": {
+        "type": "capture",
+        "solution": [
+         "2h2d"
+        ]
+       },
+       "hint": "Suba a Torre pela coluna 2.",
+       "success": "Na mão ela é uma Torre comum: a peça capturada sempre perde a promoção."
+      }
+     ]
+    },
+    {
+     "id": "promotion",
+     "title": "Promoção",
+     "term": "Naru 成る",
+     "summary": "No campo inimigo, a peça vira e fica mais forte.",
+     "steps": [
+      {
+       "kind": "info",
+       "title": "O campo inimigo",
+       "sfen": "4k4/9/9/9/9/9/9/9/4K4 b - 1",
+       "focus": [
+        "9a",
+        "8a",
+        "7a",
+        "6a",
+        "5a",
+        "4a",
+        "3a",
+        "2a",
+        "1a",
+        "9b",
+        "8b",
+        "7b",
+        "6b",
+        "5b",
+        "4b",
+        "3b",
+        "2b",
+        "1b",
+        "9c",
+        "8c",
+        "7c",
+        "6c",
+        "5c",
+        "4c",
+        "3c",
+        "2c",
+        "1c"
+       ],
+       "text": [
+        "As três últimas fileiras do lado do adversário são o campo inimigo (敵陣, tekijin): a zona de promoção.",
+        "Quando uma peça entra, sai ou se move dentro dessa zona, você pode virá-la: ela promove (成る, naru) e ganha um movimento novo. Aqui, a peça promovida ganha ouro."
+       ]
+      },
+      {
+       "kind": "exercise",
+       "title": "Vire Dragão",
+       "sfen": "4k4/9/9/9/7R1/9/9/9/4K4 b - 1",
+       "piece": "+R",
+       "text": [
+        "Leve a Torre para o campo inimigo e promova. A Torre promovida é o Dragão (龍王, ryūō): anda como a Torre e também uma casa nas diagonais."
+       ],
+       "goal": {
+        "type": "line",
+        "line": [
+         [
+          "2e2b+",
+          "2e2c+",
+          "2e2a+"
+         ]
+        ]
+       },
+       "wrong": {
+        "2e2a": "Você entrou no campo inimigo sem promover. Aqui não há motivo para isso: escolha \"Promover\".",
+        "2e2b": "Você entrou no campo inimigo sem promover. Aqui não há motivo para isso: escolha \"Promover\".",
+        "2e2c": "Você entrou no campo inimigo sem promover. Aqui não há motivo para isso: escolha \"Promover\"."
+       },
+       "hint": "Suba a Torre pela coluna 2 até a fileira c, b ou a e escolha \"Promover\".",
+       "success": "Seu Dragão está pronto! O Bispo promovido também ganha um nome: Cavalo-dragão (龍馬, ryūma), que anda como o Bispo e também uma casa na horizontal e na vertical."
+      },
+      {
+       "kind": "info",
+       "title": "Tokin (と金)",
+       "sfen": "4k4/9/9/7P1/9/9/9/9/4K4 b - 1",
+       "piece": "+P",
+       "text": [
+        "O Peão promovido se chama tokin (と金) e anda como o Ouro. Prata, Cavalo e Lança promovidos também passam a andar como o Ouro.",
+        "Ouro e Rei não promovem."
+       ]
+      },
+      {
+       "kind": "exercise",
+       "title": "Peão que vira Ouro",
+       "sfen": "4k4/9/9/7P1/9/9/9/9/4K4 b - 1",
+       "text": [
+        "Passe pelas duas estrelas. Só um Peão promovido consegue andar para o lado…"
+       ],
+       "goal": {
+        "type": "reach",
+        "stars": [
+         "2c",
+         "3c"
+        ],
+        "solution": [
+         "2d2c+",
+         "2c3c"
+        ]
+       },
+       "hint": "Ao entrar em 2c, escolha \"Promover\": o tokin (と金) anda para o lado.",
+       "success": "Isso! Um tokin (と金) custa só um Peão, mas tem a força de um Ouro. E, se o adversário capturá-lo, ganha só um Peão."
+      },
+      {
+       "kind": "exercise",
+       "title": "Promoção obrigatória",
+       "sfen": "4k4/9/9/6N2/9/9/9/9/4K4 b - 1",
+       "text": [
+        "A promoção é opcional, com uma exceção: quando a peça ficaria sem nenhum lance possível. Peão e Lança na última fileira, Cavalo nas duas últimas: nesses casos ela promove sozinha.",
+        "Salte com o Cavalo até a estrela."
+       ],
+       "goal": {
+        "type": "reach",
+        "stars": [
+         "2b"
+        ],
+        "solution": [
+         "3d2b+"
+        ]
+       },
+       "hint": "De 3d, o Cavalo salta para 2b ou 4b.",
+       "success": "O Cavalo promoveu sozinho: em 2b, sem promover, ele não teria mais para onde saltar."
+      }
+     ]
+    },
+    {
+     "id": "forbidden",
+     "title": "Os drops proibidos",
+     "term": "Nifu 二歩 · Uchifuzume 打ち歩詰め",
+     "summary": "Três regras que todo iniciante esquece.",
+     "steps": [
+      {
+       "kind": "exercise",
+       "title": "Dois peões na coluna",
+       "sfen": "4k4/9/9/9/9/9/4P4/9/4K4 b P 1",
+       "focus": [
+        "5g"
+       ],
+       "text": [
+        "Você não pode ter dois peões não promovidos na mesma coluna. Isso se chama nifu (二歩, \"dois peões\"), e é o erro mais comum de quem está começando.",
+        "Tente colocar o Peão da sua mão em 5e, na mesma coluna do seu Peão."
+       ],
+       "goal": {
+        "type": "illegal",
+        "code": "nifu",
+        "solution": "P*5e"
+       },
+       "hint": "Toque no Peão da sua mão e depois em 5e.",
+       "success": "Proibido: nifu (二歩). Em qualquer outra coluna o drop seria permitido. (Um tokin (と金) não conta: ele já não é Peão.)"
+      },
+      {
+       "kind": "exercise",
+       "title": "Peça sem saída",
+       "sfen": "4k4/9/9/9/9/9/9/9/4K4 b N 1",
+       "text": [
+        "Também não se pode colocar uma peça onde ela nunca mais poderia se mexer: Peão ou Lança na última fileira, Cavalo nas duas últimas. São as peças sem saída (行き所のない駒, ikidokoro no nai koma).",
+        "Tente colocar o Cavalo da mão em 4b."
+       ],
+       "goal": {
+        "type": "illegal",
+        "code": "dead-piece",
+        "solution": "N*4b"
+       },
+       "hint": "Toque no Cavalo da sua mão e depois em 4b.",
+       "success": "Proibido: em 4b o Cavalo não teria para onde saltar. Lembre que a peça da mão entra sem promover."
+      },
+      {
+       "kind": "exercise",
+       "title": "Mate com Peão da mão",
+       "sfen": "7lk/9/7G1/9/9/9/9/9/4K4 b P 1",
+       "focus": [
+        "1b"
+       ],
+       "text": [
+        "A última: é proibido dar xeque-mate colocando um Peão da mão. Isso se chama uchifuzume (打ち歩詰め).",
+        "Aqui, um Peão em 1b daria mate. Tente."
+       ],
+       "goal": {
+        "type": "illegal",
+        "code": "uchifuzume",
+        "solution": "P*1b"
+       },
+       "hint": "Toque no Peão da sua mão e depois em 1b.",
+       "success": "Proibido: uchifuzume (打ち歩詰め). Mas dar mate avançando um Peão que já está no tabuleiro é permitido (突き歩詰め, tsukifuzume), e dar xeque sem mate com o Peão da mão também."
+      }
+     ]
+    },
+    {
+     "id": "check",
+     "title": "Xeque e xeque-mate",
+     "term": "Ōte 王手 · Tsumi 詰み",
+     "summary": "Fugir, capturar ou bloquear; e o primeiro mate.",
+     "steps": [
+      {
+       "kind": "info",
+       "title": "Três saídas",
+       "sfen": "4k4/9/4r4/9/9/9/9/9/4K4 b - 1",
+       "focus": [
+        "5c"
+       ],
+       "text": [
+        "Quando o seu Rei é atacado, ele está em xeque (王手, ōte), e você precisa resolver isso já. Há três jeitos:",
+        "1. fugir com o Rei; 2. capturar a peça que ataca; 3. colocar uma peça no caminho, do tabuleiro ou da mão. Uma peça colocada para bloquear um xeque se chama aigoma (合駒)."
+       ]
+      },
+      {
+       "kind": "exercise",
+       "title": "Fuja",
+       "sfen": "4k4/9/4r4/9/9/9/9/9/4K4 b - 1",
+       "text": [
+        "A Torre vermelha dá xeque pela coluna 5. Tire o Rei de lá."
+       ],
+       "goal": {
+        "type": "line",
+        "line": [
+         "*"
+        ]
+       },
+       "hint": "Saia da coluna 5: qualquer casa vizinha fora dela serve.",
+       "success": "Salvo! Fora da coluna 5 a Torre não alcança o Rei."
+      },
+      {
+       "kind": "exercise",
+       "title": "Capture",
+       "sfen": "4k4/9/9/4r4/9/9/1B7/9/4K4 b - 1",
+       "text": [
+        "Xeque de novo. Desta vez há uma saída muito melhor que fugir."
+       ],
+       "goal": {
+        "type": "line",
+        "line": [
+         "8g5d"
+        ]
+       },
+       "wrong": {
+        "5i4h": "Fugir tira do xeque, mas olhe o seu Bispo: dá para capturar a Torre de graça!",
+        "5i6h": "Fugir tira do xeque, mas olhe o seu Bispo: dá para capturar a Torre de graça!",
+        "5i4i": "Fugir tira do xeque, mas olhe o seu Bispo: dá para capturar a Torre de graça!",
+        "5i6i": "Fugir tira do xeque, mas olhe o seu Bispo: dá para capturar a Torre de graça!"
+       },
+       "hint": "O seu Bispo alcança a Torre pela diagonal.",
+       "success": "Excelente! Você saiu do xeque e ainda ganhou a Torre."
+      },
+      {
+       "kind": "exercise",
+       "title": "Bloqueie",
+       "sfen": "8k/4l4/9/9/9/9/9/3S1S3/3GKG3 b P 1",
+       "text": [
+        "A Lança vermelha dá xeque e o seu Rei está cercado pelas próprias peças. Coloque uma peça no caminho."
+       ],
+       "goal": {
+        "type": "line",
+        "line": [
+         "*"
+        ]
+       },
+       "hint": "Uma das suas peças pode entrar na coluna 5, ou você pode colocar o Peão da mão em qualquer casa entre a Lança e o Rei.",
+       "success": "Bloqueado! Repare como o Rei, cercado pelas próprias peças, só tinha essa saída."
+      },
+      {
+       "kind": "exercise",
+       "title": "Seu primeiro mate",
+       "sfen": "4k4/9/4P4/9/9/9/9/9/4K4 b G 1",
+       "text": [
+        "Agora é você quem ataca. Dê xeque-mate (詰み, tsumi) com o Ouro da mão: o Rei vermelho não pode ter nenhuma saída."
+       ],
+       "goal": {
+        "type": "mate",
+        "solution": "G*5b"
+       },
+       "hint": "Coloque o Ouro bem na frente do Rei, onde o seu Peão o protege.",
+       "success": "Mate! Esse padrão se chama atama-kin (頭金), \"Ouro na cabeça\": o mate mais comum do shogi (将棋)."
+      },
+      {
+       "kind": "exercise",
+       "title": "Mate no corredor",
+       "sfen": "4k4/3ppp3/9/9/9/9/9/9/4K4 b R 1",
+       "text": [
+        "O Rei vermelho está preso atrás dos próprios peões. Dê mate com a Torre da mão."
+       ],
+       "goal": {
+        "type": "mate",
+        "solution": "R*9a"
+       },
+       "hint": "Ataque o Rei pela fileira a, de longe.",
+       "success": "Mate! O Rei não tinha para onde ir, e ninguém conseguia bloquear."
+      }
+     ]
+    },
+    {
+     "id": "ending",
+     "title": "Como a partida termina",
+     "term": "Tōryō 投了 · Sennichite 千日手",
+     "summary": "Mate, desistência, repetição e impasse.",
+     "steps": [
+      {
+       "kind": "info",
+       "title": "Mate e desistência",
+       "sfen": "4k4/9/9/9/9/9/9/9/4K4 b - 1",
+       "text": [
+        "A partida acaba no xeque-mate (詰み, tsumi). Ficar sem nenhum lance legal também é derrota (é raríssimo).",
+        "Na prática, quase toda partida termina antes, com a desistência (投了, tōryō): quem vê que vai levar mate desiste. No shogi (将棋) isso é normal e educado."
+       ]
+      },
+      {
+       "kind": "info",
+       "title": "Repetição",
+       "text": [
+        "Se a mesma posição (com as mesmas peças na mão e o mesmo jogador da vez) aparecer quatro vezes, é empate: sennichite (千日手, \"mil dias de lances\").",
+        "Exceção: se a repetição vier de xeques seguidos de um lado só (連続王手の千日手, renzoku ōte no sennichite), quem dava os xeques perde."
+       ]
+      },
+      {
+       "kind": "info",
+       "title": "Impasse",
+       "text": [
+        "Quando os dois Reis entram no campo inimigo (入玉, nyūgyoku), pode ficar impossível dar mate. Então o jogador da vez pode declarar o impasse (持将棋, jishōgi): vence quem tiver pontos suficientes.",
+        "Torre e Bispo valem 5 pontos, as outras peças (menos o Rei) 1. Os detalhes estão no botão Regras. Você vai ver isso pouco no começo."
+       ]
+      }
+     ]
+    },
+    {
+     "id": "setup",
+     "title": "A posição inicial",
+     "term": "Shoki haichi 初期配置",
+     "summary": "Onde cada peça começa e os primeiros lances.",
+     "steps": [
+      {
+       "kind": "info",
+       "title": "A posição inicial",
+       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1",
+       "focus": [
+        "1i",
+        "2i",
+        "3i",
+        "4i",
+        "5i",
+        "6i",
+        "7i",
+        "8i",
+        "9i"
+       ],
+       "text": [
+        "Na fileira de trás, do centro para fora: Rei, os dois Ouros, as duas Pratas, os dois Cavalos e as duas Lanças.",
+        "Na fileira do meio, o Bispo à esquerda (8h) e a Torre à direita (2h). Na frente, os nove peões. O adversário tem a mesma posição, espelhada."
+       ]
+      },
+      {
+       "kind": "exercise",
+       "title": "Abra o Bispo",
+       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1",
+       "text": [
+        "O primeiro lance mais popular é avançar o Peão da coluna 7 (7g7f): ele abre a diagonal do Bispo.",
+        "Depois avance o Peão da coluna 2 (2g2f), que abre caminho para a Torre atacar. Jogue os dois; o computador responde."
+       ],
+       "goal": {
+        "type": "line",
+        "line": [
+         "7g7f",
+         "3c3d",
+         "2g2f",
+         "8c8d"
+        ]
+       },
+       "wrong": {
+        "2g2f": "Também é um ótimo lance! Mas vamos começar pelo Peão da coluna 7 (7g7f)."
+       },
+       "hint": "Primeiro o Peão de 7g, depois o de 2g.",
+       "success": "Ótimo começo: o Bispo respira e a Torre já mira o campo inimigo. Gote (後手) fez o mesmo do lado dele."
+      }
+     ]
+    },
+    {
+     "id": "first-game",
+     "title": "Sua primeira partida",
+     "term": "Taikyoku 対局",
+     "summary": "Contra o computador, com dicas no caminho.",
+     "game": true,
+     "steps": [
+      {
+       "kind": "info",
+       "title": "Hora de jogar",
+       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1",
+       "text": [
+        "Você já conhece todas as regras. Agora jogue uma partida (対局, taikyoku) contra o computador no nível Iniciante.",
+        "Durante a partida, um treinador vai comentar momentos importantes: a primeira captura, a chance de promover, um xeque, uma peça desprotegida… Use o botão Dica quando quiser."
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "tactics",
+   "title": "Táticas",
+   "term": "Tesuji 手筋",
+   "description": "Ataques duplos, golpes de Peão e problemas de mate.",
+   "lessons": [
+    {
+     "id": "values",
+     "title": "Quanto vale cada peça",
+     "term": "Koma no kachi 駒の価値",
+     "summary": "Ganhe peças de graça e não entregue as suas.",
+     "steps": [
+      {
+       "kind": "info",
+       "title": "Uma tabela para começar",
+       "sfen": "4k4/9/9/9/9/9/9/9/4K4 b - 1",
+       "text": [
+        "Uma tabela comum para iniciantes: Peão 1, Lança 3, Cavalo 4, Prata 5, Ouro 6, Bispo 8, Torre 10. Promovidas valem mais: Cavalo-dragão (龍馬) cerca de 10 e Dragão (龍王) cerca de 12.",
+        "No shogi (将棋), perder uma peça dói em dobro: ela vai para a mão do adversário e volta contra você. Por isso o erro número um do iniciante é a troca ruim, entregar uma peça boa por uma pior."
+       ]
+      },
+      {
+       "kind": "exercise",
+       "title": "Peça solta",
+       "sfen": "4k4/5s3/4g4/9/9/4R3b/9/9/4K4 b - 1",
+       "text": [
+        "Duas peças vermelhas estão ao alcance da sua Torre. Qual delas dá para capturar sem perder nada?"
+       ],
+       "goal": {
+        "type": "line",
+        "line": [
+         "5f1f"
+        ]
+       },
+       "wrong": {
+        "5f5c": "A Prata em 4b recaptura: você trocaria a Torre (10) por um Ouro (6). O Bispo em 1f não tem defesa.",
+        "5f5c+": "A Prata em 4b recaptura o Dragão: você trocaria a Torre (10) por um Ouro (6). O Bispo em 1f não tem defesa."
+       },
+       "hint": "Veja quem defende cada peça. Uma delas está protegida pela Prata.",
+       "success": "Isso! O Bispo estava solto (sem defensor). Antes de capturar, pergunte sempre: quem pode recapturar?",
+       "engineCheck": true
+      },
+      {
+       "kind": "exercise",
+       "title": "Troca boa",
+       "sfen": "4k4/9/9/2g6/2b3p2/2P6/9/6R2/4K4 b - 1",
+       "text": [
+        "Você pode ganhar um Peão de graça com a Torre ou trocar um Peão por algo bem maior. Escolha a melhor captura."
+       ],
+       "goal": {
+        "type": "line",
+        "line": [
+         "7f7e"
+        ]
+       },
+       "wrong": {
+        "3h3e": "Ganhar um Peão é bom, mas o seu Peão em 7f pode capturar o Bispo. Mesmo que o Ouro recapture, você troca 1 por 8."
+       },
+       "hint": "Mesmo que a peça esteja defendida, a troca pode valer a pena se você entrega uma peça bem mais barata.",
+       "success": "Ótimo: o Ouro pode recapturar, mas você entregou um Peão e levou um Bispo.",
+       "engineCheck": true
+      }
+     ]
+    },
+    {
+     "id": "fork",
+     "title": "Ataque duplo",
+     "term": "Ryōtori 両取り",
+     "summary": "Atacar duas peças de uma vez: uma delas cai.",
+     "steps": [
+      {
+       "kind": "info",
+       "title": "Duas ameaças, uma resposta",
+       "sfen": "4k4/9/2r1g4/9/9/9/7PP/6SK1/6G2 b N 1",
+       "focus": [
+        "7c",
+        "5c"
+       ],
+       "text": [
+        "O tesuji (手筋, \"lance de técnica\") mais básico é o ataque duplo, ryōtori (両取り): uma peça ataca duas ao mesmo tempo. O adversário só consegue salvar uma.",
+        "O drop torna o ataque duplo muito comum: a peça da mão surge exatamente onde ataca as duas."
+       ]
+      },
+      {
+       "kind": "exercise",
+       "title": "Garfo de Cavalo",
+       "sfen": "4k4/9/2r1g4/9/9/9/7PP/6SK1/6G2 b N 1",
+       "text": [
+        "Coloque o Cavalo da mão atacando a Torre e o Ouro ao mesmo tempo. Depois capture o que sobrar."
+       ],
+       "goal": {
+        "type": "line",
+        "line": [
+         "N*6e",
+         "7c7f",
+         [
+          "6e5c+",
+          "6e5c"
+         ]
+        ]
+       },
+       "hint": "O Cavalo salta duas para frente e uma para o lado: procure a casa de onde ele alcança 7c e 5c.",
+       "success": "Garfo de Cavalo! A Torre fugiu e o Ouro caiu. O Cavalo é ótimo para isso porque nenhuma das duas peças consegue capturá-lo.",
+       "engineCheck": true
+      },
+      {
+       "kind": "exercise",
+       "title": "Xeque e Torre",
+       "sfen": "4k4/9/9/9/r8/9/9/9/4K4 b B 1",
+       "text": [
+        "O ataque duplo mais famoso é dar xeque e atacar a Torre ao mesmo tempo: ōte-bisha (王手飛車). O Rei precisa sair do xeque, e a Torre fica.",
+        "Encontre o drop de Bispo que faz isso."
+       ],
+       "goal": {
+        "type": "line",
+        "line": [
+         [
+          "B*7c",
+          "B*8d"
+         ],
+         "5a5b",
+         [
+          "7c9e",
+          "7c9e+",
+          "8d9e"
+         ]
+        ]
+       },
+       "hint": "O Rei e a Torre estão na mesma diagonal: coloque o Bispo entre eles.",
+       "success": "Ōte-bisha (王手飛車)! O Rei teve que fugir e a Torre caiu. Esse golpe decide muitas partidas de iniciantes: cuidado com o seu Rei e a sua Torre na mesma diagonal.",
+       "engineCheck": true
+      }
+     ]
+    },
+    {
+     "id": "wariuchi",
+     "title": "A Prata pelas costas",
+     "term": "Wariuchi no gin 割打ちの銀",
+     "summary": "A Prata ataca para trás, onde o Ouro e a Torre não alcançam.",
+     "steps": [
+      {
+       "kind": "exercise",
+       "title": "A Prata que racha",
+       "sfen": "6k2/1rpg5/9/9/9/9/7PP/6SK1/6G2 b S 1",
+       "focus": [
+        "6b",
+        "8b"
+       ],
+       "text": [
+        "A Prata anda nas diagonais de trás, e o Ouro não. Uma Prata colocada atrás de duas peças, atacando as duas pelas diagonais de trás, é o wariuchi no gin (割打ちの銀, \"Prata que racha\").",
+        "Coloque a Prata da mão atacando o Ouro e a Torre, num lugar onde nenhum dos dois possa capturá-la."
+       ],
+       "goal": {
+        "type": "line",
+        "line": [
+         "S*7a",
+         "8b8c",
+         [
+          "7a6b",
+          "7a6b+"
+         ]
+        ]
+       },
+       "wrong": {
+        "S*7c": "Daqui a Prata ataca as duas peças, mas o Ouro em 6b a captura (7c é uma diagonal da frente dele)."
+       },
+       "hint": "Coloque a Prata na fileira a, entre as duas peças.",
+       "success": "Isso! O Ouro não anda nas diagonais de trás e a Torre não anda na diagonal: a Prata fica intocável. É o provérbio kin wa naname ni sasoe (金は斜めに誘え): ataque o Ouro pela diagonal.",
+       "engineCheck": true
+      }
+     ]
+    },
+    {
+     "id": "skewer",
+     "title": "O espeto",
+     "term": "Kushizashi 串刺し",
+     "summary": "Ataque uma peça grande e pegue a que está atrás.",
+     "steps": [
+      {
+       "kind": "exercise",
+       "title": "Espeto de Lança",
+       "sfen": "4k2g1/9/7r1/9/9/9/6P2/9/6K2 b L 1",
+       "focus": [
+        "2c",
+        "2a"
+       ],
+       "text": [
+        "A Torre e o Ouro vermelhos estão na mesma coluna. Uma Lança colocada embaixo deles ataca a Torre; se a Torre sair, a Lança pega o Ouro. Isso é o kushizashi (串刺し, \"espeto\").",
+        "Coloque a Lança onde o seu Rei a defenda: se a Torre capturar, o Rei recaptura."
+       ],
+       "goal": {
+        "type": "line",
+        "line": [
+         [
+          "L*2h",
+          "L*2i"
+         ],
+         "2c5c",
+         [
+          "2h2a+",
+          "2i2a+"
+         ]
+        ]
+       },
+       "wrong": {
+        "L*2d": "A Torre captura a Lança e ninguém recaptura. Coloque-a mais embaixo, perto do seu Rei.",
+        "L*2e": "A Torre captura a Lança e ninguém recaptura. Coloque-a mais embaixo, perto do seu Rei.",
+        "L*2f": "A Torre captura a Lança e ninguém recaptura. Coloque-a mais embaixo, perto do seu Rei.",
+        "L*2g": "A Torre captura a Lança e ninguém recaptura. Coloque-a mais embaixo, perto do seu Rei."
+       },
+       "hint": "O seu Rei em 3i protege 2h e 2i.",
+       "success": "Espeto! A Torre fugiu e a Lança pegou o Ouro (promovendo, obrigatoriamente, na última fileira)."
+      }
+     ]
+    },
+    {
+     "id": "tataki",
+     "title": "O Peão de batida",
+     "term": "Tataki no fu 叩きの歩",
+     "summary": "Um Peão sacrificado puxa a peça para uma casa ruim.",
+     "steps": [
+      {
+       "kind": "info",
+       "title": "Bater com o Peão",
+       "sfen": "3k5/5g3/7r1/9/9/9/9/9/4K4 b PN 1",
+       "focus": [
+        "4b",
+        "2c"
+       ],
+       "text": [
+        "O tataki no fu (叩きの歩, \"Peão de batida\") é colocar um Peão bem na frente de uma peça inimiga. Se ela capturar, sai do lugar; se não capturar, o Peão avança e promove.",
+        "Aqui o Ouro em 4b e a Torre em 2c estão longe para um garfo. Mas se o Ouro descer para 4c…"
+       ]
+      },
+      {
+       "kind": "exercise",
+       "title": "Puxe o Ouro",
+       "sfen": "3k5/5g3/7r1/9/9/9/9/9/4K4 b PN 1",
+       "text": [
+        "Bata com o Peão na frente do Ouro e, quando ele capturar, faça o garfo de Cavalo."
+       ],
+       "goal": {
+        "type": "line",
+        "line": [
+         "P*4c",
+         "4b4c",
+         "N*3e"
+        ]
+       },
+       "wrong": {
+        "N*3e": "Ainda não: o Cavalo em 3e ataca 4c, mas o Ouro está em 4b. Primeiro puxe o Ouro para 4c."
+       },
+       "hint": "Primeiro o Peão em 4c. Depois o Cavalo numa casa que alcance 4c e 2c.",
+       "success": "Garfo! Um Peão sacrificado trouxe o Ouro para a casa do garfo. Por isso dizem fu no nai shōgi wa make shōgi (歩のない将棋は負け将棋): sem Peões na mão, faltam ferramentas."
+      },
+      {
+       "kind": "info",
+       "title": "O Peão de oposição",
+       "sfen": "4k4/9/9/7p1/7P1/9/9/7R1/4K4 b - 1",
+       "focus": [
+        "2d",
+        "2e"
+       ],
+       "text": [
+        "Primo do tataki é o awase no fu (合わせの歩, \"Peão de oposição\"): colocar um Peão bem na frente de um Peão inimigo, cara a cara, como o Peão em 2e.",
+        "Ele força uma troca de Peões no lugar que você escolheu, ou impede o avanço do Peão adversário. Aqui, se o Peão vermelho capturar, a Torre recaptura e a coluna 2 se abre."
+       ]
+      }
+     ]
+    },
+    {
+     "id": "tarefu",
+     "title": "O Peão pendurado",
+     "term": "Tarefu 垂れ歩",
+     "summary": "Um Peão na 4ª fileira que ameaça virar tokin.",
+     "steps": [
+      {
+       "kind": "exercise",
+       "title": "Pendure o Peão",
+       "sfen": "4k1g2/9/9/9/9/9/9/7R1/4K4 b P 1",
+       "text": [
+        "O tarefu (垂れ歩, \"Peão pendurado\") é colocar um Peão uma fileira antes do campo inimigo, apoiado por trás pela Torre. Ele ameaça entrar e virar tokin (と金), e é difícil de parar.",
+        "Pendure o Peão na coluna da sua Torre, avance-o e use a Torre quando o adversário capturar."
+       ],
+       "goal": {
+        "type": "line",
+        "line": [
+         "P*2d",
+         "3a2b",
+         [
+          "2d2c+",
+          "2d2c"
+         ],
+         "2b2c",
+         [
+          "2h2c+",
+          "2h2c"
+         ]
+        ]
+       },
+       "hint": "O Peão vai em 2d, na frente da Torre.",
+       "success": "O Ouro capturou o tokin (と金) e a Torre levou o Ouro: você trocou um Peão por um Ouro, e a Torre chegou ao campo inimigo."
+      }
+     ]
+    },
+    {
+     "id": "sokofu",
+     "title": "O Peão do fundo",
+     "term": "Sokofu 底歩",
+     "summary": "Um Peão na última fileira segura a Torre inimiga.",
+     "steps": [
+      {
+       "kind": "exercise",
+       "title": "Feche o fundo",
+       "sfen": "4k4/9/9/9/9/9/9/7G1/+r7K b P 1",
+       "focus": [
+        "9i"
+       ],
+       "text": [
+        "O Dragão vermelho dá xeque pela sua última fileira. Bloqueie com o Peão da mão, numa casa onde ele fique protegido.",
+        "Um Peão na sua última fileira é o sokofu (底歩, \"Peão do fundo\")."
+       ],
+       "goal": {
+        "type": "line",
+        "line": [
+         "P*2i"
+        ]
+       },
+       "wrong": {
+        "P*3i": "O Dragão captura esse Peão e o xeque continua. Coloque-o onde o Ouro e o Rei o protejam.",
+        "P*4i": "O Dragão captura esse Peão e o xeque continua. Coloque-o onde o Ouro e o Rei o protejam.",
+        "P*5i": "O Dragão captura esse Peão e o xeque continua. Coloque-o onde o Ouro e o Rei o protejam.",
+        "P*6i": "O Dragão captura esse Peão e o xeque continua. Coloque-o onde o Ouro e o Rei o protejam.",
+        "P*7i": "O Dragão captura esse Peão e o xeque continua. Coloque-o onde o Ouro e o Rei o protejam.",
+        "P*8i": "O Dragão captura esse Peão e o xeque continua. Coloque-o onde o Ouro e o Rei o protejam.",
+        "1i1h": "Fugir sai do xeque, mas o Rei fica sem abrigo. Um Peão no fundo resolve de vez.",
+        "2h2i": "Bloquear com o Ouro funciona, mas tira o Ouro da defesa. Um Peão basta."
+       },
+       "hint": "Coloque o Peão logo abaixo do seu Ouro.",
+       "success": "Isso! O provérbio diz kinzoko no fu, iwa yori katashi (金底の歩、岩より堅し): \"o Peão embaixo do Ouro é mais firme que uma rocha\"."
+      }
+     ]
+    },
+    {
+     "id": "mate1",
+     "title": "Mates em 1",
+     "term": "Ittezume 1手詰め",
+     "summary": "Padrões de mate para reconhecer na hora.",
+     "steps": [
+      {
+       "kind": "info",
+       "title": "Problemas de mate",
+       "sfen": "6nkl/9/7P1/9/9/9/9/9/K8 b G 1",
+       "text": [
+        "Os japoneses treinam com problemas de mate, o tsume shōgi (詰将棋). Os mais curtos são de um lance (1手詰め, ittezume).",
+        "O segredo é olhar para as casas de fuga do Rei: quais estão ocupadas, quais estão atacadas, e o que falta cobrir."
+       ]
+      },
+      {
+       "kind": "exercise",
+       "title": "Ouro na cabeça",
+       "sfen": "6nkl/9/7P1/9/9/9/9/9/K8 b G 1",
+       "text": [
+        "Dê mate em um lance."
+       ],
+       "goal": {
+        "type": "mate",
+        "solution": "G*2b"
+       },
+       "hint": "Atama-kin (頭金): o Ouro na cabeça do Rei, protegido pelo Peão.",
+       "success": "Mate! As próprias peças vermelhas tiram as casas de fuga do Rei."
+      },
+      {
+       "kind": "exercise",
+       "title": "Cavalo no canto",
+       "sfen": "7nk/8p/6S2/9/9/9/9/9/K8 b N 1",
+       "text": [
+        "Dê mate em um lance."
+       ],
+       "goal": {
+        "type": "mate",
+        "solution": "N*2c"
+       },
+       "hint": "O Cavalo pula: nenhuma peça consegue bloquear o xeque dele.",
+       "success": "Mate! A Prata cobre 2b e o Rei está preso no canto."
+      }
+     ]
+    },
+    {
+     "id": "mate3",
+     "title": "Mates em 3",
+     "term": "Santezume 3手詰め",
+     "summary": "Sacrificar para dar mate.",
+     "steps": [
+      {
+       "kind": "exercise",
+       "title": "Sacrifício de Torre",
+       "sfen": "8l/8k/6G2/9/9/9/9/9/K8 b R 1",
+       "text": [
+        "Mate em 3 lances (3手詰め, santezume): você joga, o adversário responde, você dá mate. Todos os seus lances devem dar xeque.",
+        "Às vezes é preciso entregar uma peça grande."
+       ],
+       "goal": {
+        "type": "line",
+        "line": [
+         "R*2b",
+         "1b1c",
+         "2b2c+"
+        ],
+        "mate": true
+       },
+       "hint": "Coloque a Torre colada ao Rei, onde o Ouro a protege.",
+       "success": "Mate! A Torre empurrou o Rei para 1c e o Dragão fechou a rede."
+      },
+      {
+       "kind": "exercise",
+       "title": "Sacrifício de Ouro",
+       "sfen": "9/8k/5sG2/9/9/9/9/9/K8 b G 1",
+       "text": [
+        "Mate em 3. Comece entregando o Ouro da mão."
+       ],
+       "goal": {
+        "type": "line",
+        "line": [
+         "G*2c",
+         "1b1a",
+         [
+          "3c2b",
+          "2c2b"
+         ]
+        ],
+        "mate": true
+       },
+       "hint": "O Ouro da mão vai colado ao Rei, protegido pelo Ouro em 3c.",
+       "success": "Mate! Um provérbio diz gyoku wa gedan ni otose (玉は下段に落とせ): empurre o Rei para a última fileira, onde ele tem menos saídas."
+      },
+      {
+       "kind": "info",
+       "title": "Hisshi (必至)",
+       "text": [
+        "Quando não há mate imediato, o objetivo pode ser o hisshi (必至): uma ameaça de mate que o adversário não consegue parar.",
+        "No final da partida, quem cria o hisshi (必至) primeiro geralmente vence, mesmo com menos peças. É a ideia do provérbio shūban wa koma no sontoku yori sokudo (終盤は駒の損得より速度): no final, a velocidade vale mais que o material."
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "strategy",
+   "title": "Estratégia",
+   "term": "Senryaku 戦略",
+   "description": "Provérbios, aberturas e castelos.",
+   "lessons": [
+    {
+     "id": "proverbs",
+     "title": "Os provérbios",
+     "term": "Kakugen 格言",
+     "summary": "Conselhos curtos que os mestres repetem.",
+     "steps": [
+      {
+       "kind": "info",
+       "title": "Rei longe da Torre",
+       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1",
+       "focus": [
+        "5i",
+        "2h"
+       ],
+       "text": [
+        "O conhecimento estratégico do shogi (将棋) é passado em provérbios, os kakugen (格言). Não são leis: há momentos para quebrá-los, mas no começo eles evitam muitos erros.",
+        "Gyokuhi sekkin su bekarazu (玉飛接近すべからず): não deixe o Rei perto da Torre. A Torre é a peça de ataque e a luta acontece em volta dela; o Rei deve ir para o outro lado."
+       ]
+      },
+      {
+       "kind": "info",
+       "title": "Não deixe o Rei no centro",
+       "focus": [
+        "5i"
+       ],
+       "text": [
+        "Igyoku wa sakeyo (居玉は避けよ): evite o Rei parado na casa inicial. Antes de a luta começar, leve o Rei para um canto e cerque-o com Ouros e Pratas: um castelo (囲い, kakoi).",
+        "E a divisão do trabalho: ataque com Torre, Bispo, Prata e Cavalo; defenda com os Ouros (e uma Prata)."
+       ]
+      },
+      {
+       "kind": "info",
+       "title": "Peões e peças grandes",
+       "text": [
+        "Fu no nai shōgi wa make shōgi (歩のない将棋は負け将棋): sem Peões na mão, a partida está perdida. Os Peões da mão são as ferramentas dos tesuji (手筋).",
+        "Ryū wa tekijin ni, uma wa jijin ni (龍は敵陣に、馬は自陣に): o Dragão trabalha melhor no campo inimigo; o Cavalo-dragão, perto do seu Rei, como defensor."
+       ]
+      },
+      {
+       "kind": "info",
+       "title": "Ataque e mate",
+       "text": [
+        "Kin wa naname ni sasoe (金は斜めに誘え): ataque o Ouro pela diagonal, onde ele é cego para trás. Gyoku wa gedan ni otose (玉は下段に落とせ): empurre o Rei inimigo para a última fileira.",
+        "Shūban wa koma no sontoku yori sokudo (終盤は駒の損得より速度): no final, a velocidade do ataque vale mais que o material."
+       ]
+      }
+     ]
+    },
+    {
+     "id": "phases",
+     "title": "As fases da partida",
+     "term": "Joban 序盤 · Chūban 中盤 · Shūban 終盤",
+     "summary": "Abertura, meio-jogo e final: o que fazer em cada uma.",
+     "steps": [
+      {
+       "kind": "info",
+       "title": "Abertura",
+       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/2PP5/PP2PPPPP/1B1R5/LNSGKGSNL b - 1",
+       "text": [
+        "Abertura (序盤, joban): decida onde fica a Torre, monte o castelo do Rei e prepare o ataque. Ninguém captura nada ainda.",
+        "Um plano simples e sólido vale mais que lances espertos. Abrir a diagonal do Bispo, posicionar a Torre e levar o Rei para o castelo são os três passos."
+       ]
+      },
+      {
+       "kind": "info",
+       "title": "Meio-jogo",
+       "text": [
+        "Meio-jogo (中盤, chūban): a luta começa, geralmente com uma troca de Peões que abre uma coluna para a Torre. Cada lado tenta ganhar material ou romper o castelo adversário.",
+        "Conte sempre: quantas peças atacam uma casa e quantas a defendem. E lembre que toda peça capturada volta como drop."
+       ]
+      },
+      {
+       "kind": "info",
+       "title": "Final",
+       "text": [
+        "Final (終盤, shūban): corrida de mate. Quem dá mate primeiro vence, mesmo com menos peças.",
+        "Antes de cada lance pergunte: tenho mate? Tenho um xeque que ganha algo? O adversário ameaça mate? Se sim, defenda ou ataque mais rápido."
+       ]
+      }
+     ]
+    },
+    {
+     "id": "rook-styles",
+     "title": "Torre parada ou Torre lateral",
+     "term": "Ibisha 居飛車 · Furibisha 振り飛車",
+     "summary": "As duas grandes famílias de abertura.",
+     "steps": [
+      {
+       "kind": "info",
+       "title": "Duas famílias",
+       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1",
+       "focus": [
+        "2h"
+       ],
+       "text": [
+        "Toda abertura começa com uma escolha: onde fica a Torre. Na Torre parada (居飛車, ibisha) ela fica na coluna 2 e ataca pela direita. Na Torre lateral (振り飛車, furibisha) ela vai para o centro ou para a esquerda.",
+        "Com a Torre lateral, o Rei vai para a direita, longe da Torre, como manda o provérbio. Ela é mais fácil de aprender: o plano é sempre parecido."
+       ]
+      },
+      {
+       "kind": "info",
+       "title": "As colunas da Torre lateral",
+       "focus": [
+        "5h",
+        "6h",
+        "7h"
+       ],
+       "text": [
+        "Cada coluna tem nome: Torre central (中飛車, nakabisha) na 5; Torre na quarta coluna (四間飛車, shikenbisha) na 6; Torre na terceira coluna (三間飛車, sangenbisha) na 7; Torre em frente (向かい飛車, mukaibisha) na 8.",
+        "As colunas são contadas a partir da borda do jogador: para Sente (先手), a 6 é a quarta coluna vista da esquerda."
+       ]
+      },
+      {
+       "kind": "exercise",
+       "title": "Mova a Torre",
+       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1",
+       "text": [
+        "Coloque a Torre na coluna 6: a posição do shikenbisha (四間飛車)."
+       ],
+       "goal": {
+        "type": "formation",
+        "pieces": {
+         "6h": "R"
+        },
+        "solution": [
+         "2h6h"
+        ]
+       },
+       "hint": "A Torre atravessa a fileira h num lance.",
+       "success": "Shikenbisha (四間飛車)! A Torre está do lado esquerdo; o Rei agora vai para a direita."
+      }
+     ]
+    },
+    {
+     "id": "mino",
+     "title": "O castelo Mino",
+     "term": "Mino-gakoi 美濃囲い",
+     "summary": "O castelo mais usado com a Torre lateral.",
+     "steps": [
+      {
+       "kind": "info",
+       "title": "Castelos",
+       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/2PP5/PP2PPPPP/1B1R5/LNSGKGSNL b - 1",
+       "text": [
+        "Um castelo (囲い, kakoi) é uma formação de Ouros e Pratas em volta do Rei. Há dezenas: os mais famosos são o Mino (美濃囲い), a Fortaleza (矢倉, yagura), o Barco (舟囲い, funa-gakoi) e o Urso na toca (穴熊, anaguma).",
+        "O Mino (美濃囲い, mino-gakoi) é considerado fácil para iniciantes e é usado até por profissionais: o Rei fica num canto seguro e as três peças de defesa se protegem umas às outras."
+       ]
+      },
+      {
+       "kind": "exercise",
+       "title": "Monte o Mino (美濃)",
+       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/2PP5/PP2PPPPP/1B1R5/LNSGKGSNL b - 1",
+       "focus": [
+        "2h",
+        "3h",
+        "5h",
+        "4i"
+       ],
+       "text": [
+        "Monte o castelo Mino (美濃囲い): Rei em 2h, Prata em 3h, um Ouro em 5h e o outro fica em 4i. O adversário espera."
+       ],
+       "goal": {
+        "type": "formation",
+        "pieces": {
+         "2h": "K",
+         "3h": "S",
+         "5h": "G",
+         "4i": "G"
+        },
+        "solution": [
+         "5i4h",
+         "4h3h",
+         "3h2h",
+         "3i3h",
+         "6i5h"
+        ]
+       },
+       "hint": "Primeiro leve o Rei até 2h (passando por 4h e 3h); depois a Prata sobe para 3h e o Ouro de 6i vai para 5h.",
+       "success": "Mino-gakoi (美濃囲い)! O Rei está longe da Torre, e Prata e Ouros se defendem em diagonal."
+      },
+      {
+       "kind": "info",
+       "title": "Forças e fraquezas",
+       "focus": [
+        "1g",
+        "1i"
+       ],
+       "text": [
+        "O Mino (美濃囲い) é forte contra ataques pelos lados e se monta em poucos lances. O ponto fraco é a borda: o ataque pela coluna 1 (端攻め, hashizeme) e pelas diagonais perto do Rei.",
+        "Por isso, muitos jogadores avançam o Peão da borda (1g1f) para dar mais espaço ao Rei."
+       ]
+      },
+      {
+       "kind": "info",
+       "title": "A Fortaleza",
+       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/2PP3P1/PPSGPPP1P/1KG4R1/LNB3SNL b - 1",
+       "focus": [
+        "8h",
+        "7h",
+        "7g",
+        "6g"
+       ],
+       "text": [
+        "Com a Torre parada, o castelo clássico é a Fortaleza (矢倉, yagura): Rei em 8h, Ouros em 7h e 6g, Prata em 7g. Muitos a consideram a defesa mais forte quando as duas Torres ficam paradas.",
+        "Ela leva mais lances para montar e é difícil de romper pela frente, porém mais fraca pelo lado."
+       ]
+      }
+     ]
+    },
+    {
+     "id": "opening-plan",
+     "title": "Um plano completo",
+     "term": "Shikenbisha 四間飛車",
+     "summary": "Nove lances que montam uma abertura sólida.",
+     "steps": [
+      {
+       "kind": "info",
+       "title": "O plano",
+       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1",
+       "text": [
+        "Vamos montar do zero uma abertura completa de Torre lateral: o shikenbisha (四間飛車) com o castelo Mino (美濃囲い).",
+        "1. Abra o Bispo (7g7f). 2. Avance o Peão de 6g para 6f: ele fecha a diagonal e evita a troca de Bispos. 3. Torre para 6h. 4. Prata de 7i para 7h. 5. Rei para 2h, Prata para 3h, Ouro para 5h."
+       ]
+      },
+      {
+       "kind": "exercise",
+       "title": "Monte a abertura",
+       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1",
+       "focus": [
+        "7f",
+        "6f",
+        "6h",
+        "7h",
+        "2h",
+        "3h",
+        "5h"
+       ],
+       "text": [
+        "Monte a formação completa. O adversário espera; numa partida de verdade ele também estaria se preparando."
+       ],
+       "goal": {
+        "type": "formation",
+        "pieces": {
+         "7f": "P",
+         "6f": "P",
+         "6h": "R",
+         "7h": "S",
+         "2h": "K",
+         "3h": "S",
+         "5h": "G"
+        },
+        "solution": [
+         "7g7f",
+         "6g6f",
+         "2h6h",
+         "7i7h",
+         "5i4h",
+         "4h3h",
+         "3h2h",
+         "3i3h",
+         "6i5h"
+        ]
+       },
+       "hint": "Siga a ordem: Peões de 7g e 6g, Torre para 6h, Prata de 7i, e então o Mino (美濃囲い).",
+       "success": "Pronto: shikenbisha (四間飛車) com Mino (美濃囲い). Daqui o plano é esperar o ataque adversário, trocar peões na coluna 6 ou 7 e contra-atacar."
+      }
+     ]
+    },
+    {
+     "id": "open-file",
+     "title": "Abrindo uma coluna",
+     "term": "Fu no kōkan 歩の交換",
+     "summary": "A troca de Peões que coloca a Torre em jogo.",
+     "steps": [
+      {
+       "kind": "exercise",
+       "title": "Troque os Peões",
+       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1",
+       "text": [
+        "Na Torre parada, o ataque clássico é avançar o Peão da coluna 2 até ele encontrar o Peão adversário. Depois da troca (歩の交換, fu no kōkan), a Torre chega à 4ª fileira e você ganha um Peão na mão.",
+        "Avance o Peão da coluna 2 três vezes e recapture com a Torre."
+       ],
+       "goal": {
+        "type": "line",
+        "line": [
+         "2g2f",
+         "8c8d",
+         "2f2e",
+         "8d8e",
+         "2e2d",
+         "2c2d",
+         "2h2d"
+        ]
+       },
+       "hint": "Sempre o Peão da coluna 2; quando o Peão vermelho capturar, recapture com a Torre.",
+       "success": "A Torre está em 2d, mirando o campo inimigo, e o Peão da mão já pode ser usado em um tesuji (手筋). Numa partida real o adversário defende 2c com Prata ou Ouro antes disso, mas a ideia é a mesma."
+      }
+     ]
+    },
+    {
+     "id": "practice-game",
+     "title": "Pratique contra o computador",
+     "term": "Jissen 実戦",
+     "summary": "Uma partida para usar o plano e as táticas.",
+     "game": true,
+     "steps": [
+      {
+       "kind": "info",
+       "title": "Partida de prática",
+       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1",
+       "text": [
+        "Hora da prática (実戦, jissen). Tente o shikenbisha (四間飛車) com o Mino (美濃囲い), procure ataques duplos (両取り) e não entregue peças soltas.",
+        "O treinador avisa quando o Rei ficar parado no centro, quando houver um ataque duplo ou uma peça sua sem defesa."
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

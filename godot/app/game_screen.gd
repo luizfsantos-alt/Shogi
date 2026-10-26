@@ -2,7 +2,8 @@ class_name GameScreen
 extends Node
 ## A game against the computer on the 3D table. The GameSession (godot/game/) holds the rules,
 ## the computer and the saved game; the table animates; the mentor explains. Everything else is
-## in the menu.
+## in the menu. What to start comes from App.request (new game, continue, or a guided game of the
+## course, where the coach of learn/coach_tips.gd comments on the way).
 
 const BEGINNER_LEVELS := 2           ## "Movimentos" is offered up to this level
 const REASONS := {
@@ -16,16 +17,17 @@ var table: Table
 var mentor: Mentor
 
 var _status: Label
-var _dialog: CanvasLayer
 var _animating := false              ## the table is showing a move; the next waits for it
 var _queue: Array = []               ## computer moves to animate, in order
+var _coach_seen := {}                ## coach tips already shown in this guided game
 
 
 func _ready() -> void:
-	_apply_theme()
+	UiTheme.apply(get_tree())
 	table = Table.new()
 	add_child(table)
 	mentor = Mentor.new()
+	mentor.balloon_width = 340.0
 	add_child(mentor)
 	session = GameSession.new()
 	add_child(session)
@@ -41,13 +43,30 @@ func _ready() -> void:
 	session.engine_failed.connect(func(msg: String) -> void: mentor.say("O computador parou de jogar: " + msg, 10.0))
 	table.move_chosen.connect(_on_player_move)
 	table.illegal_attempt.connect(_on_illegal)
+	table.reduced_effects_changed.connect(func(on: bool) -> void: App.set_setting("reduced_effects", on))
+	table.add_menu_action("Início", App.go_home)
 	table.add_menu_action("Nova partida", _show_new_game)
 	table.add_menu_action("Desfazer", func() -> void: session.undo())
 	table.add_menu_action("Dica", _hint)
 	table.add_menu_action("Declarar impasse", _declare_impasse)
 	table.add_menu_action("Desistir", func() -> void: session.resign())
 	if not _run_cmdline_demo():
-		_show_new_game()
+		_start_requested(App.request)
+
+
+## What the start screen or the course asked for.
+func _start_requested(req: Dictionary) -> void:
+	match req.get("action", ""):
+		"new":
+			start(int(req.level), req.human_color)
+		"continue":
+			if not session.load_game():
+				mentor.say("Não consegui abrir a partida salva. Comece uma nova.")
+				_show_new_game()
+		"guided":
+			start_guided(req.lesson)
+		_:
+			_show_new_game()
 
 
 # --- Game flow -----------------------------------------------------------------------------
@@ -58,11 +77,24 @@ func _colour(c: String) -> int:
 
 func start(level: int, human: String) -> void:
 	_queue.clear()
+	_coach_seen.clear()
 	session.new_game({"mode": "ai", "human_color": human, "level": level})
 	var beginner := level <= BEGINNER_LEVELS
 	mentor.say("Vamos lá! Você joga com as peças %s. %s" % [
 		"peroladas e começa" if human == "black" else "vermelhas; o computador começa",
 		"Toque numa peça para ver para onde ela pode ir." if beginner else "Boa partida."])
+
+
+## A game lesson of the course: Sente against the weakest level, with the coach.
+func start_guided(lesson_id: String) -> void:
+	_queue.clear()
+	_coach_seen.clear()
+	# The coach's first tip (the opening) comes with the first turn.
+	session.new_game({"mode": "ai", "human_color": "black", "level": 1, "coach": lesson_id})
+
+
+func _guided() -> String:
+	return str(session.settings.get("coach", ""))
 
 
 ## Rebuilds the table from the session (new game, undo, continuing a saved game).
@@ -85,11 +117,27 @@ func _refresh_turn() -> void:
 		var help := session.check_help_text()
 		if help != "":
 			mentor.say(help)
+		elif _guided() != "":
+			_coach_tip()
 	else:
 		table.set_legal_moves(PackedStringArray(), side, false)
 
 
+## The coach of the guided game: one tip at a time, each once per game, with its squares lit.
+func _coach_tip() -> void:
+	var tip := CoachTips.coach_tip(session.rules, session.settings.human_color, _coach_seen)
+	if tip.is_empty():
+		return
+	_coach_seen[tip.id] = true
+	var marks := {}
+	for sq: Vector2i in tip.squares:
+		marks[sq] = Table.GOLD
+	table.set_marks(marks)
+	mentor.note(tip.text, tip.title.to_upper())
+
+
 func _on_player_move(usi: String) -> void:
+	table.set_marks({})
 	# The table has already animated it; the session answers with the computer's move.
 	if not session.play(usi):
 		# Should not happen (the table only offers legal moves): resync.
@@ -133,9 +181,23 @@ func _on_game_over(result: Dictionary) -> void:
 	if result.get("reason", "") == "checkmate":
 		var loser := 1 if winner == "black" else 0
 		await table.checkmate_effect(table.king_square(loser))
-	mentor.say(text, 8.0)
 	_set_status(text)
 	session.save_game()
+	var lesson := _guided()
+	if lesson == "":
+		mentor.say(text, 8.0)
+		return
+	# The guided game is a lesson: 3 stars for a win, 2 for a draw, 1 for playing it to the end.
+	var stars := 3 if winner == human else (2 if winner == "draw" else 1)
+	Course.save_result(lesson, stars)
+	var following := Course.next_lesson(lesson)
+	mentor.speak([text, "Partida guiada concluída. Agora é com você: escolha um nível em Nova partida, ou siga no curso%s." % (
+		(": a próxima lição é \"%s\"" % following.title) if not following.is_empty() else "")], "FIM DA PARTIDA")
+	mentor.dialog_finished.connect(func() -> void:
+		if not following.is_empty():
+			App.open_lesson(following.id)
+		else:
+			App.open_course(), CONNECT_ONE_SHOT)
 
 
 # --- Mentor --------------------------------------------------------------------------------
@@ -203,111 +265,10 @@ func _declare_impasse() -> void:
 # --- New game ------------------------------------------------------------------------------
 
 func _show_new_game() -> void:
-	if _dialog:
-		_dialog.queue_free()
-	var layer := CanvasLayer.new()
-	layer.layer = 5
-	add_child(layer)
-	_dialog = layer
-	var dim := ColorRect.new()
-	dim.color = Color(0, 0, 0, 0.55)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	layer.add_child(dim)
-	var panel := PanelContainer.new()
-	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	panel.grow_vertical = Control.GROW_DIRECTION_BOTH
-	layer.add_child(panel)
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 18)
-	panel.add_child(box)
-	var title := Label.new()
-	title.text = "将棋  Nova partida"
-	title.add_theme_font_size_override("font_size", 46)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(title)
-	var close := func() -> void:
-		layer.queue_free()
-		_dialog = null
-
-	var saved := _saved_game()
-	if not saved.is_empty():
-		var lv := Levels.get_level(int(saved.settings.get("level", 1)))
-		var cont := _big_button("Continuar partida (%s)" % lv.name)
-		cont.pressed.connect(func() -> void:
-			close.call()
-			if not session.load_game():
-				mentor.say("Não consegui abrir a partida salva. Comece uma nova."))
-		box.add_child(cont)
-
-	box.add_child(_label("Nível do computador"))
-	var levels := HBoxContainer.new()
-	levels.add_theme_constant_override("separation", 10)
-	box.add_child(levels)
-	var chosen := {"level": int(session.settings.get("level", 1)), "side": 0}
-	var level_group := ButtonGroup.new()
-	for lv: Dictionary in Levels.LEVELS:
-		var b := _big_button("%d. %s" % [lv.id, lv.name])
-		b.toggle_mode = true
-		b.button_group = level_group
-		b.button_pressed = lv.id == chosen.level
-		b.pressed.connect(func() -> void: chosen.level = lv.id)
-		levels.add_child(b)
-
-	box.add_child(_label("Seu lado"))
-	var sides := HBoxContainer.new()
-	sides.add_theme_constant_override("separation", 10)
-	box.add_child(sides)
-	var side_group := ButtonGroup.new()
-	var side_names := ["先手 Sente (pérola, começa)", "後手 Gote (vermelho)", "Aleatório"]
-	for i in 3:
-		var b := _big_button(side_names[i])
-		b.toggle_mode = true
-		b.button_group = side_group
-		b.button_pressed = i == 0
-		b.pressed.connect(func() -> void: chosen.side = i)
-		sides.add_child(b)
-
-	var go := _big_button("Começar")
-	go.add_theme_font_size_override("font_size", 40)
-	go.pressed.connect(func() -> void:
-		close.call()
-		var side: int = chosen.side if chosen.side < 2 else randi() % 2
-		start(chosen.level, "black" if side == 0 else "white"))
-	box.add_child(go)
+	NewGamePanel.open(self, start, int(session.settings.get("level", 1)))
 
 
-## The saved game, if there is one still being played.
-func _saved_game() -> Dictionary:
-	if not FileAccess.file_exists(GameSession.SAVE_PATH):
-		return {}
-	var data = JSON.parse_string(FileAccess.get_file_as_string(GameSession.SAVE_PATH))
-	if typeof(data) != TYPE_DICTIONARY or (data.get("moves", []) as Array).is_empty():
-		return {}
-	if data.get("resigned", "") != "" or data.get("impasse_declared", "") != "":
-		return {}
-	if typeof(data.get("settings")) != TYPE_DICTIONARY:
-		return {}
-	return data
-
-
-func _big_button(text: String) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.add_theme_font_size_override("font_size", 30)
-	b.custom_minimum_size = Vector2(0, 84)
-	return b
-
-
-func _label(text: String) -> Label:
-	var l := Label.new()
-	l.text = text
-	l.add_theme_font_size_override("font_size", 28)
-	l.modulate = Color(1, 1, 1, 0.7)
-	return l
-
-
-# --- Status line and theme -----------------------------------------------------------------
+# --- Status line ----------------------------------------------------------------------------
 
 func _build_status() -> void:
 	var layer := CanvasLayer.new()
@@ -317,7 +278,9 @@ func _build_status() -> void:
 	_status.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	_status.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_status.offset_top = 18
-	_status.add_theme_font_size_override("font_size", 30)
+	_status.add_theme_font_override("font", UiTheme.mono())
+	_status.add_theme_font_size_override("font_size", 26)
+	_status.add_theme_color_override("font_color", UiTheme.GOLD)
 	_status.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
 	_status.add_theme_constant_override("outline_size", 8)
 	layer.add_child(_status)
@@ -325,16 +288,6 @@ func _build_status() -> void:
 
 func _set_status(text: String) -> void:
 	_status.text = text
-
-
-## Default font with the brush kanji as fallback, so 成, 師, 将棋… show in the interface.
-func _apply_theme() -> void:
-	var kanji: FontFile = load("res://visual/fonts/kaisei-tokumin-800-koma.woff2")
-	var base: Font = ThemeDB.fallback_font.duplicate()
-	base.fallbacks = [kanji]
-	var theme := Theme.new()
-	theme.default_font = base
-	get_tree().root.theme = theme
 
 
 # --- Screenshots for development -----------------------------------------------------------
@@ -374,6 +327,9 @@ func _demo(args: Dictionary) -> void:
 		"gote":
 			# Playing Gote: the table turns around and the computer opens.
 			start(1, "white")
+		"guided":
+			# The course's first game: the coach suggests the first move.
+			start_guided("first-game")
 	for i in int(float(args.get("at", "2.0")) * 30.0):
 		await get_tree().process_frame
 	get_viewport().get_texture().get_image().save_png(args["shot"])
