@@ -6,16 +6,14 @@ O PWA na raiz do repositório fica congelado como referência.
 ## Partida (`app/`)
 
 `app/game.tscn` é a cena principal: partida contra o computador nos 5 níveis do PWA, escolhendo o
-lado. O motor (`engine/`, `ShogiEngine`) decide o que é legal (com o filtro de uchifuzume) e joga
-pelo computador; a mesa anima; o mentor (`app/mentor.gd`, retrato provisório 師) explica lances
-recusados, avisa do xeque e dá dicas. No menu ☰: nova partida, desfazer, dica, desistir e os
-ajustes dos efeitos. A partida é salva sozinha em `user://partida.json` e pode ser continuada.
-
-As explicações completas (porte de `explain.ts`, `coach.ts`, `impasse.ts`, `session.ts`) estão
-sendo escritas em `game/` no branch do motor; por enquanto `game_screen.gd` tem uma versão curta.
+lado. A `GameSession` (`game/`, porte de `session.ts` e da camada de regras do PWA) decide o que é
+legal, joga pelo computador e salva a partida; a mesa anima; o mentor (`app/mentor.gd`, retrato
+provisório 師) explica lances recusados com os textos do PWA (`Explain`), diz como sair do xeque
+(`Coach`) e dá dicas em palavras. No menu ☰: nova partida, desfazer, dica, declarar impasse,
+desistir e os ajustes dos efeitos. A partida é salva sozinha em `user://partida.json`.
 
 Captura de tela: `godot --path godot --fixed-fps 30 res://app/game.tscn -- shot=/tmp/a.png
-demo=reply at=3` (demos: `dialog`, `reply`, `illegal`, `hint`).
+demo=reply at=3` (demos: `dialog`, `reply`, `illegal`, `hint`, `gote`).
 
 ## Frente visual (`visual/`)
 

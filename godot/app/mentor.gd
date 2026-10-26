@@ -49,12 +49,12 @@ func _ready() -> void:
 	sb.content_margin_bottom = 14
 	_balloon.add_theme_stylebox_override("panel", sb)
 	_balloon.size_flags_vertical = Control.SIZE_SHRINK_END
-	_balloon.custom_minimum_size = Vector2(420, 0)
+	_balloon.custom_minimum_size = Vector2(360, 0)
 	box.add_child(_balloon)
 	_text = Label.new()
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_text.custom_minimum_size = Vector2(380, 0)
-	_text.add_theme_font_size_override("font_size", 28)
+	_text.custom_minimum_size = Vector2(320, 0)
+	_text.add_theme_font_size_override("font_size", 26)
 	_text.add_theme_color_override("font_color", Color(0.15, 0.08, 0.04))
 	_balloon.add_child(_text)
 	# Tapping the balloon closes it.
