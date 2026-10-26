@@ -1,0 +1,5 @@
+thirdparty/
+.sconsign.dblite
+*.o
+*.os
+build/
