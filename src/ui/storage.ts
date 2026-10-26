@@ -1,3 +1,4 @@
+import type { CourseProgress } from "../learn/types";
 import type { GameSettings, SavedGame } from "./session";
 
 /**
@@ -8,6 +9,7 @@ import type { GameSettings, SavedGame } from "./session";
 const CURRENT_KEY = "shogi.current.v1";
 const SAVES_KEY = "shogi.saves.v1";
 const PREFS_KEY = "shogi.prefs.v1";
+const COURSE_KEY = "shogi.course.v1";
 const MAX_SAVES = 30;
 
 export interface Preferences {
@@ -91,4 +93,17 @@ export function loadPreferences(): Preferences {
 
 export function savePreferences(preferences: Preferences): void {
   write(PREFS_KEY, preferences);
+}
+
+export function loadCourse(): CourseProgress {
+  const stored = read<Partial<CourseProgress>>(COURSE_KEY);
+  return { stars: { ...(stored?.stars ?? {}) } };
+}
+
+/** Records a lesson result, keeping the best one. */
+export function saveLessonResult(lessonId: string, stars: number): CourseProgress {
+  const progress = loadCourse();
+  progress.stars[lessonId] = Math.max(progress.stars[lessonId] ?? 0, stars);
+  write(COURSE_KEY, progress);
+  return progress;
 }

@@ -45,7 +45,7 @@ describe("explainMove", () => {
   it("gives clear Portuguese messages", async () => {
     const game = await newGame("4k4/9/9/9/9/9/4P4/9/4K4 b P 1");
     const position = game.position();
-    expect(describeIllegal(explainMove(game, "P*5e"), position, game.variant)).toMatch(/^Nifu: você já tem um peão/);
+    expect(describeIllegal(explainMove(game, "P*5e"), position, game.variant)).toMatch(/^Nifu \(二歩\): você já tem um peão/);
     game.load("7lk/9/7G1/9/9/9/9/9/4K4 b P 1");
     expect(describeIllegal(explainMove(game, "P*1b"), game.position(), game.variant)).toMatch(/^Uchifuzume/);
     game.load("4k4/9/9/9/9/9/9/8G/r3K4 b - 1");

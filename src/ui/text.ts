@@ -4,15 +4,15 @@ import type { GameSettings } from "./session";
 /** Portuguese texts shown to the player. */
 
 export function sideName(color: Color): string {
-  return color === "black" ? "Sente ☗" : "Gote ☖";
+  return color === "black" ? "Sente 先手 ☗" : "Gote 後手 ☖";
 }
 
 const REASONS: Record<EndReason, string> = {
   checkmate: "Xeque-mate.",
   "no-legal-moves": "Sem nenhuma jogada legal (no shogi isso é derrota).",
-  repetition: "Sennichite: a mesma posição se repetiu 4 vezes. Empate.",
+  repetition: "Sennichite (千日手): a mesma posição se repetiu 4 vezes. Empate.",
   "perpetual-check": "Xeque perpétuo: a posição se repetiu 4 vezes com xeques seguidos, e quem dava os xeques perde.",
-  impasse: "Impasse declarado (jishogi, regra dos 27 pontos).",
+  impasse: "Impasse declarado (jishōgi 持将棋, regra dos 27 pontos).",
   resignation: "Desistência.",
 };
 

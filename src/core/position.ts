@@ -208,7 +208,7 @@ function checkDoubledPawns(position: Position, variant: VariantDefinition): stri
         const piece = row[col];
         return piece?.type === "P" && !piece.promoted && piece.color === color;
       }).length;
-      if (pawns > 1) return `Nifu: ${colorName(color)} tem dois peões na coluna ${variant.dims.files - col}.`;
+      if (pawns > 1) return `Nifu (二歩): ${colorName(color)} tem dois peões na coluna ${variant.dims.files - col}.`;
     }
   }
   return null;

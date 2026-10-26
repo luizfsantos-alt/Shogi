@@ -188,9 +188,9 @@ export function describeIllegal(reason: IllegalReason, position: Position, varia
     case "promotion-outside-zone":
       return `Só dá para promover quando a peça entra, sai ou se move dentro das ${variant.promotionZoneRanks} últimas fileiras (o campo do adversário).`;
     case "nifu":
-      return `Nifu: você já tem um peão (não promovido) na coluna ${reason.file}. Não pode haver dois peões seus na mesma coluna.`;
+      return `Nifu (二歩): você já tem um peão (não promovido) na coluna ${reason.file}. Não pode haver dois peões seus na mesma coluna.`;
     case "uchifuzume":
-      return "Uchifuzume: esse peão colocado da mão daria xeque-mate, e isso é proibido. (Dar mate movendo um peão do tabuleiro é permitido.)";
+      return "Uchifuzume (打ち歩詰め): esse peão colocado da mão daria xeque-mate, e isso é proibido. (Dar mate movendo um peão do tabuleiro é permitido.)";
     case "king-into-check":
       // The attackers are still on the board before the move (the king cannot have captured them).
       return `O rei não pode ir para uma casa atacada (${squares(reason.attackers, position, dims)}).`;

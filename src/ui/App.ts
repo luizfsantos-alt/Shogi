@@ -3,16 +3,25 @@ import { attackMap } from "../core/attacks";
 import { checkHelp, describeCheckHelp } from "../core/coach";
 import { describeIllegal, explainBoardMove, explainMove } from "../core/explain";
 import { formatSquare, parseUsiMove } from "../core/notation";
-import { pieceInfo } from "../core/pieces";
 import { onInstallAvailable, onUpdateAvailable } from "../pwa/register";
 import { findKing, SfenError } from "../core/position";
-import { opposite, type Color, type Piece, type Square, type UsiMove } from "../core/types";
+import { opposite, type Color, type Piece, type Square } from "../core/types";
 import { formatUsiRecord, parseUsiRecord, RecordFormatError } from "../core/usiRecord";
 import { IllegalMoveError } from "../core/GameBackend";
+import type { GameBackend } from "../core/GameBackend";
+import { coachTip, type CoachTip } from "../learn/coachTips";
+import { completedCount, findLesson, nextLesson } from "../learn/course";
+import type { Lesson } from "../learn/types";
+import { boardCells, playerBar } from "./boardView";
+import { courseMap, LessonScreen } from "./CourseView";
 import { element, showDialog } from "./dialogs";
+import { homeScreen } from "./Home";
 import { chooseMove, targetsFor, type Selection } from "./interaction";
-import { describePiece, renderPiece, type Glint, type PieceLook } from "./pieceView";
+import { type Glint, type PieceLook } from "./pieceView";
 import { pieceCard } from "./pieceCard";
+import { PressHold } from "./pressHold";
+import { askPromotion } from "./promotion";
+import { withKanji } from "./rich";
 import { showRules } from "./rules";
 import { playSound } from "./sound";
 import { DEFAULT_SETTINGS, type GameSession, type GameSettings } from "./session";
@@ -24,7 +33,10 @@ type SideChoice = Color | "random";
 /** Where the source code is published (required by the GPL when the game is distributed). */
 const SOURCE_URL = "https://github.com/luizfsantos-alt/Shogi";
 
-/** The game screen: renders the session and turns clicks into moves. */
+/**
+ * The app: the start screen, the course and the game screen. The game screen renders the
+ * session and turns clicks into moves; the course runs on its own board (`lessonBackend`).
+ */
 export class App {
   private selection: Selection | null = null;
   private flipped = false;
@@ -35,9 +47,7 @@ export class App {
   private lastOver = false;
   /** No sounds while the saved game is being restored at startup. */
   private soundsReady = false;
-  /** When a press-and-hold last showed a piece's name, so its release does not also count as a click. */
-  private longPressEndedAt = 0;
-  private tooltip: HTMLElement | null = null;
+  private readonly hold = new PressHold();
   /** Piece shown in the learning panel. */
   private infoPiece: Piece | null = null;
   private overlayHidden = false;
@@ -47,14 +57,28 @@ export class App {
   /** The ply at which a piece last promoted, and when: its gold glint plays once. */
   private promotionGlint: { ply: number; at: number } | null = null;
   private preferences = storage.loadPreferences();
+  /** Coach tips already shown in the current guided game, and the one on screen. */
+  private readonly coachSeen = new Set<string>();
+  private coachShown: CoachTip | null = null;
+  /** Where the screens go; the update banner stays above them. */
+  private readonly screen: HTMLElement;
+  private readonly banner: HTMLElement;
+  private readonly gameLayout: HTMLElement;
+  private onGameScreen = false;
+  private readonly installButtons: HTMLButtonElement[] = [];
+  private install: (() => Promise<void>) | null = null;
   private readonly els: Record<"board" | "top" | "bottom" | "status" | "coach" | "notice" | "moves" | "actions" | "overlay" | "pieceInfo", HTMLElement>;
 
   constructor(
     private readonly root: HTMLElement,
     private readonly session: GameSession,
+    private readonly lessonBackend: GameBackend,
   ) {
-    root.replaceChildren(this.buildLayout());
-    const get = (id: string): HTMLElement => root.querySelector<HTMLElement>(`#${id}`)!;
+    this.banner = element("div", { id: "update-banner", class: "update-banner", role: "status", hidden: "" });
+    this.screen = element("div", { class: "screen" });
+    root.replaceChildren(this.banner, this.screen);
+    this.gameLayout = this.buildLayout();
+    const get = (id: string): HTMLElement => this.gameLayout.querySelector<HTMLElement>(`#${id}`)!;
     this.els = {
       board: get("board"),
       top: get("hand-top"),
@@ -67,18 +91,34 @@ export class App {
       actions: get("actions"),
       overlay: get("overlay"),
     };
+    this.setupPwaControls();
   }
 
   /** Called by the session whenever the game changes. */
   onGameChange(): void {
     this.overlayHidden = false;
     const plies = this.session.backend.history().length;
+    if (plies !== this.lastPlies && this.coachShown) {
+      // A tip the player moved past without dismissing counts as read.
+      this.coachSeen.add(this.coachShown.id);
+      this.coachShown = null;
+    }
+    this.recordGuidedGame();
     if (this.soundsReady && plies === this.lastPlies + 1 && this.session.lastMove()?.endsWith("+")) {
       this.promotionGlint = { ply: plies, at: performance.now() };
     }
     storage.saveCurrentGame(this.session.toSaved());
     this.playSounds();
-    this.render();
+    if (this.onGameScreen) this.render();
+  }
+
+  /** A guided game of the course that just ended counts as its lesson: 3 stars for a win. */
+  private recordGuidedGame(): void {
+    const { backend, settings } = this.session;
+    const result = backend.result();
+    if (!settings.coach || !result.over || this.lastOver) return;
+    const human = settings.mode === "ai" ? settings.humanColor : "black";
+    storage.saveLessonResult(settings.coach, result.winner === human ? 3 : result.winner === "draw" ? 2 : 1);
   }
 
   private playSounds(): void {
@@ -99,6 +139,74 @@ export class App {
   start(): void {
     this.restoreOrStartGame();
     this.soundsReady = true;
+    this.showHome();
+  }
+
+  // ---------------------------------------------------------------- screens
+
+  private show(screen: HTMLElement, game = false): void {
+    this.onGameScreen = game;
+    this.hold.consume();
+    this.screen.replaceChildren(screen);
+    window.scrollTo?.(0, 0);
+  }
+
+  private showHome(): void {
+    const { backend, settings } = this.session;
+    const plies = backend.history().length;
+    const opponent = settings.mode === "ai" ? `contra o computador (${LEVELS.find((l) => l.id === settings.level)?.name ?? "computador"})` : "a dois jogadores";
+    const current = plies > 0 && !backend.result().over ? `${plies} ${plies === 1 ? "jogada" : "jogadas"} ${opponent}${settings.coach ? ", partida guiada" : ""}.` : null;
+    const progress = storage.loadCourse();
+    const count = completedCount(progress);
+    this.show(
+      homeScreen({
+        current,
+        courseProgress: count.done > 0 ? `${count.done} de ${count.total} lições concluídas. Continue de onde parou.` : null,
+        newcomer: count.done === 0 && !current && !this.preferences.lastSettings,
+        installButton: this.installButton(),
+        onContinue: () => this.showGame(),
+        onPlay: () => void this.askNewGame().then((started) => started && this.showGame()),
+        onLearn: () => this.showCourse(),
+        onRules: () => void showRules(this.session.backend.variant, this.look()),
+      }),
+    );
+  }
+
+  private showGame(): void {
+    this.show(this.gameLayout, true);
+    this.render();
+  }
+
+  private showCourse(): void {
+    this.show(courseMap({ progress: storage.loadCourse(), onOpen: (lesson) => this.openLesson(lesson), onHome: () => this.showHome() }));
+  }
+
+  private openLesson(lesson: Lesson): void {
+    const found = findLesson(lesson.id);
+    if (!found) return;
+    const screen = new LessonScreen({
+      backend: this.lessonBackend,
+      lesson,
+      track: found.track,
+      look: () => this.look(),
+      sound: () => this.preferences.sound,
+      onCourse: () => this.showCourse(),
+      onHome: () => this.showHome(),
+      onFinished: (done, stars) => {
+        if (stars > 0) storage.saveLessonResult(done.id, stars);
+      },
+      onOpen: (next) => this.openLesson(next),
+      onStartGame: (game) => this.startGuidedGame(game),
+    });
+    this.show(screen.element);
+  }
+
+  /** The course's game lessons: a game against the weakest level, with the coach. */
+  private startGuidedGame(lesson: Lesson): void {
+    this.coachSeen.clear();
+    this.coachShown = null;
+    this.startGame({ mode: "ai", humanColor: "black", level: 1, handicap: "none", coach: lesson.id });
+    this.showGame();
   }
 
   private restoreOrStartGame(): void {
@@ -107,7 +215,6 @@ export class App {
       try {
         this.session.restore(saved);
         this.flipped = this.defaultFlip();
-        this.render();
         return;
       } catch {
         // Corrupted autosave: start a fresh game instead.
@@ -117,6 +224,15 @@ export class App {
   }
 
   // ---------------------------------------------------------------- layout
+
+  /** "Instalar app", shown while the browser offers installation (one per screen). */
+  private installButton(): HTMLButtonElement {
+    const button = element("button", { type: "button", class: "install-button" }, "Instalar app");
+    button.hidden = this.install === null;
+    button.addEventListener("click", () => void this.install?.());
+    this.installButtons.push(button);
+    return button;
+  }
 
   private buildLayout(): HTMLElement {
     const button = (id: string, label: string) => element("button", { id, type: "button" }, label);
@@ -136,7 +252,7 @@ export class App {
       "header",
       { class: "topbar" },
       element("h1", {}, element("span", { class: "mark", "aria-hidden": "true" }, "将棋"), "Shogi"),
-      element("div", { class: "topbar-actions" }, button("btn-install", "Instalar app"), readingToggle, button("btn-rules", "Regras"), button("btn-new", "Nova partida")),
+      element("div", { class: "topbar-actions" }, button("btn-home", "Início"), this.installButton(), readingToggle, button("btn-rules", "Regras"), button("btn-new", "Nova partida")),
     );
     const play = element(
       "section",
@@ -196,9 +312,7 @@ export class App {
       link(SOURCE_URL, "Código-fonte"),
       ".",
     );
-    const updateBanner = element("div", { id: "update-banner", class: "update-banner", role: "status", hidden: "" });
-    const layout = element("div", { class: "app" }, updateBanner, header, element("main", { class: "layout" }, play, panel), footer);
-    this.setupPwaControls(layout);
+    const layout = element("div", { class: "app" }, header, element("main", { class: "layout" }, play, panel), footer);
 
     labelsSelect.value = this.preferences.labels;
     labelsSelect.addEventListener("change", () => {
@@ -206,6 +320,7 @@ export class App {
       storage.savePreferences(this.preferences);
       this.render();
     });
+    layout.querySelector("#btn-home")!.addEventListener("click", () => this.showHome());
     layout.querySelector("#btn-rules")!.addEventListener("click", () => void showRules(this.session.backend.variant, this.look()));
     layout.querySelector("#btn-new")!.addEventListener("click", () => void this.askNewGame());
     layout.querySelector("#btn-save")!.addEventListener("click", () => void this.saveGame());
@@ -250,62 +365,35 @@ export class App {
 
   private renderBoard(): void {
     const backend = this.session.backend;
-    const { files, ranks } = backend.variant.dims;
-    const look = this.look();
     const legal = this.session.canHumanMove() ? backend.legalMoves() : [];
-    const targets = this.selection ? targetsFor(this.selection, legal) : [];
     const last = this.session.lastMove();
     const lastMove = last ? parseUsiMove(last) : null;
-    const checkedKing = backend.isCheck() ? findKing(backend.position(), backend.sideToMove(), backend.variant.dims) : null;
-    const same = (a: Square | null | undefined, b: Square) => !!a && a.file === b.file && a.rank === b.rank;
     const hint = this.session.hint ? parseUsiMove(this.session.hint.move) : null;
-    const attacks = this.preferences.showAttacks && !backend.result().over ? attackMap(backend.position(), this.opponentColor(), backend.variant.dims) : null;
-    const attackers = this.session.canHumanMove() ? (checkHelp(backend)?.attackers ?? []) : [];
+    const same = (a: Square | null | undefined, b: Square) => !!a && a.file === b.file && a.rank === b.rank;
     // The gold sweep of a promotion lasts 1.6 s; later redraws leave it out.
     const promotion = this.promotionGlint;
     const promoted =
       promotion && promotion.ply === backend.history().length && performance.now() - promotion.at < 1600 ? lastMove?.to : null;
-
-    const cells: HTMLElement[] = [];
-    // Column labels (file numbers) above the board.
-    for (let col = 0; col < files; col++) {
-      cells.push(element("div", { class: "coord file" }, String(this.flipped ? col + 1 : files - col)));
-    }
-    cells.push(element("div", { class: "coord corner" }));
-    for (let row = 0; row < ranks; row++) {
-      for (let col = 0; col < files; col++) {
-        const square = this.flipped ? { file: col + 1, rank: ranks - row } : { file: files - col, rank: row + 1 };
-        const piece = backend.pieceAt(square);
-        const cell = element("button", { type: "button", class: "sq", role: "gridcell" });
-        if (row === 0) cell.classList.add("edge-top");
-        if (col === 0) cell.classList.add("edge-left");
-        cell.setAttribute("aria-label", `${formatSquare(square)}${piece ? `, ${describePiece(piece)}` : ""}`);
-        if (piece) {
-          const selected = this.selection?.kind === "board" && same(this.selection.square, square);
-          const glint: Glint | undefined = selected
-            ? this.selectionGlint()
-            : promotion && same(promoted, square)
-              ? { kind: "promote", since: promotion.at }
-              : undefined;
-          cell.append(renderPiece(piece, look, piece.color !== this.bottomColor(), glint));
-          this.pressAndHold(cell, piece);
-        }
-        if (this.selection?.kind === "board" && same(this.selection.square, square)) cell.classList.add("selected");
-        if (targets.some((t) => same(t, square))) cell.classList.add(piece ? "target-capture" : "target");
-        if (lastMove && (same(lastMove.from, square) || same(lastMove.to, square))) cell.classList.add("last");
-        if (same(checkedKing, square)) cell.classList.add("check");
-        if (attackers.some((a) => same(a, square))) cell.classList.add("attacker");
-        if (hint && (same(hint.from, square) || same(hint.to, square))) cell.classList.add("hint");
-        const attackCount = attacks?.get(`${square.file},${square.rank}`);
-        if (attackCount) {
-          cell.classList.add("attacked");
-          if (attackCount > 1) cell.dataset.attacks = String(attackCount);
-        }
-        cell.addEventListener("click", () => void this.clickSquare(square, piece));
-        cells.push(cell);
-      }
-      cells.push(element("div", { class: "coord rank" }, String.fromCharCode(97 + (this.flipped ? ranks - 1 - row : row))));
-    }
+    const selected = this.selection?.kind === "board" ? this.selection.square : null;
+    const cells = boardCells({
+      backend,
+      flipped: this.flipped,
+      look: this.look(),
+      marks: {
+        selected,
+        targets: this.selection ? targetsFor(this.selection, legal) : [],
+        last: lastMove ? [...(lastMove.from ? [lastMove.from] : []), lastMove.to] : [],
+        check: backend.isCheck() ? findKing(backend.position(), backend.sideToMove(), backend.variant.dims) : null,
+        attackers: this.session.canHumanMove() ? (checkHelp(backend)?.attackers ?? []) : [],
+        hint: hint ? [...(hint.from ? [hint.from] : []), hint.to] : [],
+        focus: this.coachShown?.squares ?? [],
+        attacks: this.preferences.showAttacks && !backend.result().over ? attackMap(backend.position(), this.opponentColor(), backend.variant.dims) : null,
+      },
+      glint: (square) =>
+        same(selected, square) ? this.selectionGlint() : promotion && same(promoted, square) ? { kind: "promote", since: promotion.at } : undefined,
+      onClick: (square, piece) => void this.clickSquare(square, piece),
+      onHold: (target, piece) => this.hold.attach(target, piece),
+    });
     this.els.board.replaceChildren(...cells);
   }
 
@@ -327,32 +415,21 @@ export class App {
 
   private renderPlayer(container: HTMLElement, color: Color): void {
     const backend = this.session.backend;
-    const hand = backend.hand(color);
     const team = color === "black" ? "Brancas" : "Vermelhas";
-    const who = this.session.settings.mode === "ai" ? (this.session.isComputer(color) ? "Computador" : "Você") : team;
-    const toMove = !backend.result().over && backend.sideToMove() === color;
-    const name = element(
-      "div",
-      { class: `player-name${toMove ? " to-move" : ""}` },
-      element("span", { class: `team-mark ${color === "black" ? "sente" : "gote"}`, "aria-hidden": "true" }),
-      element("strong", {}, sideName(color)),
-      element("small", {}, who),
-    );
-    const pieces = element("div", { class: "hand", "aria-label": `Peças na mão de ${sideName(color)}` });
-    const types = backend.variant.pieceTypes.filter((type) => (hand[type] ?? 0) > 0);
-    if (types.length === 0) pieces.append(element("span", { class: "hand-empty" }, "sem peças na mão"));
-    for (const type of types) {
-      const piece: Piece = { color, type, promoted: false };
-      const button = element("button", { type: "button", class: "hand-piece", "aria-label": `${describePiece(piece)}, ${hand[type]}` });
-      const selected = this.selection?.kind === "hand" && this.selection.type === type && backend.sideToMove() === color;
-      button.append(renderPiece(piece, this.look(), color !== this.bottomColor(), selected ? this.selectionGlint() : undefined));
-      this.pressAndHold(button, piece);
-      if (hand[type] > 1) button.append(element("span", { class: "count" }, String(hand[type])));
-      if (selected) button.classList.add("selected");
-      button.addEventListener("click", () => this.clickHand(color, type));
-      pieces.append(button);
-    }
-    container.replaceChildren(name, pieces);
+    const handSelected = this.selection?.kind === "hand" && backend.sideToMove() === color ? this.selection.type : null;
+    const bar = playerBar({
+      backend,
+      color,
+      look: this.look(),
+      flipped: this.flipped,
+      who: this.session.settings.mode === "ai" ? (this.session.isComputer(color) ? "Computador" : "Você") : team,
+      toMove: !backend.result().over && backend.sideToMove() === color,
+      selectedType: handSelected,
+      glint: handSelected ? this.selectionGlint() : undefined,
+      onClick: (type) => this.clickHand(color, type),
+      onHold: (target, piece) => this.hold.attach(target, piece),
+    });
+    container.replaceChildren(...bar);
   }
 
   private renderStatus(): void {
@@ -363,6 +440,7 @@ export class App {
     if (result.over) {
       status.append(element("strong", {}, resultTitle(result, settings)), " ", resultReason(result));
     } else {
+      if (settings.coach) status.append(element("div", { class: "guided-label" }, "Partida guiada · treinador ligado"));
       status.append(turnText(backend.sideToMove(), settings, thinking));
       if (thinking) status.append(element("span", { class: "spinner", "aria-hidden": "true" }));
       if (backend.isCheck()) status.append(element("div", { class: "check-warning" }, "Xeque! O rei está sendo atacado."));
@@ -381,6 +459,16 @@ export class App {
     const coach = this.els.coach;
     coach.replaceChildren();
     if (backend.result().over) return;
+    const tip = this.currentCoachTip();
+    if (tip) {
+      const ok = element("button", { type: "button" }, "Entendi");
+      ok.addEventListener("click", () => {
+        this.coachSeen.add(tip.id);
+        this.coachShown = null;
+        this.render();
+      });
+      coach.append(element("div", { class: "coach-tip" }, element("strong", {}, ...withKanji(tip.title)), element("p", {}, ...withKanji(tip.text)), ok));
+    }
     const help = this.session.canHumanMove() ? checkHelp(backend) : null;
     if (help) coach.append(element("p", { class: "check-help" }, describeCheckHelp(help, backend)));
     if (this.session.hintPending) {
@@ -393,6 +481,15 @@ export class App {
       play.addEventListener("click", () => this.act(() => this.session.play(hint.move)));
       coach.append(element("div", { class: "hint-text" }, element("p", {}, element("strong", {}, `Dica: ${hint.notation}`), ` — ${why}.`), play));
     }
+  }
+
+  /** The coach's tip for the guided game, kept on screen until read or moved past. */
+  private currentCoachTip(): CoachTip | null {
+    const { backend, settings } = this.session;
+    if (!settings.coach || !this.session.canHumanMove()) return null;
+    const human = settings.mode === "ai" ? settings.humanColor : backend.sideToMove();
+    this.coachShown ??= coachTip(backend, human, this.coachSeen);
+    return this.coachShown;
   }
 
   private renderPieceInfo(): void {
@@ -456,31 +553,31 @@ export class App {
       this.overlayHidden = true;
       this.render();
     });
-    overlay.replaceChildren(
-      element(
-        "div",
-        { class: "overlay-card" },
-        element("h2", {}, resultTitle(result, this.session.settings)),
-        element("p", {}, resultReason(result)),
-        element("div", { class: "dialog-actions" }, close, again),
-      ),
-    );
+    const buttons = [close, again];
+    const card = element("div", { class: "overlay-card" }, element("h2", {}, resultTitle(result, this.session.settings)), element("p", {}, resultReason(result)));
+    const coach = this.session.settings.coach;
+    if (coach) {
+      // The guided game is a lesson: from here the course goes on, or the player is ready to play.
+      card.append(element("p", { class: "muted" }, "Partida guiada concluída. Agora é com você: escolha o nível em Nova partida, ou siga no curso."));
+      const following = nextLesson(coach);
+      const course = element("button", { type: "button" }, following ? `Curso: ${following.title}` : "Curso");
+      course.addEventListener("click", () => (following ? this.openLesson(following) : this.showCourse()));
+      buttons.splice(1, 0, course);
+    }
+    card.append(element("div", { class: "dialog-actions" }, ...buttons));
+    overlay.replaceChildren(card);
   }
 
   // ---------------------------------------------------------------- interaction
 
   /** "Instalar app" while the browser offers it, and the "new version" banner. */
-  private setupPwaControls(layout: HTMLElement): void {
-    const installButton = layout.querySelector<HTMLButtonElement>("#btn-install")!;
-    installButton.hidden = true;
-    let install: (() => Promise<void>) | null = null;
-    installButton.addEventListener("click", () => void install?.());
+  private setupPwaControls(): void {
     onInstallAvailable((available) => {
-      install = available;
-      installButton.hidden = available === null;
+      this.install = available;
+      for (const button of this.installButtons) button.hidden = available === null;
     });
 
-    const banner = layout.querySelector<HTMLElement>("#update-banner")!;
+    const banner = this.banner;
     onUpdateAvailable((apply) => {
       const update = element("button", { type: "button", class: "primary" }, "Atualizar");
       update.addEventListener("click", () => {
@@ -492,65 +589,6 @@ export class App {
       banner.replaceChildren(element("span", {}, "Nova versão disponível. A partida atual fica salva."), update, later);
       banner.hidden = false;
     });
-  }
-
-  /** Press and hold a piece (mouse or touch) to see its Portuguese name while holding. */
-  private pressAndHold(target: HTMLElement, piece: Piece): void {
-    let timer = 0;
-    let start = { x: 0, y: 0 };
-    const cancel = (): void => {
-      window.clearTimeout(timer);
-      timer = 0;
-    };
-    target.addEventListener("pointerdown", (event) => {
-      if (event.button !== 0) return;
-      start = { x: event.clientX, y: event.clientY };
-      cancel();
-      timer = window.setTimeout(() => {
-        timer = 0;
-        this.showTooltip(target, piece);
-      }, 450);
-    });
-    target.addEventListener("pointermove", (event) => {
-      if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 10) cancel();
-    });
-    for (const type of ["pointerup", "pointercancel", "pointerleave"]) target.addEventListener(type, cancel);
-    // Long presses on phones would otherwise open the system menu.
-    target.addEventListener("contextmenu", (event) => event.preventDefault());
-  }
-
-  private showTooltip(target: HTMLElement, piece: Piece): void {
-    this.hideTooltip();
-    const info = pieceInfo(piece);
-    const rect = target.getBoundingClientRect();
-    const tooltip = element("div", { class: "piece-tooltip", role: "tooltip" }, info.namePt, element("small", {}, `${info.romaji} · ${sideName(piece.color)}`));
-    tooltip.style.left = `${Math.min(Math.max(rect.left + rect.width / 2, 90), window.innerWidth - 90)}px`;
-    tooltip.style.top = `${Math.max(rect.top, 60)}px`;
-    document.body.append(tooltip);
-    this.tooltip = tooltip;
-    const hide = (): void => {
-      this.longPressEndedAt = Date.now();
-      this.hideTooltip();
-      window.removeEventListener("pointerup", hide);
-      window.removeEventListener("pointercancel", hide);
-    };
-    window.addEventListener("pointerup", hide);
-    window.addEventListener("pointercancel", hide);
-  }
-
-  private hideTooltip(): void {
-    this.tooltip?.remove();
-    this.tooltip = null;
-  }
-
-  /**
-   * True (once) if the click that is arriving is the release of a press-and-hold. Some phones
-   * send no click after a long press, so the mark expires quickly instead of waiting for one.
-   */
-  private consumeLongPress(): boolean {
-    const recent = Date.now() - this.longPressEndedAt < 400;
-    this.longPressEndedAt = 0;
-    return recent;
   }
 
   private setNotice(text: string, kind: "info" | "warning" = "info"): void {
@@ -572,7 +610,7 @@ export class App {
   }
 
   private async clickSquare(square: Square, piece: Piece | null): Promise<void> {
-    if (this.consumeLongPress()) return;
+    if (this.hold.consume()) return;
     const backend = this.session.backend;
     if (piece) this.infoPiece = piece;
     if (backend.result().over || !this.session.canHumanMove()) {
@@ -586,7 +624,7 @@ export class App {
       const legal = backend.legalMoves();
       const choice = chooseMove(selection, square, legal);
       if (choice.kind !== "none") {
-        const move = choice.kind === "move" ? choice.move : await this.askPromotion(choice.promote, choice.stay);
+        const move = choice.kind === "move" ? choice.move : await askPromotion(backend.pieceAt(parseUsiMove(choice.promote)!.from!)!, this.look(), choice.promote, choice.stay);
         if (!move) return;
         const forced = move.endsWith("+") && !legal.includes(move.slice(0, -1));
         this.act(() => this.session.play(move));
@@ -623,7 +661,7 @@ export class App {
   }
 
   private clickHand(color: Color, type: string): void {
-    if (this.consumeLongPress()) return;
+    if (this.hold.consume()) return;
     const backend = this.session.backend;
     this.infoPiece = { color, type, promoted: false };
     if (!this.session.canHumanMove() || color !== backend.sideToMove()) {
@@ -646,26 +684,6 @@ export class App {
       }
     }
     this.render();
-  }
-
-  private async askPromotion(promote: UsiMove, stay: UsiMove): Promise<UsiMove | null> {
-    const from = parseUsiMove(promote)!.from!;
-    const piece = this.session.backend.pieceAt(from)!;
-    const option = (promoted: boolean, label: string) => {
-      const box = element("div", { class: "promotion-option" });
-      box.append(renderPiece({ ...piece, promoted }, this.look(), false), element("span", {}, label));
-      return box;
-    };
-    const body = element("div", { class: "promotion-choice" }, option(true, "Promover"), option(false, "Não promover"));
-    return showDialog<UsiMove | null>({
-      title: "Promover a peça?",
-      body,
-      actions: [
-        { label: "Não promover", value: stay },
-        { label: "Promover", value: promote, kind: "primary" },
-      ],
-      dismissValue: null,
-    });
   }
 
   private async confirmResign(): Promise<void> {
@@ -697,7 +715,8 @@ export class App {
     this.render();
   }
 
-  private async askNewGame(): Promise<void> {
+  /** Asks for the settings of a new game and starts it; false if the player cancelled. */
+  private async askNewGame(): Promise<boolean> {
     const last = this.preferences.lastSettings ?? DEFAULT_SETTINGS;
     const radio = (name: string, value: string, label: string, checked: boolean, disabled = false) => {
       const input = element("input", { type: "radio", name, value });
@@ -732,8 +751,8 @@ export class App {
         "fieldset",
         {},
         element("legend", {}, "Seu lado (contra o computador)"),
-        radio("side", "black", "Sente ☗ (joga primeiro)", last.humanColor === "black"),
-        radio("side", "white", "Gote ☖", last.humanColor === "white"),
+        radio("side", "black", "Sente 先手 ☗ (joga primeiro)", last.humanColor === "black"),
+        radio("side", "white", "Gote 後手 ☖", last.humanColor === "white"),
         radio("side", "random", "Aleatório", false),
       ),
       element("label", { class: "field" }, "Nível ", levelSelect),
@@ -756,7 +775,7 @@ export class App {
       ],
       dismissValue: false,
     });
-    if (!start) return;
+    if (!start) return false;
     const data = new FormData(form);
     const side = (data.get("side") ?? "black") as SideChoice;
     const settings: GameSettings = {
@@ -768,6 +787,7 @@ export class App {
     this.preferences.lastSettings = { ...settings, humanColor: side === "random" ? last.humanColor : settings.humanColor };
     storage.savePreferences(this.preferences);
     this.startGame(settings);
+    return true;
   }
 
   // ---------------------------------------------------------------- save / load / export

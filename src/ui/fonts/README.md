@@ -3,7 +3,7 @@ All are under the SIL Open Font License 1.1 (license texts in this folder).
 
 | File | Font | Used for |
 |---|---|---|
-| `koma-kanji.woff2` | **Potta One** (heavy brush), reduced to 王玉将飛車角行金銀桂馬香歩兵龍竜全圭杏と成棋 | Kanji on the pieces and the 将棋 mark in the top bar |
+| `koma-kanji.woff2` | **Potta One** (heavy brush), reduced to the Japanese characters used in the app | Kanji on the pieces, the 将棋 mark and the Japanese terms of the course (`scripts/make-kanji-font.mjs` rebuilds it) |
 | `archivo-latin.woff2` | **Archivo**, variable (weight 100–900, width 62–125%), `latin` subset | Titles, buttons, piece names (black, 62% width) and body text |
 | `archivo-romaji.woff2` | Archivo, reduced to Ō ō Ū ū | Long vowels in romaji (Ginshō, Ryūō) |
 | `plex-mono-{500,700}-latin.woff2` | **IBM Plex Mono** 500 and 700, `latin` subset | Labels, player names, move list |

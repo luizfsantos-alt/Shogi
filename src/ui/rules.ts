@@ -49,7 +49,7 @@ export function showRules(variant: VariantDefinition, look: PieceLook): Promise<
     { class: "rules" },
     section(
       "Objetivo",
-      element("p", {}, "Dar xeque-mate no rei do adversário: atacá-lo de um jeito que ele não consiga escapar. Sente (☗) joga primeiro, depois as jogadas se alternam."),
+      element("p", {}, "Dar xeque-mate no rei do adversário: atacá-lo de um jeito que ele não consiga escapar. Sente (先手 ☗) joga primeiro e Gote (後手 ☖) depois; as jogadas se alternam."),
     ),
     piecesSection(variant, look),
     section(
@@ -62,8 +62,8 @@ export function showRules(variant: VariantDefinition, look: PieceLook): Promise<
           "div",
           {},
           list(
-            `As ${zone} últimas fileiras do lado do adversário são a zona de promoção (o campo inimigo). Na figura: em cima a zona de Sente, embaixo a de Gote.`,
-            "Quando uma peça entra, sai ou se move dentro dessa zona, você pode virá-la: ela fica promovida (ganha ouro: moldura dourada no kanji, faixa dourada no modo leitura) e muda de movimento.",
+            `As ${zone} últimas fileiras do lado do adversário são a zona de promoção (o campo inimigo, 敵陣 tekijin). Na figura: em cima a zona de Sente, embaixo a de Gote.`,
+            "Quando uma peça entra, sai ou se move dentro dessa zona, você pode virá-la (成る, naru): ela fica promovida (ganha ouro: moldura dourada no kanji, faixa dourada no modo leitura) e muda de movimento.",
             "A promoção é opcional, exceto quando a peça ficaria sem jogadas: peão e lança na última fileira, cavalo nas duas últimas.",
             "Ouro e rei não promovem. Uma peça promovida continua promovida até ser capturada.",
           ),
@@ -71,21 +71,21 @@ export function showRules(variant: VariantDefinition, look: PieceLook): Promise<
       ),
     ),
     section(
-      "Capturas e drops (peças da mão)",
+      "Capturas e drops (持ち駒, mochigoma)",
       list(
         "Ao capturar, a peça vai para a sua mão, já sem promoção.",
         "Na sua vez, em vez de mover, você pode colocar (\"dropar\") uma peça da mão em qualquer casa vazia. Ela entra sem promoção, mesmo dentro da zona.",
-        "Proibido: nifu (dois peões seus não promovidos na mesma coluna), deixar uma peça sem jogadas (peão/lança na última fileira, cavalo nas duas últimas) e uchifuzume (dar xeque-mate colocando um peão da mão).",
+        "Proibido: nifu (二歩: dois peões seus não promovidos na mesma coluna), deixar uma peça sem jogadas (peão/lança na última fileira, cavalo nas duas últimas) e uchifuzume (打ち歩詰め: dar xeque-mate colocando um peão da mão).",
       ),
     ),
     section(
       "Fim da partida",
       list(
         "Xeque-mate: vence quem deu o mate. Ficar sem jogadas legais também é derrota.",
-        "Sennichite: se a mesma posição (com as mesmas peças na mão e o mesmo jogador da vez) aparecer 4 vezes, é empate.",
+        "Sennichite (千日手): se a mesma posição (com as mesmas peças na mão e o mesmo jogador da vez) aparecer 4 vezes, é empate.",
         "Xeque perpétuo: se a repetição vier de xeques seguidos, quem dava os xeques perde.",
-        "Impasse (jishogi): se os reis entram no campo inimigo e ninguém consegue dar mate, o jogador da vez pode declarar vitória. Precisa ter o rei no campo inimigo, sem estar em xeque, 10 ou mais peças lá, e pontos suficientes (torre e bispo valem 5, as demais 1, contando o campo inimigo e a mão): Sente precisa de 28 e Gote de 27.",
-        "Desistência: o jogador pode desistir a qualquer momento.",
+        "Impasse (jishōgi 持将棋): se os reis entram no campo inimigo e ninguém consegue dar mate, o jogador da vez pode declarar vitória. Precisa ter o rei no campo inimigo, sem estar em xeque, 10 ou mais peças lá, e pontos suficientes (torre e bispo valem 5, as demais 1, contando o campo inimigo e a mão): Sente precisa de 28 e Gote de 27.",
+        "Desistência (投了, tōryō): o jogador pode desistir a qualquer momento.",
       ),
     ),
   );

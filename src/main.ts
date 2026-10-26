@@ -22,6 +22,8 @@ function createEngine(variant: VariantDefinition, onError: (message: string) => 
 async function main(): Promise<void> {
   await setupServiceWorker();
   const backend = await loadBackend();
+  // The course plays on its own board, so the game in progress is never touched by a lesson.
+  const lessonBackend = await loadBackend();
   let app: App | null = null;
   let session: GameSession | null = null;
   let pendingError: string | null = null;
@@ -36,7 +38,7 @@ async function main(): Promise<void> {
   const engine = createEngine(backend.variant, reportEngineError);
   session = new GameSession(backend, engine, () => app?.onGameChange());
   if (pendingError) session.setEngineError(pendingError);
-  app = new App(root, session);
+  app = new App(root, session, lessonBackend);
 
   if (engine) {
     root.classList.add("engine-loading");

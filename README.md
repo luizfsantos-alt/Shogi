@@ -6,6 +6,20 @@ compilado para WebAssembly. Funciona no computador e no celular; não precisa de
 
 ## O que tem
 
+- **Tela inicial**: continuar a partida em andamento, **Jogar** ou **Aprender**.
+- **Curso interativo "Aprender a jogar"**, no próprio tabuleiro, em três trilhas (32 lições):
+  - **A. Fundamentos** (基本): o tabuleiro, cada peça com exercícios ("leve até a ★", "capture",
+    "tente o lance proibido"), capturas e drops, promoção, nifu e os outros drops proibidos,
+    xeque e mate, fim da partida, posição inicial e uma **primeira partida guiada**;
+  - **B. Táticas** (手筋): valor das peças, ataque duplo (両取り) e ōte-bisha, wariuchi no gin,
+    espeto, tataki no fu, awase no fu, tarefu, sokofu, mates em 1 e em 3, hisshi;
+  - **C. Estratégia** (戦略): provérbios (格言), fases da partida, ibisha × furibisha, o castelo
+    Mino montado lance a lance, a Fortaleza, um plano completo de shikenbisha e a troca de peões;
+    termina numa partida de prática.
+  - Dica (mostra de onde sai e para onde vai), recomeçar, estrelas (1 a 3) por lição e progresso
+    salvo no navegador. Todo termo japonês aparece com o seu kanji.
+  - Na **partida guiada** um treinador comenta na hora certa: primeiro lance, xeque, ataque duplo
+    disponível, peça sem defesa, peça na mão, chance de promover, rei parado no centro.
 - **Contra o computador**, em 5 níveis (Iniciante → Mestre), escolhendo o lado (Sente, Gote ou
   aleatório) e, se quiser, um **handicap** (o computador joga sem lança, bispo, torre ou torre e bispo).
   Também dá para jogar a dois no mesmo aparelho.
@@ -73,12 +87,23 @@ src/
     levels.ts           # os 5 níveis (único lugar para ajustar a força)
     uci.ts              # conversão de posições/jogadas para o motor
   worker/               # Web Worker que roda o motor fora da thread da interface
+  learn/                # o curso; sem DOM
+    types.ts            # trilhas, lições, passos e objetivos (dados)
+    board.ts            # monta posições das lições a partir de uma lista de peças
+    LessonSession.ts    # uma lição em andamento: objetivo, respostas do adversário, dicas, estrelas
+    coachTips.ts        # o treinador da partida guiada
+    course.ts           # as três trilhas e a ordem recomendada
+    lessons/            # basics.ts, tactics.ts, strategy.ts: o conteúdo
   pwa/
     sw.template.js      # service worker: cache offline + cabeçalhos COOP/COEP (vira dist/sw.js)
     register.ts         # registro, aviso de versão nova, botão "Instalar app"
   ui/
     session.ts          # partida em andamento: turnos, IA, desfazer, dicas (sem DOM, testado)
-    App.ts              # tela do jogo
+    App.ts              # telas: início, curso, jogo
+    Home.ts             # tela inicial (jogar / aprender)
+    CourseView.ts       # mapa do curso e tela da lição
+    boardView.ts        # tabuleiro e barras dos jogadores (jogo e lições)
+    pressHold.ts, promotion.ts, rich.ts  # nome ao segurar a peça, pergunta de promoção, kanji no texto
     pieceView.ts        # desenho das peças: materiais, kanji, modo leitura, brilho
     pieceCard.ts, diagram.ts, rules.ts   # painel da peça, diagramas, regras
     interaction.ts      # seleção → casas destacadas → jogada / pergunta de promoção
@@ -87,8 +112,9 @@ src/
 scripts/
   copy-vendor.mjs       # copia o motor para public/engine/
   make-icons.cjs        # gera os ícones do app em public/icons/ (precisa do Playwright)
+  make-kanji-font.mjs   # refaz a fonte de kanji com todos os caracteres japoneses usados no app
   calibration/          # ferramentas para calibrar os níveis da IA
-tests/                  # regras, notação, explicações, motor, sessão, interação
+tests/                  # regras, notação, explicações, motor, sessão, interação, curso
 ```
 
 A UI nunca fala com o ffish diretamente: tudo passa por `GameBackend`, usando notação USI
@@ -232,6 +258,27 @@ O ffish.js (regras) não precisa desses cabeçalhos; só o motor de IA.
   **iPhone/iPad (Safari)** — Compartilhar → "Adicionar à Tela de Início";
   **computador (Chrome/Edge)** — botão "Instalar app" ou o ícone na barra de endereço.
 - Em `npm run dev` não há service worker (o servidor de desenvolvimento já envia os cabeçalhos).
+
+## O curso: como editar e de onde vem o conteúdo
+
+As lições são dados em `src/learn/lessons/*.ts`. Cada passo é uma explicação (`info`) ou um
+exercício com um objetivo: chegar às estrelas, capturar tudo ou montar uma formação (o adversário
+fica parado), seguir uma sequência com respostas do adversário, dar mate, ou tentar um lance
+proibido. As posições se escrevem com `setup({ "5i": "K", "5a": "k" }, "G")`.
+
+`tests/lessons.test.ts` confere todas: posições válidas, soluções que resolvem cada exercício,
+mates conferidos por busca (o mate em 3 tem um único primeiro lance), lances táticos marcados com
+`engineCheck` conferidos pelo Fairy-Stockfish, e todo termo japonês acompanhado do kanji.
+Depois de escrever um termo novo, rode `node scripts/make-kanji-font.mjs` para incluir os
+caracteres na fonte.
+
+Referências usadas para a estrutura e os conceitos: a série "How to Play Shogi" de HIDETCHI
+(regras → táticas → aberturas → castelos), recomendada pelo [Lishogi](https://lishogi.org/resources);
+os artigos de tesuji da escola [i-tsu-tsu](https://en.i-tsu-tsu.co.jp/blog/); os verbetes
+[Shogi tactics](https://en.wikipedia.org/wiki/Shogi_tactics), [Shogi strategy](https://en.wikipedia.org/wiki/Shogi_strategy)
+e [Castle (shogi)](https://en.wikipedia.org/wiki/Castle_(shogi)) da Wikipedia; e os provérbios
+(kakugen 格言) listados no [World Shogi Forum do 81Dojo](https://system.81dojo.com/en/topics/28).
+Os textos e as posições são nossos.
 
 ## Licença e créditos
 
