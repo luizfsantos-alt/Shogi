@@ -21,6 +21,9 @@ guarda os ajustes em `user://ajustes.json`; o botão "voltar" do Android sobe um
 - **Lição** (`lesson.gd`): a mesa com a posição do passo, estrelas ★ para alcançar, casas em foco,
   dica, recomeçar e o painel da peça (`ui/piece_card.gd`). Ao terminar: estrelas (1 a 3) e a próxima
   lição.
+  Nas sequências (aberturas, castelos) o tengu aponta um lance por vez: diz o lance, acende a casa
+  de saída e a de chegada e, depois da resposta do adversário, aponta o próximo (`guide` e `point`
+  do objetivo `line`; nos problemas táticos o `guide` só lembra a etapa seguinte, sem acender casas).
 
 O visual segue o Genpei do PWA (`ui/ui_theme.gd`): fundo queimado, Archivo condensada, rótulos em
 IBM Plex Mono, botões chanfrados, vermelho para ação e ouro para valor; os kanji da interface vêm
@@ -38,7 +41,8 @@ tamanhos:
 
 - **grande** (`speak`): o que precisa ser lido até o fim (boas-vindas, explicações das lições,
   fim da partida guiada). O tengu inteiro (3 pixels de tela por pixel da arte), a tela escurece e
-  cada toque no balão mostra a próxima página. Nas lições, o tabuleiro desliza para a direita;
+  cada toque no balão mostra a próxima página; uma página que não cabe sobre o tengu é partida entre
+  frases em mais páginas (a fonte não diminui). Nas lições, o tabuleiro desliza para a direita;
 - **pequeno** (`say`, `note`): falas enquanto o jogador mexe as peças, com só a cabeça da pose
   num medalhão.
 

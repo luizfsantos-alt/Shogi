@@ -97,7 +97,19 @@ export type Goal =
    * `strong` lists, by index in `line`, moves as good as the one asked: they are praised but not
    * played (and not counted as mistakes), and the learner tries again the move of the lesson.
    */
-  | { type: "line"; line: Accept[]; mate?: boolean; strong?: Record<number, Record<UsiMove, string>> }
+  | {
+      type: "line";
+      line: Accept[];
+      mate?: boolean;
+      strong?: Record<number, Record<UsiMove, string>>;
+      /**
+       * What the mentor says before each of the learner's moves (line[0], line[2]…), one at a
+       * time: a sequence is taught move by move, not all at once in the step's text.
+       */
+      guide?: string[];
+      /** The mentor also lights the squares of each move (a sequence to learn, not a puzzle). */
+      point?: boolean;
+    }
   /** Find a checkmate (any mating move counts). */
   | { type: "mate"; solution: UsiMove }
   /** Try a forbidden move of this kind, to see the rule in action. */

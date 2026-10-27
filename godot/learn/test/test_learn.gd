@@ -245,6 +245,34 @@ func test_lesson_session() -> void:
 	expect(s.finished, "bishop finished")
 	expect_eq(s.score, 3, "(2 + 3) / 2 rounded")
 
+	# A guided line: the mentor says one move at a time and points its squares, at no cost.
+	var mino := lesson("mino")
+	var mino_step := 1
+	var guide: Array = mino.steps[mino_step].goal.guide
+	s = session_at(mino, mino_step)
+	expect(s.points(), "mino points its moves")
+	expect_eq(s.feedback.get("text"), guide[0], "first cue on load")
+	expect_eq(s.cue_squares(), [sq("5i"), sq("4h")] as Array[Vector2i], "first move pointed")
+	expect_eq(s.line_move(), Vector2i(0, 5), "move 1 of 5")
+	s.play("5i4h")
+	expect_eq(s.feedback.get("text"), guide[1], "next cue after the reply")
+	expect_eq(s.cue_squares(), [sq("4h"), sq("3h")] as Array[Vector2i], "second move pointed")
+	expect_eq(s.line_move(), Vector2i(1, 5), "move 2 of 5")
+	for move in ["4h3h", "3h2h", "3i3h", "6i5h"]:
+		s.play(move)
+	expect(s.solved, "mino solved")
+	expect_eq(s.cue(), "", "no cue once solved")
+	s.next()
+	expect_eq(s._results.get(mino_step), 3, "pointed moves cost no star")
+
+	# A puzzle with a guide says the next stage without pointing it.
+	s = session_at(lesson("fork"), 1)
+	expect(not s.points(), "fork does not point")
+	expect_eq(s.cue(), "", "no cue before the first move")
+	s.play("N*6e")
+	expect_eq(s.feedback.get("text"), lesson("fork").steps[1].goal.guide[1], "fork's second cue")
+	expect_eq(s.cue_squares(), [] as Array[Vector2i], "fork points nothing")
+
 	# A skipped exercise scores 0.
 	var king := lesson("king")
 	s = session_at(king, king.steps.size() - 1)

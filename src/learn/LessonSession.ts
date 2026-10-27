@@ -85,6 +85,21 @@ export class LessonSession {
     return squares(this.step.focus);
   }
 
+  /** What the mentor says before the learner's next move in a guided line ("" when nothing). */
+  get cue(): string {
+    const goal = this.exercise?.goal;
+    if (goal?.type !== "line" || !goal.guide || this.solved || this.lineIndex % 2 === 1) return "";
+    return goal.guide[this.lineIndex / 2] ?? "";
+  }
+
+  /** Squares of that move (from and to), when the line points them: no help counted, no stars lost. */
+  get cueSquares(): Square[] {
+    const goal = this.exercise?.goal;
+    if (goal?.type !== "line" || !goal.point || this.solved || this.replying || this.lineIndex % 2 === 1) return [];
+    const parsed = parseUsiMove(accepted(goal.line[this.lineIndex])[0] ?? "");
+    return parsed ? [...(parsed.from ? [parsed.from] : []), parsed.to] : [];
+  }
+
   /** Stars left on the board in a "reach" exercise. */
   get remainingStars(): Square[] {
     return this.starSquares;
@@ -162,6 +177,7 @@ export class LessonSession {
     this.hinted = false;
     this.hintSquares = [];
     this.starSquares = step.kind === "exercise" && step.goal.type === "reach" ? squares(step.goal.stars) : [];
+    if (this.cue) this.feedback = { kind: "info", text: this.cue };
     const sfen = step.sfen ?? this.previousSfen(index);
     if (sfen) this.backend.load(sfen);
     else if (index === 0) this.backend.load();
@@ -274,7 +290,7 @@ export class LessonSession {
       this.backend.push(reply);
       this.lastMove = reply;
       this.lineIndex++;
-      this.feedback = { kind: "info", text: "Sua vez." };
+      this.feedback = { kind: "info", text: this.cue || "Sua vez." };
       if (this.lineIndex >= goal.line.length) this.solve(exercise);
       this.onChange();
     });
