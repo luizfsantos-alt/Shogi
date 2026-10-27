@@ -77,7 +77,7 @@ func _show_step() -> void:
 	_update_hud()
 	_sync_table()
 	if step.kind == "info":
-		mentor.speak(step.text, step.title.to_upper())
+		mentor.speak(step.text.map(Course.gote_words), step.title.to_upper())
 	else:
 		_show_goal()
 
@@ -85,7 +85,7 @@ func _show_step() -> void:
 ## The exercise's explanation and goal, in the small balloon (the pieces can move meanwhile).
 func _show_goal() -> void:
 	var step := session.step()
-	mentor.note("\n\n".join(step.text), step.title.to_upper(), "point")
+	mentor.note(Course.gote_words("\n\n".join(step.text)), step.title.to_upper(), "point")
 
 
 func _on_changed() -> void:
@@ -114,15 +114,15 @@ func _show_feedback() -> void:
 	_last_feedback = fb.duplicate()
 	match fb.kind:
 		"error":
-			mentor.note(fb.text, "AINDA NÃO", "stern")
+			mentor.note(Course.gote_words(fb.text), "AINDA NÃO", "stern")
 		"success":
-			var text: String = fb.text
+			var text: String = Course.gote_words(fb.text)
 			if _illegal_text != "":
 				text = _illegal_text + "\n\n" + text
 			mentor.note(text + "\n\nToque aqui para seguir.", "MUITO BEM!", "laugh")
 			table.fx.promotion_burst(table.square_pos(Vector2i(4, 4)) + Vector3(0, 3, 0))
 		_:
-			mentor.note(fb.text, session.step().title.to_upper(), "explain")
+			mentor.note(Course.gote_words(fb.text), session.step().title.to_upper(), "explain")
 	_illegal_text = ""
 
 

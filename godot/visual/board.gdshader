@@ -15,14 +15,13 @@ uniform bool draw_grid = true;  // off for the komadai, same wood
 // Pixel look (proposal): > 0 snaps the wood and the grid to texels of this size (cm) and draws
 // the grain in a few flat tones, so the board matches the pixel kanji on the pieces.
 uniform float pixel_size = 0.0;
-// In the pixel look the board is a slab of stone: four greys, dithered where they meet, a few
-// cracks, and the grid cut into it (dark groove, lit lower lip).
-uniform vec3 px_stone_0 : source_color = vec3(0.13, 0.135, 0.15);
-uniform vec3 px_stone_1 : source_color = vec3(0.19, 0.195, 0.215);
-uniform vec3 px_stone_2 : source_color = vec3(0.25, 0.25, 0.27);
-uniform vec3 px_stone_3 : source_color = vec3(0.32, 0.31, 0.32);
-uniform vec3 px_line : source_color = vec3(0.07, 0.07, 0.09);
-uniform vec3 px_lip : source_color = vec3(0.45, 0.43, 0.41);
+// In the pixel look the board is kaya in pixels: the same grain in four warm tones, dithered
+// where they meet, and the grid drawn in flat dark lines (no lit lip: it read as raised bars).
+uniform vec3 px_wood_0 : source_color = vec3(0.27, 0.14, 0.06);
+uniform vec3 px_wood_1 : source_color = vec3(0.32, 0.175, 0.075);
+uniform vec3 px_wood_2 : source_color = vec3(0.37, 0.21, 0.095);
+uniform vec3 px_wood_3 : source_color = vec3(0.42, 0.25, 0.115);
+uniform vec3 px_line : source_color = vec3(0.05, 0.03, 0.018);
 uniform sampler2D noise_tex : hint_default_white, filter_linear_mipmap, repeat_enable;
 
 varying vec3 lpos;
@@ -51,18 +50,11 @@ void fragment() {
 	float grain = clamp(0.8 - 0.3 * lines + 0.3 * (fine - 0.5) + 0.4 * (patch - 0.5), 0.0, 1.0);
 	vec3 albedo = mix(wood_dark, wood_light, grain);
 	if (pixel) {
-		// Stone: broad patches and a fine mottle, 2×2 ordered dither, then one of four greys.
-		vec2 sp2 = vec2(lp.x + lp.y * 0.7, lp.z + lp.y * 0.3);
-		float patches = tap(sp2 * 0.015 + 0.21);
-		float mottle = tap(sp2 * 0.11 + 0.63);
-		float stone = clamp(0.5 + (patches - 0.5) * 0.8 + (mottle - 0.5) * 0.6, 0.0, 1.0);
+		// Kaya: the grain snapped to one of four tones through a 2×2 ordered dither.
 		vec2 cellp = mod(floor(vec2(lpos.x + lpos.y, lpos.z) / pixel_size), 2.0);
 		float bayer = (cellp.x * 2.0 + cellp.y * 3.0 - cellp.x * cellp.y * 4.0) / 4.0 - 0.375;
-		float g = clamp(stone + bayer * 0.2, 0.0, 0.999) * 4.0;
-		albedo = g < 1.0 ? px_stone_0 : (g < 2.0 ? px_stone_1 : (g < 3.0 ? px_stone_2 : px_stone_3));
-		// Cracks: the thin valleys of a ridged noise, one texel wide.
-		float ridge = abs(tap(sp2 * 0.022 + 0.47) - 0.5);
-		albedo = mix(albedo, px_line, step(ridge, 0.008) * 0.85);
+		float g = clamp(grain + bayer * 0.25, 0.0, 0.999) * 4.0;
+		albedo = g < 1.0 ? px_wood_0 : (g < 2.0 ? px_wood_1 : (g < 3.0 ? px_wood_2 : px_wood_3));
 	}
 	float rough = pixel ? 0.6 : 0.42;
 	float coat = pixel ? 0.0 : gloss;
@@ -83,13 +75,6 @@ void fragment() {
 		float st = pixel ? step(max(sd.x, sd.y), pixel_size * 1.1) : step(length(abs(sp) - star), star_radius);
 		float ink = max(on_line, st);
 		albedo = mix(albedo, pixel ? px_line : line_color, ink * 0.92);
-		if (pixel) {
-			// The lit lower lip of the cut, one texel toward the player.
-			vec2 pl = p - vec2(0.0, pixel_size);
-			vec2 dl = abs(pl - round(pl / cell) * cell);
-			float lip = step(dl.y, half_w) * inside.x * (1.0 - ink);
-			albedo = mix(albedo, px_lip, lip);
-		}
 		rough = mix(rough, 0.25, ink);
 	}
 

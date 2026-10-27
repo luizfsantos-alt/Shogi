@@ -33,7 +33,9 @@ Do Hearthstone vêm só a **sensação 3D** e os **efeitos gordos**; o resto da 
 - Cunha 3D gerada por código, com **leves defeitos** (cantos gastos, faces não perfeitamente
   planas, lascas e arranhões finos; semente diferente por peça, nenhuma igual à outra).
 - **Cores (decisão antiga do PWA, retomada):** quem joga primeiro (Sente) em **laca perolada**;
-  quem joga depois (Gote) em **laca vermelha**. A face promovida tem escrita em ouro nos dois
+  quem joga depois (Gote) em **laca vermelha** no visual clássico e **laca preta** no visual
+  pixel (out/2026: sobre a mesa de madeira o vermelho se confundia com o laranja da kaya, e o
+  preto separa os lados da pérola com mais força). A face promovida tem escrita em ouro nos dois
   lados, e a borda da peça promovida fica dourada. Uma peça capturada troca de cor no ar, a
   caminho do komadai.
 - **Kanji com a cor da função** (out/2026): peças da mesma função têm o kanji da mesma cor, no
@@ -42,6 +44,12 @@ Do Hearthstone vêm só a **sensação 3D** e os **efeitos gordos**; o resto da 
   musgo, Lança ameixa, Peão ardósia. Tons **dessaturados**, como tinta de laca, meio escuros e
   longe do vermelho: os saturados da primeira versão ficaram berrantes. A tabela fica em
   `Koma.INK` (`visual/koma.gd`). A face promovida não segue a tabela (a peça muda de função).
+  Na laca preta do visual pixel o Gote usa `Koma.INK_GOTE`: os mesmos tons um pouco mais
+  saturados, o Peão e a Prata mais claros (o ardósia sumia no preto) e o **Rei em branco**. A
+  Torre tem o mesmo índigo saturado nos dois lados: com tons diferentes, as duas torres pareciam
+  peças de funções diferentes. Os textos das lições (do PWA) chamam as peças do Gote de
+  vermelhas; no visual pixel o app troca a palavra por "pretas" (`Course.gote_words`), e o
+  vermelho de perigo ("as setas em vermelho") fica.
 - Superfície com **gloss**: verniz com reflexo visível.
 - Kanji **entalhado** (sulco com a tinta no fundo), na fonte **Kaisei Tokumin ExtraBold**
   (OFL): pesada e legível, com os traços abertos. A Potta One do PWA ficou ilegível na peça.
@@ -87,10 +95,13 @@ na linha de comando).
   nelas e riscava o kanji de branco. Antes o kanji era em alto-relevo. No visual clássico o kanji
   continua entalhado. `tools/lookdev_pixel.gd` renderiza todas as faces dos dois lados para ajustar.
 - Coordenadas da moldura em pixel, sem suavização (IBM Plex Mono pequena, ampliada com filtro
-  *nearest*), num cinza claro de pedra.
-- Tabuleiro e komadai em **pedra** pixelada (quatro cinzas com dither, rachaduras, a grade
-  entalhada com o lábio iluminado).
-- Fundo: **lajes de pedra escura** em texels maiores, e a vinheta em degraus com dither.
+  *nearest*), num cinza claro e quente.
+- Tabuleiro e komadai em **madeira kaya** pixelada: o veio em quatro tons quentes com dither e
+  a grade em linhas escuras lisas (out/2026). Antes eram de pedra cinza, com a grade entalhada e
+  um lábio claro embaixo de cada linha horizontal: as linhas pareciam réguas saltadas, e a pedra
+  se confundia com o chão, do mesmo tom e com o mesmo pontilhado.
+- Fundo: **lajes de pedra quase preta** em texels maiores, e a vinheta em degraus com dither: o
+  chão fica bem abaixo do tabuleiro, que é a coisa mais clara da tela.
 - Efeitos em pixel: poeira de pedra em blocos que se desfaz em dither, anel de impacto em
   5 quadros, faíscas como cruzinhas em três tons de ouro, casas marcadas com borda de um texel
   e preenchimento quadriculado, setas pixeladas, tremor em passos inteiros, sem bloom.

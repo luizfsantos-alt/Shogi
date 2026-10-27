@@ -3,7 +3,9 @@ extends RefCounted
 ## "Nova partida": the computer's level and the player's side, as a modal panel. Used by the
 ## start screen and by the game's menu. `on_start` receives (level: int, human_color: String).
 
-const SIDES := ["先手 Sente\npérola, começa", "後手 Gote\nvermelho", "Aleatório"]
+## Gote's lacquer is black in the pixel look and red in the classic one.
+static func side_labels() -> Array:
+	return ["先手 Sente\npérola, começa", "後手 Gote\n%s" % ("preto" if Koma.pixel else "vermelho"), "Aleatório"]
 
 
 static func open(parent: Node, on_start: Callable, level := 1) -> void:
@@ -67,7 +69,7 @@ static func open(parent: Node, on_start: Callable, level := 1) -> void:
 	box.add_child(sides)
 	var side_group := ButtonGroup.new()
 	for i in 3:
-		var b := UiTheme.button(SIDES[i], "", 28, 112)
+		var b := UiTheme.button(side_labels()[i], "", 28, 112)
 		b.toggle_mode = true
 		b.button_group = side_group
 		b.button_pressed = i == 0

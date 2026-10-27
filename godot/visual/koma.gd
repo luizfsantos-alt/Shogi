@@ -8,19 +8,30 @@ const KANJI := {
 	"G": ["gold", ""], "S": ["silver", "silver_p"], "N": ["knight", "knight_p"],
 	"L": ["lance", "lance_p"], "P": ["pawn", "pawn_p"],
 }
-## Ink of the unpromoted face, one colour per kind, the same on both teams: every knight has the
-## same kanji colour whether it is Sente's (pearl) or Gote's (red lacquer). Mid-dark, saturated
-## hues away from red, so they stay dark enough on the lit pearl and stand out by hue on the red.
+## Ink of the unpromoted face, one colour per kind: every knight has the same kanji colour on
+## both teams. Mid-dark, saturated hues away from red, so they stay dark enough on the lit pearl.
 ## The promoted face keeps its own ink (red or gold) and the gold rim: its move changes.
 const INK := {
 	"K": Color(0.1, 0.09, 0.09),    # sumi black
-	"R": Color(0.2, 0.25, 0.42),    # indigo
+	"R": Color(0.145, 0.21, 0.42),  # indigo, as saturated as Gote's so both rooks read alike
 	"B": Color(0.16, 0.36, 0.37),   # muted teal
 	"G": Color(0.5, 0.4, 0.2),      # ochre
 	"S": Color(0.32, 0.35, 0.39),   # steel
 	"N": Color(0.23, 0.35, 0.24),   # moss green
 	"L": Color(0.37, 0.27, 0.43),   # plum
 	"P": Color(0.21, 0.21, 0.23),   # slate: the most common piece stays quiet
+}
+## The same inks on Gote's black lacquer in the pixel look: a little more saturated, the pawn and
+## the silver lighter so they do not sink into the black, and the king in white.
+const INK_GOTE := {
+	"K": Color(0.9, 0.88, 0.84),    # white
+	"R": Color(0.145, 0.21, 0.42),
+	"B": Color(0.11, 0.36, 0.37),
+	"G": Color(0.5, 0.375, 0.125),
+	"S": Color(0.39, 0.44, 0.5),
+	"N": Color(0.2, 0.35, 0.21),
+	"L": Color(0.355, 0.23, 0.43),
+	"P": Color(0.41, 0.41, 0.46),
 }
 const SHADER := preload("res://visual/koma.gdshader")
 const PIXEL_SHADER := preload("res://visual/koma_pixel.gdshader")
@@ -104,7 +115,7 @@ func _build_look(team: float) -> void:
 	material.set_shader_parameter("seed", float(_seed % 997))
 	material.set_shader_parameter("noise_tex", shared_noise())
 	material.set_shader_parameter("team", team)
-	material.set_shader_parameter("ink_kind", INK[kind])
+	material.set_shader_parameter("ink_kind", _ink())
 	# Set now so tweens can animate them.
 	material.set_shader_parameter("glow", 0.0)
 	material.set_shader_parameter("gold_edge", 0.0)
@@ -119,13 +130,20 @@ func _build_look(team: float) -> void:
 	mesh_instance.rotation.x = -KomaMesh.rest_tilt(kind)
 
 
-## Facing for a new owner (after a capture the piece changes sides).
+## The kanji's ink for this piece's kind and owner.
+func _ink() -> Color:
+	return INK_GOTE[kind] if pixel and colour == 1 else INK[kind]
+
+
+## Facing and ink for a new owner (after a capture the piece changes sides).
 func set_colour(c: int) -> void:
 	colour = c
 	rotation.y = PI if colour == 1 else 0.0
+	material.set_shader_parameter("ink_kind", _ink())
 
 
-## Changes the lacquer to the new owner's (pearl or red) over `seconds`.
+## Changes the lacquer to the new owner's (pearl, or black in the pixel look and red in the
+## classic one) over `seconds`.
 func fade_to_team(c: int, seconds: float) -> void:
 	create_tween().tween_property(material, "shader_parameter/team", float(c), seconds).set_trans(Tween.TRANS_SINE)
 
