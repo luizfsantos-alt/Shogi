@@ -23,13 +23,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The engine (Fairy-Stockfish + godot-cpp, C++) takes most of the build time and rarely
+      # changes: its libraries are cached under a hash of everything they are built from (the
+      # dependencies are pinned in fetch_deps.sh), and rebuilt only when that changes.
+      - uses: actions/cache@v4
+        id: engine
+        with:
+          path: godot/bin/*.so
+          key: shogi-engine-${{ hashFiles('godot/engine/src/**', 'godot/engine/Makefile', 'godot/engine/*.sh', 'godot/engine/*.py', 'godot/bin/shogi_engine.gdextension') }}-ndk-r28c
+
       - uses: nttld/setup-ndk@v1
+        if: steps.engine.outputs.cache-hit != 'true'
         id: ndk
         with:
           ndk-version: r28c
           add-to-path: false
 
       - name: Build the engine (linux for the tests, android arm64)
+        if: steps.engine.outputs.cache-hit != 'true'
         env:
           ANDROID_NDK_ROOT: ${{ steps.ndk.outputs.ndk-path }}
         run: godot/engine/build.sh all

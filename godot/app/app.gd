@@ -81,7 +81,7 @@ func saved_game() -> Dictionary:
 	var data = JSON.parse_string(FileAccess.get_file_as_string(GameSession.SAVE_PATH))
 	if typeof(data) != TYPE_DICTIONARY or (data.get("moves", []) as Array).is_empty():
 		return {}
-	if data.get("resigned", "") != "" or data.get("impasse_declared", "") != "":
+	if str(data.get("resigned", "")) != "" or bool(data.get("impasse_declared", false)):
 		return {}
 	if typeof(data.get("settings")) != TYPE_DICTIONARY:
 		return {}
