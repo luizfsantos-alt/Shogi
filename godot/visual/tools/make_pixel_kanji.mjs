@@ -4,7 +4,7 @@
  * strokes are 2 to 4 whole texels wide, and the movement marks around it ("moldura-bússola"). The
  * outline of the piece is the compass: the tip is forward, the shoulders the forward diagonals,
  * the middle of each side the sideways step, the base corners the backward diagonals and the
- * middle of the base backward. A filled circle there, painted where it falls on the piece = one
+ * middle of the base backward. A filled circle there (what of it is on the piece shows) = one
  * square; a chevron pointing out of the piece there =
  * any distance; two little horns under the tip = the knight's jump. The marks are pixel sprites
  * (true pixel circles, lines at 0, 45 or 90 degrees), pushed in from the edge until all of each is
@@ -104,8 +104,10 @@ function onPiece(o, q) {
 
 // One square: a pixel circle, 8 texels across on the tip, the sides and the base (centred on a
 // texel corner), 7 across on the corners (centred on a texel). Its inner half (the half disc,
-// straight side toward the edge) is what is fitted on the piece; the whole circle is then painted
-// wherever it falls on the piece, so the outer half fills the space up to the edge.
+// straight side toward the edge) is what is fitted on the piece; the whole circle is then painted,
+// so the outer half fills the space up to the edge. It is not trimmed to the outline: the texels
+// the edge only partly covers (the very tip) must be inked too, and past the edge there is no
+// surface to show it.
 const DISC = [], DISC_HALF = [];
 for (let y = -4; y < 4; y++)
   for (let x = -4; x < 4; x++)
@@ -120,10 +122,11 @@ for (let y = -3; y <= 3; y++)
       DISC_CORNER.push([x, y]);
       if (x <= y) DISC_CORNER_HALF.push([x, y]);
     }
-// Any distance: a chevron pointing out. Straight ones have two arms at 45 degrees, two texels
-// thick, five rows long; corner ones are a square bracket, two texels thick, six long each way.
+// Any distance: a chevron pointing out. Straight ones have two arms at 45 degrees, three texels
+// across (about two thick, like the brackets), five rows long; corner ones are a square bracket,
+// two texels thick, six long each way.
 const CHEVRON = [];
-for (let y = 0; y < 5; y++) CHEVRON.push([-y - 1, y], [-y, y], [y - 1, y], [y, y]);
+for (let y = 0; y < 5; y++) for (let i = -1; i < 2; i++) CHEVRON.push([-y - 1 + i, y], [y - i, y]);
 const CHEVRON_CORNER = [];
 for (let i = 0; i < 6; i++) CHEVRON_CORNER.push([-i, 0], [-i, 1], [0, i], [-1, i]);
 // The knight: two horns under the tip, a straight stem whose top bends out at 45 degrees (two
@@ -140,8 +143,7 @@ const turn = {
 
 // Where a sprite goes: its origin on the edge, and the step that pushes it into the piece. It is
 // pushed in a texel at a time until all of `sprite` is on the piece, never cut by the outline;
-// then `paint` (the sprite itself, or the whole circle around a half disc) is drawn there, where
-// it falls on the piece. The left directions are the mirror images of the right ones, so the two
+// then `paint` (the sprite itself, or the whole circle around a half disc) is drawn there. The left directions are the mirror images of the right ones, so the two
 // sides always match.
 function placeSprite(o, sprite, dir, paint = sprite) {
   const onTexel = ([x, y]) => x >= 0 && y >= 0 && x < W && y < H && onPiece(o, [((x + 0.5) / W - 0.5) * o.w, (0.5 - (y + 0.5) / H) * o.h]);
@@ -156,7 +158,7 @@ function placeSprite(o, sprite, dir, paint = sprite) {
   const at = (k, s) => s.map(turn[d]).map(([x, y]) => [origin[0] + step[0] * k + x, origin[1] + step[1] * k + y]);
   for (let k = 0; k < 24; k++) {
     if (!at(k, sprite).every(onTexel)) continue;
-    const texels = at(k, paint).filter(onTexel);
+    const texels = at(k, paint).filter(([x, y]) => x >= 0 && y >= 0 && x < W && y < H);
     return mirror ? texels.map(([x, y]) => [W - 1 - x, y]) : texels;
   }
   throw new Error(`no room for a mark at ${dir}`);

@@ -81,11 +81,12 @@ na linha de comando).
 - **Moldura-bússola** (out/2026, do esboço do dono do projeto): o contorno da peça é a bússola.
   Ponta = frente, ombros = diagonais da frente, meio das laterais = lados, cantos de baixo =
   diagonais de trás, meio da base = trás. **Círculo** cheio = uma casa: o meio círculo de dentro
-  é encaixado inteiro na peça e o círculo todo, com o mesmo centro, é pintado onde cai na peça
-  (na ponta e nos cantos ele quase fecha; nas laterais e na base fica meio círculo); **chevron** apontando para fora = qualquer distância; **dois chifres** sob a ponta = o
+  é encaixado inteiro na peça e o círculo todo, com o mesmo centro, é pintado na máscara sem
+  recorte (fora da peça não há superfície; recortado, sobravam texels de laca branca na pontinha
+  da peça). Na ponta e nos cantos ele quase fecha; nas laterais e na base fica meio círculo; **chevron** apontando para fora = qualquer distância; **dois chifres** sob a ponta = o
   salto do cavalo. Na cor do kanji e em baixo-relevo como ele, mas sem a sombra interna do sulco
   (só a borda clara do outro lado): a sombra mordia os círculos. As marcas são sprites de pixel
-  (círculos de pixel de 8 e 7 texels, chevrons a 45° em degraus iguais e
+  (círculos de pixel de 8 e 7 texels, chevrons a 45° com 3 texels de largura (2 ficavam finos) e
   cantoneiras retas nos cantos), empurrados da borda para dentro até caberem inteiros na peça, e
   o script para se uma marca encostar no kanji. Elas passam por cima da borda arredondada: o
   shader grava a máscara também no alto do bisel (normal com `y` > 0,25 no espaço da peça).
