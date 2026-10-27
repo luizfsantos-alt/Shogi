@@ -1553,7 +1553,7 @@
       {
        "kind": "info",
        "title": "Abertura",
-       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/2PP5/PP2PPPPP/1B1R5/LNSGKGSNL b - 1",
+       "sfen": "ln1gkgsnl/1r1s3b1/p1pppp1pp/1p4p2/9/2PP5/PP2PPPPP/1B1R5/LNSGKGSNL b - 7",
        "text": [
         "Abertura (序盤, joban): decida onde fica a Torre, monte o castelo do Rei e prepare o ataque. Ninguém captura nada ainda.",
         "Um plano simples e sólido vale mais que lances espertos. Abrir a diagonal do Bispo, posicionar a Torre e levar o Rei para o castelo são os três passos."
@@ -1638,7 +1638,7 @@
       {
        "kind": "info",
        "title": "Castelos",
-       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/2PP5/PP2PPPPP/1B1R5/LNSGKGSNL b - 1",
+       "sfen": "ln1gkgsnl/1r1s3b1/p1pppp1pp/1p4p2/9/2PP5/PP2PPPPP/1B1R5/LNSGKGSNL b - 7",
        "text": [
         "Um castelo (囲い, kakoi) é uma formação de Ouros e Pratas em volta do Rei. Há dezenas: os mais famosos são o Mino (美濃囲い), a Fortaleza (矢倉, yagura), o Barco (舟囲い, funa-gakoi) e o Urso na toca (穴熊, anaguma).",
         "O Mino (美濃囲い, mino-gakoi) é considerado fácil para iniciantes e é usado até por profissionais: o Rei fica num canto seguro e as três peças de defesa se protegem umas às outras."
@@ -1647,7 +1647,7 @@
       {
        "kind": "exercise",
        "title": "Monte o Mino (美濃)",
-       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/2PP5/PP2PPPPP/1B1R5/LNSGKGSNL b - 1",
+       "sfen": "ln1gkgsnl/1r1s3b1/p1pppp1pp/1p4p2/9/2PP5/PP2PPPPP/1B1R5/LNSGKGSNL b - 7",
        "focus": [
         "2h",
         "3h",
@@ -1655,23 +1655,30 @@
         "4i"
        ],
        "text": [
-        "Monte o castelo Mino (美濃囲い): Rei em 2h, Prata em 3h, um Ouro em 5h e o outro fica em 4i. O adversário espera."
+        "Monte o castelo Mino (美濃囲い): Rei em 2h, Prata em 3h, um Ouro em 5h e o outro fica em 4i.",
+        "O adversário também leva o Rei dele para longe da Torre. Comece pelo Rei: ele atravessa 4h e 3h até 2h."
        ],
        "goal": {
-        "type": "formation",
-        "pieces": {
-         "2h": "K",
-         "3h": "S",
-         "5h": "G",
-         "4i": "G"
-        },
-        "solution": [
+        "type": "line",
+        "line": [
          "5i4h",
+         "5a4b",
          "4h3h",
+         "4b3b",
          "3h2h",
+         "6a5b",
          "3i3h",
+         "1c1d",
          "6i5h"
-        ]
+        ],
+        "strong": {
+         "0": {
+          "7i7h": "A Prata em 7h faz parte do shikenbisha (四間飛車) e pode vir antes do castelo."
+         },
+         "6": {
+          "6i5h": "O Ouro em 5h antes da Prata monta o mesmo Mino (美濃囲い)."
+         }
+        }
        },
        "hint": "Primeiro leve o Rei até 2h (passando por 4h e 3h); depois a Prata sobe para 3h e o Ouro de 6i vai para 5h.",
        "success": "Mino-gakoi (美濃囲い)! O Rei está longe da Torre, e Prata e Ouros se defendem em diagonal."
@@ -1691,7 +1698,7 @@
       {
        "kind": "info",
        "title": "A Fortaleza",
-       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/2PP3P1/PPSGPPP1P/1KG4R1/LNB3SNL b - 1",
+       "sfen": "ln4knl/1r1s2gb1/p1pp1gspp/1p2ppp2/9/2PPPB3/PPSG1PPPP/1KG4R1/LN4SNL w - 26",
        "focus": [
         "8h",
         "7h",
@@ -1734,30 +1741,37 @@
         "5h"
        ],
        "text": [
-        "Monte a formação completa. O adversário espera; numa partida de verdade ele também estaria se preparando."
+        "Monte a formação completa, na ordem do plano. O adversário joga de Torre parada (居飛車, ibisha) e também guarda o Rei."
        ],
        "goal": {
-        "type": "formation",
-        "pieces": {
-         "7f": "P",
-         "6f": "P",
-         "6h": "R",
-         "7h": "S",
-         "2h": "K",
-         "3h": "S",
-         "5h": "G"
-        },
-        "solution": [
+        "type": "line",
+        "line": [
          "7g7f",
+         "3c3d",
          "6g6f",
+         "8c8d",
          "2h6h",
+         "7a6b",
          "7i7h",
+         "5a4b",
          "5i4h",
+         "4b3b",
          "4h3h",
+         "6a5b",
          "3h2h",
+         "1c1d",
          "3i3h",
+         "7c7d",
          "6i5h"
-        ]
+        ],
+        "strong": {
+         "6": {
+          "5i4h": "Levar o Rei para o castelo antes da Prata também é bom."
+         },
+         "14": {
+          "6i5h": "O Ouro em 5h antes da Prata monta o mesmo Mino (美濃囲い)."
+         }
+        }
        },
        "hint": "Siga a ordem: Peões de 7g e 6g, Torre para 6h, Prata de 7i, e então o Mino (美濃囲い).",
        "success": "Pronto: shikenbisha (四間飛車) com Mino (美濃囲い). Daqui o plano é esperar o ataque adversário, trocar peões na coluna 6 ou 7 e contra-atacar."
@@ -1941,7 +1955,7 @@
       {
        "kind": "info",
        "title": "Por que a Fortaleza",
-       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/2PPPB3/PPSG1PPPP/1KG4R1/LN4SNL b - 1",
+       "sfen": "ln4knl/1r1s2gb1/p1pp1gspp/1p2ppp2/9/2PPPB3/PPSG1PPPP/1KG4R1/LN4SNL w - 26",
        "focus": [
         "8h",
         "7h",
@@ -1965,43 +1979,54 @@
         "4f"
        ],
        "text": [
-        "Monte a Fortaleza a partir da posição inicial: Peões em 7f, 6f e 5f; Prata em 7g; Ouros em 7h e 6g; o Bispo sai por 7i até 4f; o Rei vai para 8h. O adversário espera."
+        "Monte a Fortaleza a partir da posição inicial: Peões em 7f, 6f e 5f; Prata em 7g; Ouros em 7h e 6g; o Bispo sai por 7i até 4f; o Rei vai para 8h.",
+        "O adversário também monta a Fortaleza dele (相矢倉, ai-yagura). Siga a ordem clássica: Peões 7f e 6f, Prata para 6h, Peão 5f, Ouros, Prata em 7g, Bispo e, por último, o Rei."
        ],
        "goal": {
-        "type": "formation",
-        "pieces": {
-         "7f": "P",
-         "6f": "P",
-         "5f": "P",
-         "7g": "S",
-         "7h": "G",
-         "6g": "G",
-         "4f": "B",
-         "8h": "K"
-        },
-        "solution": [
+        "type": "line",
+        "line": [
          "7g7f",
-         "7i6h",
+         "8c8d",
          "6g6f",
+         "3c3d",
+         "7i6h",
+         "3a4b",
          "5g5f",
+         "4c4d",
          "6i7h",
+         "4a3b",
          "4i5h",
+         "5c5d",
          "5h6g",
+         "6a5b",
          "6h7g",
+         "5b4c",
          "8h7i",
+         "4b3c",
          "7i4f",
+         "7a6b",
          "5i6h",
+         "5a4a",
          "6h7i",
+         "4a3a",
          "7i8h"
-        ]
+        ],
+        "strong": {
+         "4": {
+          "6i7h": "O Ouro em 7h antes da Prata também é jogado pelos profissionais."
+         },
+         "8": {
+          "4i5h": "O outro Ouro primeiro chega à mesma Fortaleza."
+         }
+        }
        },
        "hint": "Abra caminho primeiro: Peões 7f e 6f, a Prata de 7i passa por 6h até 7g, e o Bispo recua para 7i e sai pela diagonal de 5g. Só então o Rei atravessa 6h e 7i até 8h.",
-       "success": "Kin-yagura (金矢倉)! O Bispo saiu antes do Rei porque o Rei precisava da casa dele. Na abertura, a ordem dos lances importa tanto quanto o destino."
+       "success": "Kin-yagura (金矢倉)! O Bispo saiu antes do Rei porque o Rei precisava da casa dele. Na abertura, a ordem dos lances importa tanto quanto o destino; o adversário ainda está a dois lances da Fortaleza dele."
       },
       {
        "kind": "info",
        "title": "Forças e fraquezas",
-       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/2PPPB3/PPSG1PPPP/1KG4R1/LN4SNL b - 1",
+       "sfen": "ln4knl/1r1s2gb1/p1pp1gspp/1p2ppp2/9/2PPPB3/PPSG1PPPP/1KG4R1/LN4SNL w - 26",
        "focus": [
         "7g",
         "8g",
@@ -2044,22 +2069,29 @@
         "1e"
        ],
        "text": [
-        "Avance o Peão da coluna 2 até 2e e leve a Prata de 3i até 1e. O adversário espera."
+        "Avance o Peão da coluna 2 até 2e e leve a Prata de 3i até 1e, passando por 3h, 2g e 2f.",
+        "O adversário vê o ataque chegando: o Ouro sobe para 3b para defender 2c, e ele continua se desenvolvendo."
        ],
        "goal": {
-        "type": "formation",
-        "pieces": {
-         "2e": "P",
-         "1e": "S"
-        },
-        "solution": [
+        "type": "line",
+        "line": [
          "2g2f",
+         "4a3b",
          "2f2e",
+         "3c3d",
          "3i3h",
+         "7a6b",
          "3h2g",
+         "6a5b",
          "2g2f",
+         "9c9d",
          "2f1e"
-        ]
+        ],
+        "strong": {
+         "0": {
+          "7g7f": "Abrir o Bispo primeiro é o lance mais comum da abertura."
+         }
+        }
        },
        "hint": "O Peão sai primeiro, porque a Prata precisa passar por 2g e 2f.",
        "success": "A Prata chegou. Em 1e ela apoia o avanço 2e2d e, quando o Peão for trocado, entra em 2d."
@@ -2111,7 +2143,7 @@
       {
        "kind": "info",
        "title": "O Rei no buraco",
-       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/2PP5/PP2PPPPP/1B1R3SL/LNSG2GNK b - 1",
+       "sfen": "ln3gsnl/1r1sg1kb1/3ppp1p1/ppp3p1p/9/2PP5/PP2PPPPP/1B1R3SL/LNSG2GNK w - 20",
        "focus": [
         "1i",
         "1h",
@@ -2126,7 +2158,7 @@
       {
        "kind": "exercise",
        "title": "Entre na toca",
-       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/2PP5/PP2PPPPP/1B1R5/LNSGKGSNL b - 1",
+       "sfen": "ln1gkgsnl/1r1s3b1/p1pppp1pp/1p4p2/9/2PP5/PP2PPPPP/1B1R5/LNSGKGSNL b - 7",
        "focus": [
         "1i",
         "1h",
@@ -2134,28 +2166,34 @@
         "3i"
        ],
        "text": [
-        "Monte o Anaguma (穴熊) com a Torre já em 6h: Lança em 1h, Rei em 1i, Prata em 2h e Ouro em 3i. O adversário espera."
+        "Monte o Anaguma (穴熊) com a Torre já em 6h: Lança em 1h, Rei em 1i, Prata em 2h e Ouro em 3i.",
+        "Enquanto isso o adversário guarda o Rei dele e avança os Peões das bordas: repare quanto tempo a toca custa."
        ],
        "goal": {
-        "type": "formation",
-        "pieces": {
-         "1h": "L",
-         "1i": "K",
-         "2h": "S",
-         "3i": "G"
-        },
-        "solution": [
+        "type": "line",
+        "line": [
          "1i1h",
+         "5a4b",
          "5i4h",
+         "4b3b",
          "4h3h",
+         "6a5b",
          "3h2h",
+         "7c7d",
          "2h1i",
+         "1c1d",
          "3i2h",
+         "9c9d",
          "4i3i"
-        ]
+        ],
+        "strong": {
+         "0": {
+          "7i7h": "A Prata em 7h é lance normal do shikenbisha (四間飛車)."
+         }
+        }
        },
        "hint": "A Lança sobe primeiro para liberar o canto. O Rei anda por 4h, 3h e 2h; depois a Prata e o Ouro fecham a porta.",
-       "success": "O Urso está na toca. Foram sete lances só para isso: o Mino (美濃囲い) fica pronto em cinco."
+       "success": "O Urso está na toca. Foram sete lances só para isso: o Mino (美濃囲い) fica pronto em cinco, e nesse tempo o adversário já castelou e avançou os Peões da borda."
       },
       {
        "kind": "info",
@@ -2311,7 +2349,7 @@
       {
        "kind": "info",
        "title": "Quatro perguntas",
-       "sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/2PP5/PP2PPPPP/1B1R3SL/LNSG2GNK b - 1",
+       "sfen": "ln3gsnl/1r1sg1kb1/3ppp1p1/ppp3p1p/9/2PP5/PP2PPPPP/1B1R3SL/LNSG2GNK w - 20",
        "text": [
         "Antes de escolher um plano, avalie a posição (形勢判断, keisei handan). Os profissionais fazem quatro perguntas:",
         "1) Material (駒の損得, koma no sontoku): quem tem mais peças, contando as da mão? 2) Segurança do Rei (玉の堅さ, gyoku no katasa): qual castelo aguenta mais? 3) Eficiência (駒の効率, koma no kōritsu): as peças trabalham ou estão paradas? 4) A vez (手番, teban): quem ataca primeiro?"

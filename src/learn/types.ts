@@ -94,8 +94,10 @@ export type Goal =
   /**
    * Moves alternate: the learner plays line[0], the opponent answers line[1], and so on.
    * With `mate`, any checkmating move also ends the exercise successfully.
+   * `strong` lists, by index in `line`, moves as good as the one asked: they are praised but not
+   * played (and not counted as mistakes), and the learner tries again the move of the lesson.
    */
-  | { type: "line"; line: Accept[]; mate?: boolean }
+  | { type: "line"; line: Accept[]; mate?: boolean; strong?: Record<number, Record<UsiMove, string>> }
   /** Find a checkmate (any mating move counts). */
   | { type: "mate"; solution: UsiMove }
   /** Try a forbidden move of this kind, to see the rule in action. */

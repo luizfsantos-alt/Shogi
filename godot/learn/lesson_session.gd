@@ -293,6 +293,11 @@ func _play_line(ex: Dictionary, goal: Dictionary, move: String) -> void:
 		_solve(ex)
 		return
 	if not accepts(goal.line[_line_index], move):
+		# A move as good as the one asked: praised, not played and not a mistake.
+		var strong: String = goal.get("strong", {}).get(str(_line_index), {}).get(move, "")
+		if strong != "":
+			feedback = {"kind": "info", "text": "Escolha forte! %s Mas aqui o exercício pede outro lance: tente de novo." % strong}
+			return
 		_miss(ex, move)
 		return
 	rules.play(move)

@@ -1,4 +1,3 @@
-import { setup } from "../board";
 import type { Lesson } from "../types";
 
 /**
@@ -10,30 +9,11 @@ import type { Lesson } from "../types";
 
 const START = "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1";
 
-/** Gote's starting pieces, for positions where only Sente has moved. */
-const GOTE_START: Record<string, string> = {
-  "9a": "l", "8a": "n", "7a": "s", "6a": "g", "5a": "k", "4a": "g", "3a": "s", "2a": "n", "1a": "l",
-  "8b": "r", "2b": "b",
-  ...Object.fromEntries([9, 8, 7, 6, 5, 4, 3, 2, 1].map((file) => [`${file}c`, "p"])),
-};
+/** After 1.P-7f P-3d 2.P-6f P-8d 3.R-6h S-6b: Sente in Shikenbisha, both Kings still to castle. */
+const SHIKENBISHA = "ln1gkgsnl/1r1s3b1/p1pppp1pp/1p4p2/9/2PP5/PP2PPPPP/1B1R5/LNSGKGSNL b - 7";
 
-const SENTE_BACK: Record<string, string> = { "9i": "L", "8i": "N", "2i": "N", "1i": "L" };
-
-/** Sente in Shikenbisha (rook on file 6), before castling. */
-const SHIKENBISHA = setup({
-  ...GOTE_START,
-  ...SENTE_BACK,
-  "7i": "S", "6i": "G", "5i": "K", "4i": "G", "3i": "S", "8h": "B", "6h": "R",
-  "9g": "P", "8g": "P", "7f": "P", "6f": "P", "5g": "P", "4g": "P", "3g": "P", "2g": "P", "1g": "P",
-});
-
-/** Sente's Gold Fortress (kin-yagura). */
-const YAGURA = setup({
-  ...GOTE_START,
-  ...SENTE_BACK,
-  "8h": "K", "7h": "G", "7g": "S", "6g": "G", "7i": "B", "3i": "S", "2h": "R",
-  "9g": "P", "8g": "P", "7f": "P", "6f": "P", "5g": "P", "4g": "P", "3g": "P", "2f": "P", "1g": "P",
-});
+/** Both sides in Yagura: Sente's Gold Fortress (kin-yagura) is ready, Gote's still being built. */
+const YAGURA = "ln4knl/1r1s2gb1/p1pp1gspp/1p2ppp2/9/2PPPB3/PPSG1PPPP/1KG4R1/LN4SNL w - 26";
 
 export const STRATEGY: Lesson[] = [
   {
@@ -169,9 +149,17 @@ export const STRATEGY: Lesson[] = [
         sfen: SHIKENBISHA,
         focus: ["2h", "3h", "5h", "4i"],
         text: [
-          "Monte o castelo Mino (美濃囲い): Rei em 2h, Prata em 3h, um Ouro em 5h e o outro fica em 4i. O adversário espera.",
+          "Monte o castelo Mino (美濃囲い): Rei em 2h, Prata em 3h, um Ouro em 5h e o outro fica em 4i.",
+          "O adversário também leva o Rei dele para longe da Torre. Comece pelo Rei: ele atravessa 4h e 3h até 2h.",
         ],
-        goal: { type: "formation", pieces: { "2h": "K", "3h": "S", "5h": "G", "4i": "G" }, solution: ["5i4h", "4h3h", "3h2h", "3i3h", "6i5h"] },
+        goal: {
+          type: "line",
+          line: ["5i4h", "5a4b", "4h3h", "4b3b", "3h2h", "6a5b", "3i3h", "1c1d", "6i5h"],
+          strong: {
+            0: { "7i7h": "A Prata em 7h faz parte do shikenbisha (四間飛車) e pode vir antes do castelo." },
+            6: { "6i5h": "O Ouro em 5h antes da Prata monta o mesmo Mino (美濃囲い)." },
+          },
+        },
         hint: "Primeiro leve o Rei até 2h (passando por 4h e 3h); depois a Prata sobe para 3h e o Ouro de 6i vai para 5h.",
         success: "Mino-gakoi (美濃囲い)! O Rei está longe da Torre, e Prata e Ouros se defendem em diagonal.",
       },
@@ -216,11 +204,14 @@ export const STRATEGY: Lesson[] = [
         title: "Monte a abertura",
         sfen: START,
         focus: ["7f", "6f", "6h", "7h", "2h", "3h", "5h"],
-        text: ["Monte a formação completa. O adversário espera; numa partida de verdade ele também estaria se preparando."],
+        text: ["Monte a formação completa, na ordem do plano. O adversário joga de Torre parada (居飛車, ibisha) e também guarda o Rei."],
         goal: {
-          type: "formation",
-          pieces: { "7f": "P", "6f": "P", "6h": "R", "7h": "S", "2h": "K", "3h": "S", "5h": "G" },
-          solution: ["7g7f", "6g6f", "2h6h", "7i7h", "5i4h", "4h3h", "3h2h", "3i3h", "6i5h"],
+          type: "line",
+          line: ["7g7f", "3c3d", "6g6f", "8c8d", "2h6h", "7a6b", "7i7h", "5a4b", "5i4h", "4b3b", "4h3h", "6a5b", "3h2h", "1c1d", "3i3h", "7c7d", "6i5h"],
+          strong: {
+            6: { "5i4h": "Levar o Rei para o castelo antes da Prata também é bom." },
+            14: { "6i5h": "O Ouro em 5h antes da Prata monta o mesmo Mino (美濃囲い)." },
+          },
         },
         hint: "Siga a ordem: Peões de 7g e 6g, Torre para 6h, Prata de 7i, e então o Mino (美濃囲い).",
         success: "Pronto: shikenbisha (四間飛車) com Mino (美濃囲い). Daqui o plano é esperar o ataque adversário, trocar peões na coluna 6 ou 7 e contra-atacar.",

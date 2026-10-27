@@ -251,7 +251,14 @@ export class LessonSession {
       this.solve(exercise);
       return;
     }
-    if (!accepts(goal.line[this.lineIndex], move)) return this.miss(exercise, move);
+    if (!accepts(goal.line[this.lineIndex], move)) {
+      const strong = goal.strong?.[this.lineIndex]?.[move];
+      if (strong) {
+        this.feedback = { kind: "info", text: `Escolha forte! ${strong} Mas aqui o exercício pede outro lance: tente de novo.` };
+        return;
+      }
+      return this.miss(exercise, move);
+    }
     this.backend.push(move);
     this.lastMove = move;
     this.played.push(move);

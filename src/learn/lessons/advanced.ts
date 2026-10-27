@@ -21,38 +21,23 @@ const START = "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1";
 /** After 1.P-7f P-8d 2.P-2f G-3b 3.G-7h P-8e: Gote's Rook pawn is one step from 8f. */
 const KAKUGAWARI = "lnsgk1snl/1r4gb1/p1ppppppp/9/1p7/2P4P1/PP1PPPP1P/1BG4R1/LNS1KGSNL b - 7";
 
-/** Gote's starting pieces, for positions where only Sente has moved. */
-const GOTE_START: Record<string, string> = {
-  "9a": "l", "8a": "n", "7a": "s", "6a": "g", "5a": "k", "4a": "g", "3a": "s", "2a": "n", "1a": "l",
-  "8b": "r", "2b": "b",
-  ...Object.fromEntries([9, 8, 7, 6, 5, 4, 3, 2, 1].map((file) => [`${file}c`, "p"])),
-};
+/**
+ * Ai-yagura: 1.P-7f P-8d 2.P-6f P-3d 3.S-6h S-4b 4.P-5f P-4d 5.G-7h G-3b 6.G-5h P-5d 7.G-6g G-5b
+ * 8.S-7g G-4c 9.B-7i S-3c 10.B-4f S-6b 11.K-6h K-4a 12.K-7i K-3a 13.K-8h: Sente's Gold Fortress
+ * (kin-yagura) with the Bishop out on 4f; Gote's Fortress is still being built.
+ */
+const YAGURA_LINE = ["7g7f", "8c8d", "6g6f", "3c3d", "7i6h", "3a4b", "5g5f", "4c4d", "6i7h", "4a3b", "4i5h", "5c5d", "5h6g", "6a5b", "6h7g", "5b4c", "8h7i", "4b3c", "7i4f", "7a6b", "5i6h", "5a4a", "6h7i", "4a3a", "7i8h"];
+const YAGURA = "ln4knl/1r1s2gb1/p1pp1gspp/1p2ppp2/9/2PPPB3/PPSG1PPPP/1KG4R1/LN4SNL w - 26";
 
-const SENTE_BACK: Record<string, string> = { "9i": "L", "8i": "N", "2i": "N", "1i": "L" };
+/** After 1.P-7f P-3d 2.P-6f P-8d 3.R-6h S-6b: Sente in Shikenbisha, both Kings still to castle. */
+const SHIKENBISHA = "ln1gkgsnl/1r1s3b1/p1pppp1pp/1p4p2/9/2PP5/PP2PPPPP/1B1R5/LNSGKGSNL b - 7";
 
-/** Sente's Gold Fortress (kin-yagura), with the Bishop out on 4f. */
-const YAGURA = setup({
-  ...GOTE_START,
-  ...SENTE_BACK,
-  "8h": "K", "7h": "G", "7g": "S", "6g": "G", "4f": "B", "3i": "S", "2h": "R",
-  "9g": "P", "8g": "P", "7f": "P", "6f": "P", "5f": "P", "4g": "P", "3g": "P", "2g": "P", "1g": "P",
-});
-
-/** Sente in Shikenbisha (rook on file 6), before castling. */
-const SHIKENBISHA = setup({
-  ...GOTE_START,
-  ...SENTE_BACK,
-  "7i": "S", "6i": "G", "5i": "K", "4i": "G", "3i": "S", "8h": "B", "6h": "R",
-  "9g": "P", "8g": "P", "7f": "P", "6f": "P", "5g": "P", "4g": "P", "3g": "P", "2g": "P", "1g": "P",
-});
-
-/** Shikenbisha with the Anaguma castle in the corner. */
-const ANAGUMA = setup({
-  ...GOTE_START,
-  "9i": "L", "8i": "N", "2i": "N", "1h": "L",
-  "7i": "S", "6i": "G", "1i": "K", "3i": "G", "2h": "S", "8h": "B", "6h": "R",
-  "9g": "P", "8g": "P", "7f": "P", "6f": "P", "5g": "P", "4g": "P", "3g": "P", "2g": "P", "1g": "P",
-});
+/**
+ * From SHIKENBISHA: 4.L-1h K-4b 5.K-4h K-3b 6.K-3h G-5b 7.K-2h P-7d 8.K-1i P-1d 9.S-2h P-9d
+ * 10.G-3i: Sente's Anaguma against Gote's Static Rook castle.
+ */
+const ANAGUMA_LINE = ["1i1h", "5a4b", "5i4h", "4b3b", "4h3h", "6a5b", "3h2h", "7c7d", "2h1i", "1c1d", "3i2h", "9c9d", "4i3i"];
+const ANAGUMA = "ln3gsnl/1r1sg1kb1/3ppp1p1/ppp3p1p/9/2PP5/PP2PPPPP/1B1R3SL/LNSG2GNK w - 20";
 
 /** Bōgin arrived: Silver on 1e and Pawn on 2e against a Static Rook camp. */
 const BOGIN = setup({
@@ -146,15 +131,19 @@ const OPENINGS: Lesson[] = [
         sfen: START,
         focus: ["8h", "7h", "7g", "6g", "4f"],
         text: [
-          "Monte a Fortaleza a partir da posição inicial: Peões em 7f, 6f e 5f; Prata em 7g; Ouros em 7h e 6g; o Bispo sai por 7i até 4f; o Rei vai para 8h. O adversário espera.",
+          "Monte a Fortaleza a partir da posição inicial: Peões em 7f, 6f e 5f; Prata em 7g; Ouros em 7h e 6g; o Bispo sai por 7i até 4f; o Rei vai para 8h.",
+          "O adversário também monta a Fortaleza dele (相矢倉, ai-yagura). Siga a ordem clássica: Peões 7f e 6f, Prata para 6h, Peão 5f, Ouros, Prata em 7g, Bispo e, por último, o Rei.",
         ],
         goal: {
-          type: "formation",
-          pieces: { "7f": "P", "6f": "P", "5f": "P", "7g": "S", "7h": "G", "6g": "G", "4f": "B", "8h": "K" },
-          solution: ["7g7f", "7i6h", "6g6f", "5g5f", "6i7h", "4i5h", "5h6g", "6h7g", "8h7i", "7i4f", "5i6h", "6h7i", "7i8h"],
+          type: "line",
+          line: YAGURA_LINE,
+          strong: {
+            4: { "6i7h": "O Ouro em 7h antes da Prata também é jogado pelos profissionais." },
+            8: { "4i5h": "O outro Ouro primeiro chega à mesma Fortaleza." },
+          },
         },
         hint: "Abra caminho primeiro: Peões 7f e 6f, a Prata de 7i passa por 6h até 7g, e o Bispo recua para 7i e sai pela diagonal de 5g. Só então o Rei atravessa 6h e 7i até 8h.",
-        success: "Kin-yagura (金矢倉)! O Bispo saiu antes do Rei porque o Rei precisava da casa dele. Na abertura, a ordem dos lances importa tanto quanto o destino.",
+        success: "Kin-yagura (金矢倉)! O Bispo saiu antes do Rei porque o Rei precisava da casa dele. Na abertura, a ordem dos lances importa tanto quanto o destino; o adversário ainda está a dois lances da Fortaleza dele.",
       },
       {
         kind: "info",
@@ -190,8 +179,15 @@ const OPENINGS: Lesson[] = [
         title: "Leve a Prata",
         sfen: START,
         focus: ["2e", "1e"],
-        text: ["Avance o Peão da coluna 2 até 2e e leve a Prata de 3i até 1e. O adversário espera."],
-        goal: { type: "formation", pieces: { "2e": "P", "1e": "S" }, solution: ["2g2f", "2f2e", "3i3h", "3h2g", "2g2f", "2f1e"] },
+        text: [
+          "Avance o Peão da coluna 2 até 2e e leve a Prata de 3i até 1e, passando por 3h, 2g e 2f.",
+          "O adversário vê o ataque chegando: o Ouro sobe para 3b para defender 2c, e ele continua se desenvolvendo.",
+        ],
+        goal: {
+          type: "line",
+          line: ["2g2f", "4a3b", "2f2e", "3c3d", "3i3h", "7a6b", "3h2g", "6a5b", "2g2f", "9c9d", "2f1e"],
+          strong: { 0: { "7g7f": "Abrir o Bispo primeiro é o lance mais comum da abertura." } },
+        },
         hint: "O Peão sai primeiro, porque a Prata precisa passar por 2g e 2f.",
         success: "A Prata chegou. Em 1e ela apoia o avanço 2e2d e, quando o Peão for trocado, entra em 2d.",
       },
@@ -232,10 +228,17 @@ const OPENINGS: Lesson[] = [
         title: "Entre na toca",
         sfen: SHIKENBISHA,
         focus: ["1i", "1h", "2h", "3i"],
-        text: ["Monte o Anaguma (穴熊) com a Torre já em 6h: Lança em 1h, Rei em 1i, Prata em 2h e Ouro em 3i. O adversário espera."],
-        goal: { type: "formation", pieces: { "1h": "L", "1i": "K", "2h": "S", "3i": "G" }, solution: ["1i1h", "5i4h", "4h3h", "3h2h", "2h1i", "3i2h", "4i3i"] },
+        text: [
+          "Monte o Anaguma (穴熊) com a Torre já em 6h: Lança em 1h, Rei em 1i, Prata em 2h e Ouro em 3i.",
+          "Enquanto isso o adversário guarda o Rei dele e avança os Peões das bordas: repare quanto tempo a toca custa.",
+        ],
+        goal: {
+          type: "line",
+          line: ANAGUMA_LINE,
+          strong: { 0: { "7i7h": "A Prata em 7h é lance normal do shikenbisha (四間飛車)." } },
+        },
         hint: "A Lança sobe primeiro para liberar o canto. O Rei anda por 4h, 3h e 2h; depois a Prata e o Ouro fecham a porta.",
-        success: "O Urso está na toca. Foram sete lances só para isso: o Mino (美濃囲い) fica pronto em cinco.",
+        success: "O Urso está na toca. Foram sete lances só para isso: o Mino (美濃囲い) fica pronto em cinco, e nesse tempo o adversário já castelou e avançou os Peões da borda.",
       },
       {
         kind: "info",
