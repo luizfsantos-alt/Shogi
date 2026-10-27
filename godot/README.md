@@ -85,7 +85,7 @@ outras regras: isso vem com o motor). Os lados se alternam, para testar os dois 
 
 Dois visuais (`DECISIONS.md`, "Visual pixel"). O **pixel**, padrão: peças grossas com luz em
 faixas e contorno (`koma_pixel.gdshader`, `koma_outline.gdshader`), um kanji em pixel com as marcas
-de movimento (`textures/kanji_px/`, de `tools/make_pixel_kanji.mjs` com a DotGothic16), mesa de
+de movimento (`textures/kanji_px/`, de `tools/make_pixel_kanji.mjs` com a Noto Sans JP Black, em baixo-relevo), mesa de
 pedra, chão de lajes (`ground.gdshader`), vinheta em degraus e efeitos em pixel. O **clássico**, de
 laca e madeira, volta com Ajustes › "Visual pixel" desligado. O uniform global `pixel_look`
 (`project.godot`) troca os efeitos de uma vez; `Table.set_pixel_look` troca tudo sem recarregar.

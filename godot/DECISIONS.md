@@ -65,16 +65,27 @@ na linha de comando).
   fica um pouco abaixo do máximo (`pearl_exposure`) para a luz da mesa não estourar os tons.
   No Gote o cetim é quente e mais fraco, para o vermelho continuar saturado. Ajustes em
   `nacre`, `satin_pearl`, `satin_red` (`koma_pixel.gdshader`).
-- **Um kanji só**, em pixel (DotGothic16, OFL), com as **marcas de movimento** gravadas em volta:
+- **Um kanji só**, grande e de traço grosso, com as **marcas de movimento** gravadas em volta:
   um ponto = uma casa, dois pontos em linha = qualquer distância, cruzinha = o salto do cavalo.
-  Máscaras de 32×36 em `visual/textures/kanji_px/` (`tools/make_pixel_kanji.mjs`).
+  Máscaras de 48×54 em `visual/textures/kanji_px/` (`tools/make_pixel_kanji.mjs`): a Noto Sans
+  JP Black (OFL) rasterizada sem meio-tom, com traços de 2 a 5 texels, ocupando ~2/3 da largura da
+  face e assentada no corpo da peça, abaixo da ponta. As marcas ficam no anel da borda.
+  A primeira versão usava a DotGothic16 no tamanho nativo (16 px numa máscara de 32×36): traços de
+  um texel e kanji em meia face, finos demais para ler no celular; 銀 e 歩 viravam borrões. Testadas
+  e descartadas também: DotGothic16 ampliada ×2 (銀 continua quebrado), Dela Gothic One (pesada,
+  os kanji viram blocos) e Potta One (a do app web; mais embolada que a Noto em pixel).
 - Kanji na cor da função (`Koma.INK`), igual nos dois lados; promovida com kanji vermelho no
   Sente e ouro no Gote, mais a borda dourada. Um contorno de um texel em volta da tinta foi
   testado e descartado: fechava os vãos dos kanji densos (銀, 歩).
-- Kanji em **relevo** no visual pixel: a tinta fica em alto-relevo, sombreada texel a texel como
-  num sprite (borda de cima e da esquerda clara, de baixo e da direita escura, e uma sombra de um
-  texel na laca embaixo e à direita do traço). Força em `ink_bevel` e `ink_shadow`
-  (`koma_pixel.gdshader`). No visual clássico o kanji continua entalhado.
+- Kanji em **baixo-relevo** no visual pixel: a tinta fica no fundo de um sulco, sombreada texel a
+  texel como uma borda afundada de sprite. A parede do lado da luz faz sombra no primeiro texel do
+  traço, e a parede oposta aparece como um texel claro na laca logo depois do traço; o miolo fica
+  liso, para os traços estreitos lerem como uma cor só. O lado da luz sai da luz principal da mesa
+  (`light_from`, no mundo) projetada na face, então o sulco fica certo nos dois lados (o Gote está
+  girado) e depois da virada da promoção. Força em `groove_shadow` e `groove_light`
+  (`koma_pixel.gdshader`). A normal não é mais inclinada nas bordas do traço: o brilho duro pegava
+  nelas e riscava o kanji de branco. Antes o kanji era em alto-relevo. No visual clássico o kanji
+  continua entalhado. `tools/lookdev_pixel.gd` renderiza todas as faces dos dois lados para ajustar.
 - Coordenadas da moldura em pixel, sem suavização (IBM Plex Mono pequena, ampliada com filtro
   *nearest*), num cinza claro de pedra.
 - Tabuleiro e komadai em **pedra** pixelada (quatro cinzas com dither, rachaduras, a grade
