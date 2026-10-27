@@ -59,6 +59,12 @@ na linha de comando).
 
 - Peças **60% mais grossas**, com bordas mais redondas, luz em **faixas** (sem degradê), um
   brilho duro e **contorno escuro** como num sprite: o 3D fica acentuado.
+- **Acetinado e perolado** (out/2026): as peças têm um brilho largo de cetim em dois degraus por
+  baixo do reflexo duro. No Sente a laca é **madrepérola**: manchas rosa, lilás e verde-água que
+  mudam com o ângulo de visão, também em degraus, e o brilho de cetim ganha essas cores. O branco
+  fica um pouco abaixo do máximo (`pearl_exposure`) para a luz da mesa não estourar os tons.
+  No Gote o cetim é quente e mais fraco, para o vermelho continuar saturado. Ajustes em
+  `nacre`, `satin_pearl`, `satin_red` (`koma_pixel.gdshader`).
 - **Um kanji só**, em pixel (DotGothic16, OFL), com as **marcas de movimento** gravadas em volta:
   um ponto = uma casa, dois pontos em linha = qualquer distância, cruzinha = o salto do cavalo.
   Máscaras de 32×36 em `visual/textures/kanji_px/` (`tools/make_pixel_kanji.mjs`).
