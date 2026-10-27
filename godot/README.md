@@ -90,14 +90,17 @@ laca e madeira, volta com Ajustes › "Visual pixel" desligado. O uniform global
 (`project.godot`) troca os efeitos de uma vez; `Table.set_pixel_look` troca tudo sem recarregar.
 
 - `koma_mesh.gd`: a cunha gerada por código, com leves defeitos (semente diferente por peça).
-- `koma.gdshader`: (clássico) laca perolada (Sente) ou vermelha (Gote), kanji entalhado com tinta preta ou
-  ouro no fundo, verniz com brilho, desgaste. O ruído vem de uma textura pequena compartilhada.
+- `koma.gdshader`: (clássico) laca perolada (Sente) ou vermelha (Gote), kanji entalhado com a
+  tinta no fundo, verniz com brilho, desgaste. O ruído vem de uma textura pequena compartilhada.
 - `textures/kanji/`: máscaras do entalhe, geradas por `tools/make_kanji_textures.mjs` com a
   Kaisei Tokumin ExtraBold (`fonts/`, OFL, reduzida aos caracteres das peças).
 - `arrows.gd`, `arrow.gdshader`: as setas do botão "Movimentos".
-- `koma.gd`: pegar, carregar, soltar com peso, virar na promoção.
+- `koma.gd`: pegar, carregar, soltar com peso, virar na promoção. `Koma.INK` é a cor do kanji
+  de cada tipo de peça, a mesma no Sente e no Gote (os dois shaders a recebem em `ink_kind`).
 - `fx.gd`: poeira e anel no impacto, faíscas na promoção, tremor, pausa no impacto.
-- `table.gd`: a cena (`table.tscn`), o toque, as setas e o menu de ajustes (☰).
+- `table.gd`: a cena (`table.tscn`), o toque, as setas e o menu de ajustes (☰). As coordenadas
+  (colunas 9…1 em cima, fileiras a…i à direita) são `Label3D` deitados na moldura do tabuleiro;
+  `set_view_side` as recoloca para quem joga de Gote.
 
 Captura de tela para desenvolvimento (precisa de um display; no container, `xvfb-run`):
 
