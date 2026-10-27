@@ -63,6 +63,15 @@ describe("course structure", () => {
     expect(missing).toEqual([]);
   });
 
+  it("puts every lesson of a track with parts in one of its parts", () => {
+    for (const track of TRACKS.filter((t) => t.parts)) {
+      const parts = new Set(track.parts!.map((p) => p.id));
+      for (const lesson of track.lessons) expect(parts.has(lesson.part ?? ""), lesson.id).toBe(true);
+    }
+    expect(TRACKS.at(-1)?.advanced).toBe(true);
+    expect(nextLesson("practice-game")?.id).toBe(TRACKS[3].lessons[0].id);
+  });
+
   it("loads every position and parses every square", () => {
     for (const lesson of allLessons()) {
       for (const step of lesson.steps) {
