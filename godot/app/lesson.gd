@@ -263,7 +263,7 @@ func _build_hud() -> void:
 	_hud.root = col
 
 	var index: int = track.lessons.find(lesson) + 1
-	var letter: String = ["A", "B", "C"][Course.tracks().find(track)]
+	var letter := String.chr(65 + Course.tracks().find(track))  # A, B, C, D
 	col.add_child(UiTheme.label("TRILHA %s · LIÇÃO %d/%d" % [letter, index, track.lessons.size()], "Caption", 21))
 	var title := UiTheme.label(lesson.title, "Title", 46)
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

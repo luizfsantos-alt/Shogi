@@ -16,7 +16,8 @@ guarda os ajustes em `user://ajustes.json`; o botão "voltar" do Android sobe um
   recusados (`Explain`), diz como sair do xeque (`Coach`) e dá dicas em palavras. Na **partida
   guiada** do curso, o treinador (`learn/coach_tips.gd`) comenta os momentos importantes e marca as
   casas. No menu ☰: início, nova partida, desfazer, dica, declarar impasse, desistir e os ajustes.
-- **Curso** (`course.gd`): as três trilhas lado a lado, com as estrelas e a próxima lição.
+- **Curso** (`course.gd`): duas abas. **Iniciante**: as três trilhas lado a lado; **Avançado**: a trilha D,
+  uma coluna por parte (aberturas, táticas, planejamento, mates). Abre na aba da próxima lição.
 - **Lição** (`lesson.gd`): a mesa com a posição do passo, estrelas ★ para alcançar, casas em foco,
   dica, recomeçar e o painel da peça (`ui/piece_card.gd`). Ao terminar: estrelas (1 a 3) e a próxima
   lição.
@@ -53,7 +54,7 @@ desenhado com filtro *nearest*.
 
 ### O curso (`learn/`)
 
-As 32 lições vêm do PWA: `node scripts/export-lessons.mjs` gera `learn/course.json` a partir de
+As 52 lições vêm do PWA: `node scripts/export-lessons.mjs` gera `learn/course.json` a partir de
 `src/learn/` (o teste `tests/godotCourse.test.ts` falha se o arquivo ficar desatualizado). Duas
 frases que citam botões do PWA são trocadas no carregamento (`Course.APP_WORDING`).
 
@@ -63,8 +64,8 @@ frases que citam botões do PWA são trocadas no carregamento (`Course.APP_WORDI
 | `lesson_session.gd` | `LessonSession` | `LessonSession.ts` (passos, objetivos, respostas do adversário, dicas, estrelas) |
 | `coach_tips.gd` | `CoachTips` | `coachTips.ts` (o treinador da partida guiada) |
 
-Testes: `godot --headless --path godot -s res://learn/test/test_learn.gd`. São 843 verificações:
-todos os 48 exercícios resolvidos pela `LessonSession`, mates conferidos por busca, os casos de
+Testes: `godot --headless --path godot -s res://learn/test/test_learn.gd`. São 1286 verificações:
+todos os 72 exercícios resolvidos pela `LessonSession`, mates conferidos por busca, os casos de
 `lessons.test.ts` e `coachTips.test.ts`, progresso salvo e a cobertura da fonte de kanji.
 
 Capturas de tela (demos em `_demo` de cada tela):

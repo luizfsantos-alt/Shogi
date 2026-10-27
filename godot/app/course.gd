@@ -1,12 +1,18 @@
 extends Node
-## The course map: the three tracks side by side (基本 basics, 手筋 tactics, 戦略 strategy), each
-## lesson with its stars; the recommended one stands out.
+## The course map, in two tabs. Iniciante: the three tracks side by side (基本 basics, 手筋 tactics,
+## 戦略 strategy). Avançado: the advanced track (上級), one column per part. Each lesson shows its
+## stars; the recommended one stands out.
 
-const TRACK_LETTERS := ["A", "B", "C"]
+const TRACK_LETTERS := ["A", "B", "C", "D"]
+const TABS := ["Iniciante", "Avançado"]
 ## Pixel emblem of each track (app/course_art/<name>.png).
 const EMBLEMS := {"A": "basics", "B": "tactics", "C": "strategy"}
 
 var mentor: Mentor
+var _tab_buttons: Array[Button] = []
+var _columns: HBoxContainer
+var _progress: Dictionary
+var _recommended: Dictionary
 
 
 func _ready() -> void:
@@ -51,13 +57,30 @@ func _ready() -> void:
 		go.pressed.connect(App.open_lesson.bind(recommended.id))
 		head.add_child(go)
 
-	var tracks := HBoxContainer.new()
-	tracks.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	tracks.add_theme_constant_override("separation", 22)
-	col.add_child(tracks)
-	var tlist := Course.tracks()
-	for i in tlist.size():
-		tracks.add_child(_track_column(tlist[i], TRACK_LETTERS[i], progress, recommended.get("id", "")))
+	var tabs := HBoxContainer.new()
+	tabs.add_theme_constant_override("separation", 12)
+	col.add_child(tabs)
+	for i in TABS.size():
+		var tab := UiTheme.button(TABS[i], "GhostButton", 28, 64)
+		tab.toggle_mode = true
+		tab.custom_minimum_size.x = 260
+		tab.pressed.connect(_show_tab.bind(i))
+		tabs.add_child(tab)
+		_tab_buttons.append(tab)
+
+	_columns = HBoxContainer.new()
+	_columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_columns.add_theme_constant_override("separation", 22)
+	col.add_child(_columns)
+	_progress = progress
+	_recommended = recommended
+	# Open on the tab of the recommended lesson (Avançado once the beginner course is done).
+	var start_tab := 0
+	if not recommended.is_empty():
+		start_tab = 1 if Course.find_lesson(recommended.id).track.get("advanced", false) else 0
+	elif count.done > 0:
+		start_tab = 1
+	_show_tab(start_tab)
 
 	mentor = Mentor.new()
 	mentor.bottom = -26.0
@@ -69,7 +92,38 @@ func _ready() -> void:
 	_run_cmdline_demo()
 
 
-func _track_column(track: Dictionary, letter: String, progress: Dictionary, recommended: String) -> Control:
+func _show_tab(tab: int) -> void:
+	for i in _tab_buttons.size():
+		var b := _tab_buttons[i]
+		b.set_pressed_no_signal(i == tab)
+		b.add_theme_color_override("font_color", UiTheme.TEXT if i == tab else UiTheme.MUTED)
+		var line := UiTheme.box(Color(UiTheme.FRAME, 0.9) if i == tab else Color(0, 0, 0, 0), UiTheme.GOLD if i == tab else Color.TRANSPARENT, 0, 10)
+		line.border_width_bottom = 3 if i == tab else 0
+		b.add_theme_stylebox_override("normal", line)
+		b.add_theme_stylebox_override("pressed", line)
+	for c in _columns.get_children():
+		c.queue_free()
+	var recommended: String = _recommended.get("id", "")
+	var tlist := Course.tracks()
+	for i in tlist.size():
+		var track: Dictionary = tlist[i]
+		if bool(track.get("advanced", false)) != (tab == 1):
+			continue
+		if track.has("parts"):
+			# A long track: one column per part, numbered on from the previous parts.
+			var n := 0
+			for p in track.parts.size():
+				var part: Dictionary = track.parts[p]
+				var lessons: Array = track.lessons.filter(func(l): return l.get("part", "") == part.id)
+				var column := {"title": part.title, "term": part.term, "description": part.description, "lessons": lessons}
+				var caption := "TRILHA %s · PARTE %d" % [TRACK_LETTERS[i], p + 1]
+				_columns.add_child(_track_column(column, TRACK_LETTERS[i], _progress, recommended, caption, n, 40))
+				n += lessons.size()
+		else:
+			_columns.add_child(_track_column(track, TRACK_LETTERS[i], _progress, recommended))
+
+
+func _track_column(track: Dictionary, letter: String, progress: Dictionary, recommended: String, caption := "", first := 0, title_size := 46) -> Control:
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.add_theme_stylebox_override("panel", UiTheme.box(Color(UiTheme.SURFACE, 0.95), UiTheme.BORDER, 2, 18))
@@ -78,7 +132,9 @@ func _track_column(track: Dictionary, letter: String, progress: Dictionary, reco
 	panel.add_child(box)
 
 	var count := Course.completed_count(progress, track)
-	box.add_child(UiTheme.label("TRILHA %s · %d/%d" % [letter, count.done, count.total], "Caption", 22))
+	if caption == "":
+		caption = "TRILHA %s" % letter
+	box.add_child(UiTheme.label("%s · %d/%d" % [caption, count.done, count.total], "Caption", 22))
 	var name := HBoxContainer.new()
 	name.add_theme_constant_override("separation", 16)
 	name.custom_minimum_size.y = 98  # the emblem's height, so the three columns line up
@@ -93,7 +149,7 @@ func _track_column(track: Dictionary, letter: String, progress: Dictionary, reco
 		emblem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		emblem.custom_minimum_size = Vector2(96, 98)
 		name.add_child(emblem)
-	var title := UiTheme.label(track.title, "Title", 46)
+	var title := UiTheme.label(track.title, "Title", title_size)
 	title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	name.add_child(title)
 	# "Kihon 基本": the kanji in brush, gold.
@@ -116,7 +172,7 @@ func _track_column(track: Dictionary, letter: String, progress: Dictionary, reco
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	list.add_theme_constant_override("separation", 8)
 	scroll.add_child(list)
-	var n := 0
+	var n := first
 	for lesson: Dictionary in track.lessons:
 		n += 1
 		var b := _lesson_button(lesson, n, int(progress.stars.get(lesson.id, 0)), lesson.id == recommended)
@@ -177,10 +233,11 @@ static func _stars_text(stars: int) -> String:
 
 func _scroll_to(scroll: ScrollContainer, control: Control) -> void:
 	await get_tree().process_frame
-	scroll.ensure_control_visible(control)
+	if is_instance_valid(scroll) and is_instance_valid(control):  # gone if the tab changed
+		scroll.ensure_control_visible(control)
 
 
-# godot --path godot --fixed-fps 30 res://app/course.tscn -- shot=/tmp/a.png at=1
+# godot --path godot --fixed-fps 30 res://app/course.tscn -- shot=/tmp/a.png at=1 [tab=1]
 func _run_cmdline_demo() -> void:
 	var shot := ""
 	var at := 1.0
@@ -189,6 +246,8 @@ func _run_cmdline_demo() -> void:
 			shot = a.substr(5)
 		elif a.begins_with("at="):
 			at = float(a.substr(3))
+		elif a.begins_with("tab="):
+			_show_tab(int(a.substr(4)))
 	if shot == "":
 		return
 	for i in int(at * 30.0):
