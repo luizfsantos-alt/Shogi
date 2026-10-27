@@ -65,9 +65,19 @@ void fragment() {
 		vec2 p = lp.xz + cell * 4.5;
 		vec2 d = abs(p - round(p / cell) * cell);
 		vec2 inside = step(vec2(-0.01), p) * step(p, cell * 9.0 + 0.01);
-		// In the pixel look a line is one texel wide, whatever line_width says.
-		float half_w = pixel ? pixel_size * 0.5 : line_width * 0.5;
-		float on_line = max(step(d.x, half_w) * inside.y, step(d.y, half_w) * inside.x);
+		float on_line;
+		if (pixel) {
+			// In the pixel look a line is exactly one texel wide, whatever line_width says: the
+			// texel that holds the line, picked by index. Comparing the distance to half a texel
+			// lost whole lines that fall on a texel border (between ranks f and g) to rounding.
+			highp vec2 q = lpos.xz + cell * 4.5;
+			highp vec2 line_texel = floor((round(q / cell) * cell - cell * 4.5) / pixel_size);
+			vec2 hit = step(abs(floor(lpos.xz / pixel_size) - line_texel), vec2(0.5));
+			on_line = max(hit.x * inside.y, hit.y * inside.x);
+		} else {
+			float half_w = line_width * 0.5;
+			on_line = max(step(d.x, half_w) * inside.y, step(d.y, half_w) * inside.x);
+		}
 		// Star points where lines 3 and 6 cross (square ones in the pixel look).
 		vec2 sp = lp.xz;
 		vec2 star = vec2(1.5) * cell;
