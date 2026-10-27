@@ -201,11 +201,11 @@ export class App {
     this.show(screen.element);
   }
 
-  /** The course's game lessons: a game against the weakest level, with the coach. */
+  /** The course's game lessons: a game against the lesson's level (the weakest by default), with the coach. */
   private startGuidedGame(lesson: Lesson): void {
     this.coachSeen.clear();
     this.coachShown = null;
-    this.startGame({ mode: "ai", humanColor: "black", level: 1, handicap: "none", coach: lesson.id });
+    this.startGame({ mode: "ai", humanColor: "black", level: lesson.level ?? 1, handicap: "none", coach: lesson.id });
     this.showGame();
   }
 

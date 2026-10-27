@@ -89,12 +89,13 @@ func start(level: int, human: String) -> void:
 		"Toque numa peça para ver para onde ela pode ir." if beginner else "Boa partida."], 0.0, "explain")
 
 
-## A game lesson of the course: Sente against the weakest level, with the coach.
+## A game lesson of the course: Sente against the lesson's level (the weakest by default), with the coach.
 func start_guided(lesson_id: String) -> void:
 	_queue.clear()
 	_coach_seen.clear()
+	var level := int(Course.find_lesson(lesson_id).get("lesson", {}).get("level", 1))
 	# The coach's first tip (the opening) comes with the first turn.
-	session.new_game({"mode": "ai", "human_color": "black", "level": 1, "coach": lesson_id})
+	session.new_game({"mode": "ai", "human_color": "black", "level": level, "coach": lesson_id})
 
 
 func _guided() -> String:

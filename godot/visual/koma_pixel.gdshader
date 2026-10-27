@@ -15,17 +15,31 @@ uniform float team : hint_range(0.0, 1.0) = 0.0;
 uniform float seed = 0.0;
 
 group_uniforms palette;
-uniform vec3 pearl_light : source_color = vec3(1.0, 0.97, 0.9);
-uniform vec3 pearl_base : source_color = vec3(0.9, 0.86, 0.78);
+uniform vec3 pearl_light : source_color = vec3(0.86, 0.84, 0.8);
+uniform vec3 pearl_base : source_color = vec3(0.78, 0.75, 0.7);
 uniform vec3 pearl_tint : source_color = vec3(0.86, 0.84, 0.95);
 uniform vec3 red_light : source_color = vec3(0.72, 0.1, 0.07);
 uniform vec3 red_base : source_color = vec3(0.56, 0.05, 0.035);
-uniform vec3 ink_black : source_color = vec3(0.07, 0.04, 0.03);
-uniform vec3 ink_cream : source_color = vec3(1.0, 0.93, 0.78);  // Gote's ink: cream reads on red
+uniform vec3 ink_kind : source_color = vec3(0.07, 0.04, 0.03);  // front face: Koma.INK, by kind
 uniform vec3 ink_promoted : source_color = vec3(0.78, 0.1, 0.04); // promoted Sente: red
 uniform vec3 ink_gold : source_color = vec3(1.0, 0.78, 0.3);      // promoted Gote: gold
 uniform float texels_per_cm = 9.5;   // the grid of the sheen and the edges, close to the mask's
 uniform float carve_depth = 0.9;
+uniform float ink_bevel : hint_range(0.0, 1.0) = 0.6;   // raised ink: lit top-left rim, dark lower-right rim
+uniform float ink_shadow : hint_range(0.0, 1.0) = 0.35;  // the shadow the raised ink casts on the lacquer
+
+group_uniforms pearl;
+// Mother-of-pearl on the Sente pieces: the colour slides between pink, lavender and mint with
+// the angle you see the face from, in flat steps like the rest of the sprite.
+uniform vec3 nacre_pink : source_color = vec3(1.0, 0.72, 0.84);
+uniform vec3 nacre_lilac : source_color = vec3(0.74, 0.77, 1.0);
+uniform vec3 nacre_mint : source_color = vec3(0.72, 0.97, 0.86);
+uniform float nacre : hint_range(0.0, 1.0) = 0.6;
+// The table light is strong enough to clip white lacquer: pearl is kept lower so its hues show.
+uniform float pearl_exposure : hint_range(0.3, 1.0) = 0.7;
+// Satin: a broad soft sheen under the sharp highlight, stronger on pearl than on red lacquer.
+uniform float satin_pearl : hint_range(0.0, 2.0) = 0.7;
+uniform float satin_red : hint_range(0.0, 2.0) = 0.22;
 
 group_uniforms shading;
 uniform float bands = 3.0;
@@ -38,9 +52,15 @@ uniform float glow = 0.0;
 uniform float gold_edge = 0.0;
 
 varying vec3 lpos;
+varying vec3 v_sheen;  // colour of the satin sheen: warm on red, the nacre hue on pearl
 
 void vertex() {
 	lpos = VERTEX;
+}
+
+// The kanji mask of a face (front or promoted back) at a texel.
+float mask_at(bool is_back, vec2 uv) {
+	return is_back ? texture(kanji_back, uv).r : texture(kanji_front, uv).r;
 }
 
 float tap(vec2 p) {
@@ -69,6 +89,16 @@ void fragment() {
 	vec3 under = mix(vec3(0.62, 0.5, 0.38), vec3(0.3, 0.05, 0.03), step(0.5, team));
 	albedo = mix(albedo, under, step(0.55, edge * 0.7 + tap(cell_pos.xz * 0.5) * 0.3) * 0.6);
 	float rough = 0.35;
+	// Nacre: hue from the viewing angle and the swirl, snapped to three steps.
+	float pearl_side = 1.0 - step(0.5, team);
+	float facing = 1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0);
+	float hue = fract(facing * 1.5 + swirl * 2.2 + (cell_pos.x + cell_pos.z) * 0.06);
+	float step3 = floor(hue * 3.0);
+	vec3 nacre_col = step3 < 0.5 ? nacre_pink : (step3 < 1.5 ? nacre_lilac : nacre_mint);
+	albedo *= mix(vec3(1.0), nacre_col, nacre * pearl_side) * mix(1.0, pearl_exposure, pearl_side);
+	// The sheen carries the nacre hue, pushed further from white so it shows on the lit face.
+	vec3 nacre_sheen = mix(vec3(1.0), clamp((nacre_col - 0.86) * 3.0 + 0.86, 0.0, 1.0), nacre);
+	v_sheen = mix(vec3(1.0, 0.55, 0.45), nacre_sheen, pearl_side);
 
 	if (face > 0.5) {
 		bool is_back = back > 0.5;
@@ -83,12 +113,21 @@ void fragment() {
 			mu = texture(kanji_front, cell_uv + vec2(t.x, 0)).r - texture(kanji_front, cell_uv - vec2(t.x, 0)).r;
 			mv = texture(kanji_front, cell_uv + vec2(0, t.y)).r - texture(kanji_front, cell_uv - vec2(0, t.y)).r;
 		}
-		// Carved texels: the wall next to the ink catches the light on one side only.
-		n = normalize(n + (TANGENT * mu + BINORMAL * mv) * carve_depth * (1.0 - m));
+		// Raised texels: the edge of a stroke leans away from it and catches the light on one side.
+		n = normalize(n - (TANGENT * mu + BINORMAL * mv) * carve_depth * m);
 		float ink = step(0.5, m);
-		vec3 ink_col = is_back ? mix(ink_promoted, ink_gold, step(0.5, team)) : mix(ink_black, ink_cream, step(0.5, team));
-		albedo = mix(albedo, ink_col, ink);
-		rough = mix(rough, 0.6, ink);
+		vec3 ink_col = is_back ? mix(ink_promoted, ink_gold, step(0.5, team)) : ink_kind;
+		// The ink stands out like a lacquered relief, shaded texel by texel as on a sprite: the
+		// texels on its upper-left rim catch the light, those on the lower-right rim fall in shade,
+		// and the lacquer just below and to the right of a stroke gets a one-texel drop shadow.
+		float above = step(0.5, mask_at(is_back, cell_uv - t));
+		float below = step(0.5, mask_at(is_back, cell_uv + t));
+		float lit_rim = ink * (1.0 - above);
+		float dark_rim = ink * (1.0 - below) * (1.0 - lit_rim);
+		ink_col = mix(ink_col, ink_col * 1.35 + vec3(0.05), lit_rim * ink_bevel);
+		ink_col = mix(ink_col, ink_col * 0.55, dark_rim * ink_bevel);
+		albedo = mix(mix(albedo, albedo * vec3(0.45, 0.42, 0.4), above * ink_shadow), ink_col, ink);
+		rough = mix(rough, 0.28, ink);
 	}
 
 	ALBEDO = albedo;
@@ -108,4 +147,8 @@ void light() {
 	vec3 h = normalize(VIEW + LIGHT);
 	float s = pow(clamp(dot(NORMAL, h), 0.0, 1.0), 80.0) * ATTENUATION;
 	SPECULAR_LIGHT += LIGHT_COLOR * step(0.5, s) * highlight * (1.0 - ROUGHNESS) / PI;
+	// Satin: a wide sheen in two flat steps, so the lacquer glows over the whole lit side.
+	float sheen = pow(clamp(dot(NORMAL, h), 0.0, 1.0), 6.0) * ATTENUATION;
+	float satin = mix(satin_pearl, satin_red, step(0.5, team));
+	SPECULAR_LIGHT += LIGHT_COLOR * v_sheen * (step(0.4, sheen) * 0.16 + step(0.7, sheen) * 0.2) * satin / PI;
 }

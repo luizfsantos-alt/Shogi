@@ -6,7 +6,7 @@ import type { UsiMove } from "../core/types";
  * Sente (☗, at the bottom). Squares are written in USI ("5e"), moves in USI ("7g7f", "G*5b").
  */
 
-export type TrackId = "basics" | "tactics" | "strategy";
+export type TrackId = "basics" | "tactics" | "strategy" | "advanced";
 
 export interface Track {
   id: TrackId;
@@ -14,7 +14,19 @@ export interface Track {
   /** Japanese name with kanji, e.g. "Tesuji 手筋". */
   term?: string;
   description: string;
+  /** The track continues the beginner course (A–C): the app shows it under "Avançado". */
+  advanced?: boolean;
+  /** Parts of a long track, in order; each lesson names its part. */
+  parts?: TrackPart[];
   lessons: Lesson[];
+}
+
+export interface TrackPart {
+  id: string;
+  title: string;
+  /** Japanese name with kanji. */
+  term: string;
+  description: string;
 }
 
 export interface Lesson {
@@ -24,9 +36,13 @@ export interface Lesson {
   term?: string;
   /** One line for the course map. */
   summary: string;
+  /** Id of the track part the lesson belongs to (tracks with parts only). */
+  part?: string;
   steps: Step[];
   /** The lesson is a game against the computer with the coach's tips (it ends the course). */
   game?: boolean;
+  /** Level of the computer in a game lesson (1-5); the weakest when absent. */
+  level?: number;
 }
 
 interface StepBase {

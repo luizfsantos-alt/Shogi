@@ -2,7 +2,7 @@ extends SceneTree
 ## Headless tests for the course (godot/learn).
 ##   godot --headless --path godot -s res://learn/test/test_learn.gd
 ## Cases mirror tests/lessons.test.ts and tests/coachTips.test.ts of the PWA: every exercise of
-## the 32 lessons is solved through the LessonSession, the mates are checked by search, and the
+## the 52 lessons is solved through the LessonSession, the mates are checked by search, and the
 ## coach tips come out on the same positions.
 
 const START := GameRules.START_SFEN
@@ -88,8 +88,17 @@ func forced_mates(r: GameRules, moves: int) -> Array:
 
 func test_structure() -> void:
 	var cjk := RegEx.create_from_string(CJK)
-	expect_eq(Course.tracks().size(), 3, "three tracks")
-	expect_eq(Course.all_lessons().size(), 32, "32 lessons")
+	expect_eq(Course.tracks().size(), 4, "four tracks")
+	expect_eq(Course.all_lessons().size(), 52, "52 lessons")
+	# The advanced track (D): shown under Avançado, one column per part, every lesson in a part.
+	var advanced: Dictionary = Course.tracks()[3]
+	expect(advanced.get("advanced", false), "track D is advanced")
+	var parts := {}
+	for part: Dictionary in advanced.parts:
+		parts[part.id] = true
+	for l: Dictionary in advanced.lessons:
+		expect(parts.has(l.get("part", "")), "lesson %s in a part" % l.id)
+	expect_eq(Course.next_lesson("practice-game").id, advanced.lessons[0].id, "strategy leads to the advanced track")
 	var ids := {}
 	for track: Dictionary in Course.tracks():
 		expect(cjk.search(track.term) != null, "track term with kanji: " + track.id)
@@ -112,7 +121,7 @@ func test_structure() -> void:
 	expect_eq(Course.find_lesson("mino").track.id, "strategy", "mino is strategy")
 	expect(Course.find_lesson("nope").is_empty(), "unknown lesson")
 	expect(Course.next_lesson(Course.all_lessons()[-1].id).is_empty(), "nothing after the last lesson")
-	expect_eq(Course.completed_count({"stars": {"board": 2, "king": 1}}), {"done": 2, "total": 32}, "completed count")
+	expect_eq(Course.completed_count({"stars": {"board": 2, "king": 1}}), {"done": 2, "total": 52}, "completed count")
 
 
 func test_progress() -> void:

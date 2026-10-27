@@ -44,7 +44,7 @@ export interface CourseMapOptions {
   onHome: () => void;
 }
 
-/** The course: three tracks with their lessons, stars and the recommended next lesson. */
+/** The course: the tracks with their lessons (long tracks in parts), stars and the recommended next lesson. */
 export function courseMap({ progress, onOpen, onHome }: CourseMapOptions): HTMLElement {
   const recommended = recommendedLesson(progress);
   const overall = completedCount(progress);
@@ -52,7 +52,7 @@ export function courseMap({ progress, onOpen, onHome }: CourseMapOptions): HTMLE
     "section",
     { class: "course-intro" },
     element("h2", {}, "Aprender a jogar"),
-    element("p", {}, `${overall.done} de ${overall.total} lições concluídas. O caminho recomendado é Fundamentos → Táticas → Estratégia, mas você pode abrir qualquer lição.`),
+    element("p", {}, `${overall.done} de ${overall.total} lições concluídas. O caminho recomendado é Fundamentos → Táticas → Estratégia → Avançado, mas você pode abrir qualquer lição.`),
   );
   if (recommended) {
     const resume = button(overall.done === 0 ? `Começar: ${recommended.title}` : `Continuar: ${recommended.title}`, () => onOpen(recommended), "primary");
@@ -63,7 +63,13 @@ export function courseMap({ progress, onOpen, onHome }: CourseMapOptions): HTMLE
   const tracks = TRACKS.map((track, index) => {
     const count = completedCount(progress, track);
     const list = element("ol", { class: "lesson-list" });
+    let part: string | undefined;
     for (const lesson of track.lessons) {
+      if (lesson.part !== part) {
+        part = lesson.part;
+        const info = track.parts?.find((p) => p.id === part);
+        if (info) list.append(element("li", { class: "lesson-part" }, titleWithTerm("h3", info.title, info.term), element("p", { class: "muted" }, info.description)));
+      }
       const stars = progress.stars[lesson.id] ?? 0;
       const item = element(
         "button",

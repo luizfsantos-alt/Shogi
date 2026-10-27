@@ -7,7 +7,7 @@ compilado para WebAssembly. Funciona no computador e no celular; não precisa de
 ## O que tem
 
 - **Tela inicial**: continuar a partida em andamento, **Jogar** ou **Aprender**.
-- **Curso interativo "Aprender a jogar"**, no próprio tabuleiro, em três trilhas (32 lições):
+- **Curso interativo "Aprender a jogar"**, no próprio tabuleiro, em três trilhas iniciantes e uma avançada (52 lições):
   - **A. Fundamentos** (基本): o tabuleiro, cada peça com exercícios ("leve até a ★", "capture",
     "tente o lance proibido"), capturas e drops, promoção, nifu e os outros drops proibidos,
     xeque e mate, fim da partida, posição inicial e uma **primeira partida guiada**;
@@ -16,6 +16,13 @@ compilado para WebAssembly. Funciona no computador e no celular; não precisa de
   - **C. Estratégia** (戦略): provérbios (格言), fases da partida, ibisha × furibisha, o castelo
     Mino montado lance a lance, a Fortaleza, um plano completo de shikenbisha e a troca de peões;
     termina numa partida de prática.
+  - **D. Avançado** (上級), em quatro partes: **Aberturas** (定跡: o porquê dos primeiros lances, o
+    Kakugawari jogado lance a lance, a Fortaleza montada, o Bōgin rompendo a coluna 2, o Anaguma
+    e o ataque pela borda); **Táticas avançadas** (o Cavalo preso por um Peão, a Torre em cruz,
+    o xeque duplo, defender a tempo); **Planejamento** (大局観: avaliar a posição, "xeque só
+    empurra", tsumero, hisshi e zetto, a corrida do final, provérbios do final); **Mates
+    forçados** (詰将棋: ikken-ryū, sacrifícios, a armadilha do uchifuzume, mates em 3 e em 5,
+    hisshi) e uma partida contra o nível Médio.
   - Dica (mostra de onde sai e para onde vai), recomeçar, estrelas (1 a 3) por lição e progresso
     salvo no navegador. Todo termo japonês aparece com o seu kanji.
   - Na **partida guiada** um treinador comenta na hora certa: primeiro lance, xeque, ataque duplo
@@ -92,8 +99,8 @@ src/
     board.ts            # monta posições das lições a partir de uma lista de peças
     LessonSession.ts    # uma lição em andamento: objetivo, respostas do adversário, dicas, estrelas
     coachTips.ts        # o treinador da partida guiada
-    course.ts           # as três trilhas e a ordem recomendada
-    lessons/            # basics.ts, tactics.ts, strategy.ts: o conteúdo
+    course.ts           # as quatro trilhas e a ordem recomendada
+    lessons/            # basics.ts, tactics.ts, strategy.ts, advanced.ts: o conteúdo
   pwa/
     sw.template.js      # service worker: cache offline + cabeçalhos COOP/COEP (vira dist/sw.js)
     register.ts         # registro, aviso de versão nova, botão "Instalar app"

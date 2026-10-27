@@ -21,6 +21,10 @@ especificação (lições e vetores de teste exportados em JSON).
 - Tabuleiro no centro, **komadai nas laterais**, como objetos 3D na mesma cena.
 - **Nenhuma interface fixa na mesa**: desfazer, dica, lista de lances, regras etc. ficam todos
   no menu.
+- **Coordenadas na moldura do tabuleiro** (out/2026): números das colunas (9…1) na borda de cima
+  e letras das fileiras (a…i) na borda da direita, como o app escreve as casas ("7f"). Seguem o
+  lado de quem joga: jogando de Gote, a mesa vira e as coordenadas vão junto, sempre em pé para o
+  jogador. O tabuleiro ganhou 1,5 cm de moldura de cada lado para elas.
 
 ## Peças
 
@@ -28,10 +32,16 @@ Do Hearthstone vêm só a **sensação 3D** e os **efeitos gordos**; o resto da 
 
 - Cunha 3D gerada por código, com **leves defeitos** (cantos gastos, faces não perfeitamente
   planas, lascas e arranhões finos; semente diferente por peça, nenhuma igual à outra).
-- **Cores (decisão antiga do PWA, retomada):** quem joga primeiro (Sente) em **laca perolada
-  com escrita preta**; quem joga depois (Gote) em **laca vermelha com escrita em ouro**. A face
-  promovida tem escrita em ouro nos dois lados, e a borda da peça promovida fica dourada. Uma
-  peça capturada troca de cor no ar, a caminho do komadai.
+- **Cores (decisão antiga do PWA, retomada):** quem joga primeiro (Sente) em **laca perolada**;
+  quem joga depois (Gote) em **laca vermelha**. A face promovida tem escrita em ouro nos dois
+  lados, e a borda da peça promovida fica dourada. Uma peça capturada troca de cor no ar, a
+  caminho do komadai.
+- **Kanji com a cor da função** (out/2026): peças da mesma função têm o kanji da mesma cor, no
+  Sente e no Gote (todos os cavalos verdes, todas as lanças violeta…), para reconhecer a peça
+  de longe. Rei sumi (preto), Torre índigo, Bispo verde-azulado, Ouro ocre, Prata aço, Cavalo
+  musgo, Lança ameixa, Peão ardósia. Tons **dessaturados**, como tinta de laca, meio escuros e
+  longe do vermelho: os saturados da primeira versão ficaram berrantes. A tabela fica em
+  `Koma.INK` (`visual/koma.gd`). A face promovida não segue a tabela (a peça muda de função).
 - Superfície com **gloss**: verniz com reflexo visível.
 - Kanji **entalhado** (sulco com a tinta no fundo), na fonte **Kaisei Tokumin ExtraBold**
   (OFL): pesada e legível, com os traços abertos. A Potta One do PWA ficou ilegível na peça.
@@ -49,11 +59,24 @@ na linha de comando).
 
 - Peças **60% mais grossas**, com bordas mais redondas, luz em **faixas** (sem degradê), um
   brilho duro e **contorno escuro** como num sprite: o 3D fica acentuado.
+- **Acetinado e perolado** (out/2026): as peças têm um brilho largo de cetim em dois degraus por
+  baixo do reflexo duro. No Sente a laca é **madrepérola**: manchas rosa, lilás e verde-água que
+  mudam com o ângulo de visão, também em degraus, e o brilho de cetim ganha essas cores. O branco
+  fica um pouco abaixo do máximo (`pearl_exposure`) para a luz da mesa não estourar os tons.
+  No Gote o cetim é quente e mais fraco, para o vermelho continuar saturado. Ajustes em
+  `nacre`, `satin_pearl`, `satin_red` (`koma_pixel.gdshader`).
 - **Um kanji só**, em pixel (DotGothic16, OFL), com as **marcas de movimento** gravadas em volta:
   um ponto = uma casa, dois pontos em linha = qualquer distância, cruzinha = o salto do cavalo.
   Máscaras de 32×36 em `visual/textures/kanji_px/` (`tools/make_pixel_kanji.mjs`).
-- Gote com kanji **creme** (ouro sobre vermelho some); promovida com kanji vermelho no Sente e
-  ouro no Gote, mais a borda dourada.
+- Kanji na cor da função (`Koma.INK`), igual nos dois lados; promovida com kanji vermelho no
+  Sente e ouro no Gote, mais a borda dourada. Um contorno de um texel em volta da tinta foi
+  testado e descartado: fechava os vãos dos kanji densos (銀, 歩).
+- Kanji em **relevo** no visual pixel: a tinta fica em alto-relevo, sombreada texel a texel como
+  num sprite (borda de cima e da esquerda clara, de baixo e da direita escura, e uma sombra de um
+  texel na laca embaixo e à direita do traço). Força em `ink_bevel` e `ink_shadow`
+  (`koma_pixel.gdshader`). No visual clássico o kanji continua entalhado.
+- Coordenadas da moldura em pixel, sem suavização (IBM Plex Mono pequena, ampliada com filtro
+  *nearest*), num cinza claro de pedra.
 - Tabuleiro e komadai em **pedra** pixelada (quatro cinzas com dither, rachaduras, a grade
   entalhada com o lábio iluminado).
 - Fundo: **lajes de pedra escura** em texels maiores, e a vinheta em degraus com dither.

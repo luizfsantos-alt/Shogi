@@ -1,9 +1,10 @@
+import { ADVANCED, ADVANCED_PARTS } from "./lessons/advanced";
 import { BASICS } from "./lessons/basics";
 import { STRATEGY } from "./lessons/strategy";
 import { TACTICS } from "./lessons/tactics";
 import type { CourseProgress, Lesson, Track } from "./types";
 
-/** The whole course, in the recommended order: A → B → C. */
+/** The whole course, in the recommended order: A → B → C, then the advanced track D. */
 export const TRACKS: readonly Track[] = [
   {
     id: "basics",
@@ -25,6 +26,15 @@ export const TRACKS: readonly Track[] = [
     term: "Senryaku 戦略",
     description: "Provérbios, aberturas e castelos.",
     lessons: STRATEGY,
+  },
+  {
+    id: "advanced",
+    title: "Avançado",
+    term: "Jōkyū 上級",
+    description: "Aberturas e seus motivos, táticas avançadas, planejamento e mates forçados.",
+    advanced: true,
+    parts: ADVANCED_PARTS,
+    lessons: ADVANCED,
   },
 ];
 

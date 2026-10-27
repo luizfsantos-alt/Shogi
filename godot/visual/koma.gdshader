@@ -1,6 +1,7 @@
-// Material of a koma: glossy lacquer. Sente (moves first) is pearl with black ink; Gote is red
-// lacquer with gold ink. `team` goes from 0 (pearl) to 1 (red), so a captured piece can change
-// colour on its way to the other side. The promoted face carries gold ink on both teams.
+// Material of a koma: glossy lacquer. Sente (moves first) is pearl, Gote red lacquer; the ink
+// of the front face has one colour per kind (Koma.INK), the same on both teams. `team` goes
+// from 0 (pearl) to 1 (red), so a captured piece can change colour on its way to the other side.
+// The promoted face carries gold ink on both teams.
 // The kanji is carved into the face, with the ink at the bottom of the groove.
 // Vertex colours from KomaMesh: r = edge wear, g = front face, b = back face.
 // All the noise comes from one small shared texture: cheap on phones.
@@ -25,7 +26,7 @@ uniform vec3 red_base : source_color = vec3(0.56, 0.035, 0.025);
 uniform vec3 red_deep : source_color = vec3(0.3, 0.01, 0.01);
 
 group_uniforms ink;
-uniform vec3 ink_black : source_color = vec3(0.02, 0.018, 0.016);
+uniform vec3 ink_kind : source_color = vec3(0.02, 0.018, 0.016);  // front face: Koma.INK, by kind
 uniform vec3 ink_gold : source_color = vec3(1.0, 0.74, 0.3);
 uniform float carve_depth = 6.0;
 uniform float groove_shadow : hint_range(0.0, 1.0) = 0.45;
@@ -96,9 +97,9 @@ void fragment() {
 		n = normalize(n + (TANGENT * mu + BINORMAL * mv) * carve_depth);
 		float wall = clamp(length(vec2(mu, mv)) * 4.0, 0.0, 1.0);
 		float ink = smoothstep(0.45, 0.85, m);
-		// Gold on Gote's pieces and on every promoted face; black otherwise.
-		float gold = is_back ? 1.0 : team;
-		vec3 ink_col = mix(ink_black, ink_gold, gold);
+		// The front face carries its kind's colour on both teams; every promoted face is gold.
+		float gold = is_back ? 1.0 : 0.0;
+		vec3 ink_col = is_back ? ink_gold : ink_kind;
 		albedo = mix(albedo, albedo * (1.0 - groove_shadow), wall);
 		albedo = mix(albedo, ink_col, ink);
 		rough = mix(rough, mix(0.18, 0.3, gold), ink);
