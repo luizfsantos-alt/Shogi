@@ -7,7 +7,8 @@ extends Node3D
 ## Units are centimetres; the board top is at y = 0, centred on the origin.
 
 const CELL := Vector2(3.33, 3.64)
-const BOARD_SIZE := Vector3(33.4, 6.0, 36.4)
+## The grid is 9 cells; the frame around it is wide enough for the coordinates.
+const BOARD_SIZE := Vector3(36.4, 6.0, 39.4)
 const KOMADAI_SIZE := Vector3(11.5, 2.6, 12.0)
 const KOMADAI_TOP := -2.6
 const START_SFEN := "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1"
@@ -70,10 +71,16 @@ static var pixel_default := true
 ## Texel size of the board in the pixel look (cm): twice the pieces' texels, so the wood reads
 ## as chunkier pixels than the finer kanji.
 const PIXEL_SIZE := 0.21
+const CAMERA_DIST := 74.0
 var _wood: Array[ShaderMaterial] = []
 var _env: Environment
 var _vignette: TextureRect
 var _vignette_px: ColorRect
+## Coordinates on the board's frame: file numbers (9…1) on the top edge, rank letters (a…i) on
+## the right edge, as the player sees the board (USI, the way the app writes squares: "7f").
+var _coords: Array[Label3D] = []
+var _view_side := 0
+static var _coord_fonts := {}         ## smooth (bool) -> FontFile for the coordinates
 
 
 func _ready() -> void:
@@ -89,6 +96,7 @@ func _ready() -> void:
 	add_child(fx)
 	fx.attach_camera(camera)
 	_build_board()
+	_build_coords()
 	_build_squares()
 	arrows = MoveArrows.new()
 	arrows.cell = CELL
@@ -162,7 +170,7 @@ func _build_world() -> void:
 	camera.keep_aspect = Camera3D.KEEP_HEIGHT
 	add_child(camera)
 	var target := Vector3(0, -1.0, 1.2)
-	var dist := 70.0
+	var dist := CAMERA_DIST
 	var tilt := deg_to_rad(18.0)
 	camera.look_at_from_position(target + Vector3(0, cos(tilt), sin(tilt)) * dist, target)
 	camera.near = 5.0
@@ -243,6 +251,70 @@ func _build_board() -> void:
 func _apply_wood_look() -> void:
 	for m in _wood:
 		m.set_shader_parameter("pixel_size", PIXEL_SIZE if Koma.pixel else 0.0)
+	_apply_coords_look()
+
+
+func _build_coords() -> void:
+	for i in 18:
+		var l := Label3D.new()
+		l.text = str(9 - i) if i < 9 else char(97 + i - 9)
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		l.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(l)
+		_coords.append(l)
+	_place_coords()
+	_apply_coords_look()
+
+
+## The labels lie flat on the frame, upright for the player at the bottom of the screen.
+func _place_coords() -> void:
+	# Halfway between the grid and the board's edge.
+	var gx := CELL.x * 4.5
+	var gz := CELL.y * 4.5
+	var fx_mid := (gx + BOARD_SIZE.x * 0.5) * 0.5
+	var fz_mid := (gz + BOARD_SIZE.z * 0.5) * 0.5 + 0.25
+	# Seen from Gote everything turns around the centre of the board.
+	var turn := 1.0 if _view_side == 0 else -1.0
+	for i in 18:
+		var l := _coords[i]
+		var pos: Vector3
+		if i < 9:
+			pos = Vector3((i - 4) * CELL.x, 0.0, -fz_mid * turn)  # file 9 - i over column i
+		else:
+			pos = Vector3(fx_mid * turn, 0.0, (i - 9 - 4) * CELL.y)  # rank over row i - 9
+		l.position = pos + Vector3(0, 0.02, 0)
+		# Flat on the board, rotated in its own plane: the y turn has to come first.
+		l.basis = Basis(Vector3.UP, 0.0 if _view_side == 0 else PI) * Basis(Vector3.RIGHT, -PI * 0.5)
+
+
+func _apply_coords_look() -> void:
+	for l in _coords:
+		if Koma.pixel:
+			# Chunky pixels on the stone, like the carved grid: no smoothing, a light grey.
+			l.font = _coords_font(false)
+			l.font_size = 16
+			l.pixel_size = 0.095
+			l.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+			l.modulate = Color(0.78, 0.75, 0.7)
+			l.outline_size = 0
+		else:
+			l.font = _coords_font(true)
+			l.font_size = 64
+			l.pixel_size = 0.022
+			l.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+			l.modulate = Color(0.12, 0.07, 0.03, 0.85)
+			l.outline_size = 0
+
+
+static func _coords_font(smooth: bool) -> FontFile:
+	if not _coord_fonts.has(smooth):
+		var f := FontFile.new()
+		f.data = (load("res://app/ui/fonts/plex-mono-700-latin.woff2") as FontFile).data
+		f.antialiasing = TextServer.FONT_ANTIALIASING_GRAY if smooth else TextServer.FONT_ANTIALIASING_NONE
+		f.hinting = TextServer.HINTING_NONE if smooth else TextServer.HINTING_NORMAL
+		_coord_fonts[smooth] = f
+	return _coord_fonts[smooth]
 
 
 ## The parts of the look shared by every material (a global shader uniform) and the scene.
@@ -841,7 +913,7 @@ static func _star_mesh() -> ArrayMesh:
 ## Shifts the picture sideways by `pixels` (of a 1080-high screen), leaving room for the mentor:
 ## positive moves the board to the right.
 func set_view_offset(pixels: float) -> void:
-	var units_per_pixel := 2.0 * 70.0 * tan(deg_to_rad(camera.fov / 2.0)) / 1080.0
+	var units_per_pixel := 2.0 * CAMERA_DIST * tan(deg_to_rad(camera.fov / 2.0)) / 1080.0
 	camera.h_offset = -pixels * units_per_pixel
 
 
@@ -1002,6 +1074,8 @@ func set_view_side(colour: int) -> void:
 	var t := _cam_home if colour == 0 else Transform3D(Basis(Vector3.UP, PI), Vector3.ZERO) * _cam_home
 	camera.transform = t
 	fx.attach_camera(camera)
+	_view_side = colour
+	_place_coords()
 
 
 ## Checkmate: the world slows down, the king's square bursts in red and the table shakes.
