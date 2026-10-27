@@ -33,7 +33,9 @@ Do Hearthstone vêm só a **sensação 3D** e os **efeitos gordos**; o resto da 
 - Cunha 3D gerada por código, com **leves defeitos** (cantos gastos, faces não perfeitamente
   planas, lascas e arranhões finos; semente diferente por peça, nenhuma igual à outra).
 - **Cores (decisão antiga do PWA, retomada):** quem joga primeiro (Sente) em **laca perolada**;
-  quem joga depois (Gote) em **laca vermelha**. A face promovida tem escrita em ouro nos dois
+  quem joga depois (Gote) em **laca vermelha** no visual clássico e **laca preta** no visual
+  pixel (out/2026: sobre a mesa de madeira o vermelho se confundia com o laranja da kaya, e o
+  preto separa os lados da pérola com mais força). A face promovida tem escrita em ouro nos dois
   lados, e a borda da peça promovida fica dourada. Uma peça capturada troca de cor no ar, a
   caminho do komadai.
 - **Kanji com a cor da função** (out/2026): peças da mesma função têm o kanji da mesma cor, no
@@ -42,6 +44,12 @@ Do Hearthstone vêm só a **sensação 3D** e os **efeitos gordos**; o resto da 
   musgo, Lança ameixa, Peão ardósia. Tons **dessaturados**, como tinta de laca, meio escuros e
   longe do vermelho: os saturados da primeira versão ficaram berrantes. A tabela fica em
   `Koma.INK` (`visual/koma.gd`). A face promovida não segue a tabela (a peça muda de função).
+  Na laca preta do visual pixel o Gote usa `Koma.INK_GOTE`: os mesmos tons um pouco mais
+  saturados, o Peão e a Prata mais claros (o ardósia sumia no preto) e o **Rei em branco**. A
+  Torre tem o mesmo índigo saturado nos dois lados: com tons diferentes, as duas torres pareciam
+  peças de funções diferentes. Os textos das lições (do PWA) chamam as peças do Gote de
+  vermelhas; no visual pixel o app troca a palavra por "pretas" (`Course.gote_words`), e o
+  vermelho de perigo ("as setas em vermelho") fica.
 - Superfície com **gloss**: verniz com reflexo visível.
 - Kanji **entalhado** (sulco com a tinta no fundo), na fonte **Kaisei Tokumin ExtraBold**
   (OFL): pesada e legível, com os traços abertos. A Potta One do PWA ficou ilegível na peça.
@@ -65,21 +73,35 @@ na linha de comando).
   fica um pouco abaixo do máximo (`pearl_exposure`) para a luz da mesa não estourar os tons.
   No Gote o cetim é quente e mais fraco, para o vermelho continuar saturado. Ajustes em
   `nacre`, `satin_pearl`, `satin_red` (`koma_pixel.gdshader`).
-- **Um kanji só**, em pixel (DotGothic16, OFL), com as **marcas de movimento** gravadas em volta:
+- **Um kanji só**, grande e de traço grosso, com as **marcas de movimento** gravadas em volta:
   um ponto = uma casa, dois pontos em linha = qualquer distância, cruzinha = o salto do cavalo.
-  Máscaras de 32×36 em `visual/textures/kanji_px/` (`tools/make_pixel_kanji.mjs`).
+  Máscaras de 48×54 em `visual/textures/kanji_px/` (`tools/make_pixel_kanji.mjs`): a Noto Sans
+  JP Black (OFL) rasterizada sem meio-tom, com traços de 2 a 5 texels, ocupando ~2/3 da largura da
+  face e assentada no corpo da peça, abaixo da ponta. As marcas ficam no anel da borda.
+  A primeira versão usava a DotGothic16 no tamanho nativo (16 px numa máscara de 32×36): traços de
+  um texel e kanji em meia face, finos demais para ler no celular; 銀 e 歩 viravam borrões. Testadas
+  e descartadas também: DotGothic16 ampliada ×2 (銀 continua quebrado), Dela Gothic One (pesada,
+  os kanji viram blocos) e Potta One (a do app web; mais embolada que a Noto em pixel).
 - Kanji na cor da função (`Koma.INK`), igual nos dois lados; promovida com kanji vermelho no
   Sente e ouro no Gote, mais a borda dourada. Um contorno de um texel em volta da tinta foi
   testado e descartado: fechava os vãos dos kanji densos (銀, 歩).
-- Kanji em **relevo** no visual pixel: a tinta fica em alto-relevo, sombreada texel a texel como
-  num sprite (borda de cima e da esquerda clara, de baixo e da direita escura, e uma sombra de um
-  texel na laca embaixo e à direita do traço). Força em `ink_bevel` e `ink_shadow`
-  (`koma_pixel.gdshader`). No visual clássico o kanji continua entalhado.
+- Kanji em **baixo-relevo** no visual pixel: a tinta fica no fundo de um sulco, sombreada texel a
+  texel como uma borda afundada de sprite. A parede do lado da luz faz sombra no primeiro texel do
+  traço, e a parede oposta aparece como um texel claro na laca logo depois do traço; o miolo fica
+  liso, para os traços estreitos lerem como uma cor só. O lado da luz sai da luz principal da mesa
+  (`light_from`, no mundo) projetada na face, então o sulco fica certo nos dois lados (o Gote está
+  girado) e depois da virada da promoção. Força em `groove_shadow` e `groove_light`
+  (`koma_pixel.gdshader`). A normal não é mais inclinada nas bordas do traço: o brilho duro pegava
+  nelas e riscava o kanji de branco. Antes o kanji era em alto-relevo. No visual clássico o kanji
+  continua entalhado. `tools/lookdev_pixel.gd` renderiza todas as faces dos dois lados para ajustar.
 - Coordenadas da moldura em pixel, sem suavização (IBM Plex Mono pequena, ampliada com filtro
-  *nearest*), num cinza claro de pedra.
-- Tabuleiro e komadai em **pedra** pixelada (quatro cinzas com dither, rachaduras, a grade
-  entalhada com o lábio iluminado).
-- Fundo: **lajes de pedra escura** em texels maiores, e a vinheta em degraus com dither.
+  *nearest*), num cinza claro e quente.
+- Tabuleiro e komadai em **madeira kaya** pixelada: o veio em quatro tons quentes com dither e
+  a grade em linhas escuras lisas (out/2026). Antes eram de pedra cinza, com a grade entalhada e
+  um lábio claro embaixo de cada linha horizontal: as linhas pareciam réguas saltadas, e a pedra
+  se confundia com o chão, do mesmo tom e com o mesmo pontilhado.
+- Fundo: **lajes de pedra quase preta** em texels maiores, e a vinheta em degraus com dither: o
+  chão fica bem abaixo do tabuleiro, que é a coisa mais clara da tela.
 - Efeitos em pixel: poeira de pedra em blocos que se desfaz em dither, anel de impacto em
   5 quadros, faíscas como cruzinhas em três tons de ouro, casas marcadas com borda de um texel
   e preenchimento quadriculado, setas pixeladas, tremor em passos inteiros, sem bloom.

@@ -24,6 +24,7 @@ func _run() -> void:
 	test_exercises()
 	test_lesson_session()
 	test_coach_tips()
+	test_gote_words()
 	test_kanji_font()
 	print("%d checks, %d failures (%d ms)" % [checks, failures, Time.get_ticks_msec() - t])
 	quit(1 if failures > 0 else 0)
@@ -316,6 +317,16 @@ func test_coach_tips() -> void:
 
 ## Every Japanese character of the course and of the app's scripts is in the bundled brush font
 ## (app/ui/fonts/koma-kanji.woff2; `node scripts/make-kanji-font.mjs --godot` remakes it).
+func test_gote_words() -> void:
+	var pixel := Koma.pixel
+	Koma.pixel = true
+	expect_eq(Course.gote_words("O Rei vermelho e as peças vermelhas; Vermelha é a Torre."), "O Rei preto e as peças pretas; Preta é a Torre.", "Gote's pieces are black in the pixel look")
+	expect_eq(Course.gote_words("mostra as dela em vermelho"), "mostra as dela em vermelho", "danger stays red")
+	Koma.pixel = false
+	expect_eq(Course.gote_words("o Rei vermelho"), "o Rei vermelho", "red lacquer in the classic look")
+	Koma.pixel = pixel
+
+
 func test_kanji_font() -> void:
 	var font: FontFile = load("res://app/ui/fonts/koma-kanji.woff2")
 	var japanese := RegEx.create_from_string("[\\x{3040}-\\x{30ff}\\x{3400}-\\x{9fff}\\x{3005}]")

@@ -85,7 +85,7 @@ func start(level: int, human: String) -> void:
 	session.new_game({"mode": "ai", "human_color": human, "level": level})
 	var beginner := level <= BEGINNER_LEVELS
 	mentor.say("Vamos lá! Você joga com as peças %s. %s" % [
-		"peroladas e começa" if human == "black" else "vermelhas; o computador começa",
+		"peroladas e começa" if human == "black" else "%s; o computador começa" % ("pretas" if Koma.pixel else "vermelhas"),
 		"Toque numa peça para ver para onde ela pode ir." if beginner else "Boa partida."], 0.0, "explain")
 
 

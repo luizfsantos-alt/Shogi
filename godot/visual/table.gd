@@ -291,7 +291,7 @@ func _place_coords() -> void:
 func _apply_coords_look() -> void:
 	for l in _coords:
 		if Koma.pixel:
-			# Chunky pixels on the stone, like the carved grid: no smoothing, a light grey.
+			# Chunky pixels on the kaya, like the grid: no smoothing, a light warm grey.
 			l.font = _coords_font(false)
 			l.font_size = 16
 			l.pixel_size = 0.095
@@ -795,7 +795,7 @@ func _capture(victim: Koma, new_owner: int) -> void:
 	t.tween_method(func(k: float) -> void:
 		victim.position = start.lerp(peak, k).lerp(peak.lerp(end, k), k), 0.0, 1.0, 0.55).set_trans(Tween.TRANS_SINE)
 	t.tween_property(spin, "rotation:y", spin.rotation.y + TAU * 2.0, 0.55)
-	victim.fade_to_team(new_owner, 0.5)  # red turns to pearl (or back) in the air
+	victim.fade_to_team(new_owner, 0.5)  # the lacquer turns to the new owner's in the air
 	t.tween_property(spin, "rotation:x", spin.rotation.x + TAU, 0.55)
 	t.chain().tween_callback(func() -> void:
 		spin.rotation = Vector3.ZERO

@@ -1,6 +1,6 @@
 // The pixel look of a koma (the default, see DECISIONS.md "Visual pixel"): the same lacquer as
 // koma.gdshader, but everything on its surface is drawn in whole texels, like a 16-bit sprite.
-// The kanji and the movement marks come from a 32×36 mask (textures/kanji_px/) sampled with
+// The kanji and the movement marks come from a 48×54 mask (textures/kanji_px/) sampled with
 // nearest filtering, the sheen is posterized, and the light falls in a few hard bands with one
 // sharp highlight, so the thick wedge reads in 3D the way a hand-shaded sprite does.
 // Vertex colours from KomaMesh: r = edge wear, g = front face, b = back face.
@@ -18,15 +18,18 @@ group_uniforms palette;
 uniform vec3 pearl_light : source_color = vec3(0.86, 0.84, 0.8);
 uniform vec3 pearl_base : source_color = vec3(0.78, 0.75, 0.7);
 uniform vec3 pearl_tint : source_color = vec3(0.86, 0.84, 0.95);
-uniform vec3 red_light : source_color = vec3(0.72, 0.1, 0.07);
-uniform vec3 red_base : source_color = vec3(0.56, 0.05, 0.035);
+// Gote's black lacquer (the classic look keeps it red).
+uniform vec3 black_light : source_color = vec3(0.075, 0.07, 0.075);
+uniform vec3 black_base : source_color = vec3(0.035, 0.033, 0.036);
 uniform vec3 ink_kind : source_color = vec3(0.07, 0.04, 0.03);  // front face: Koma.INK, by kind
 uniform vec3 ink_promoted : source_color = vec3(0.78, 0.1, 0.04); // promoted Sente: red
 uniform vec3 ink_gold : source_color = vec3(1.0, 0.78, 0.3);      // promoted Gote: gold
-uniform float texels_per_cm = 9.5;   // the grid of the sheen and the edges, close to the mask's
-uniform float carve_depth = 0.9;
-uniform float ink_bevel : hint_range(0.0, 1.0) = 0.6;   // raised ink: lit top-left rim, dark lower-right rim
-uniform float ink_shadow : hint_range(0.0, 1.0) = 0.35;  // the shadow the raised ink casts on the lacquer
+uniform float texels_per_cm = 9.5;   // the grid of the sheen and the edges
+// Where the table's key light comes from (world space, toward the light): the carved kanji is
+// shaded for it, so the groove reads the same on both teams and after the promotion flip.
+uniform vec3 light_from = vec3(-0.41, 0.74, 0.53);
+uniform float groove_shadow : hint_range(0.0, 1.0) = 0.7;  // the shadow of the groove's wall on the light's side
+uniform float groove_light : hint_range(0.0, 1.0) = 0.5;   // the far wall, lit, on the lacquer just past the stroke
 
 group_uniforms pearl;
 // Mother-of-pearl on the Sente pieces: the colour slides between pink, lavender and mint with
@@ -37,9 +40,9 @@ uniform vec3 nacre_mint : source_color = vec3(0.72, 0.97, 0.86);
 uniform float nacre : hint_range(0.0, 1.0) = 0.6;
 // The table light is strong enough to clip white lacquer: pearl is kept lower so its hues show.
 uniform float pearl_exposure : hint_range(0.3, 1.0) = 0.7;
-// Satin: a broad soft sheen under the sharp highlight, stronger on pearl than on red lacquer.
+// Satin: a broad soft sheen under the sharp highlight, stronger on pearl than on black lacquer.
 uniform float satin_pearl : hint_range(0.0, 2.0) = 0.7;
-uniform float satin_red : hint_range(0.0, 2.0) = 0.22;
+uniform float satin_black : hint_range(0.0, 2.0) = 0.3;
 
 group_uniforms shading;
 uniform float bands = 3.0;
@@ -52,7 +55,7 @@ uniform float glow = 0.0;
 uniform float gold_edge = 0.0;
 
 varying vec3 lpos;
-varying vec3 v_sheen;  // colour of the satin sheen: warm on red, the nacre hue on pearl
+varying vec3 v_sheen;  // colour of the satin sheen: cool on black, the nacre hue on pearl
 
 void vertex() {
 	lpos = VERTEX;
@@ -83,10 +86,10 @@ void fragment() {
 	float swirl = tap(cell_pos.xz * 0.035 + cell_pos.y * 0.02);
 	float tone = floor(clamp(swirl * 1.6 - 0.35, 0.0, 0.999) * 3.0);
 	vec3 pearl = tone > 1.5 ? pearl_light : (tone > 0.5 ? pearl_base : mix(pearl_base, pearl_tint, 0.35));
-	vec3 red = tone > 1.5 ? red_light : red_base;
-	vec3 albedo = mix(pearl, red, step(0.5, team));
+	vec3 black = tone > 1.5 ? black_light : black_base;
+	vec3 albedo = mix(pearl, black, step(0.5, team));
 	// Worn edges: the wood under the lacquer, in a single darker tone.
-	vec3 under = mix(vec3(0.62, 0.5, 0.38), vec3(0.3, 0.05, 0.03), step(0.5, team));
+	vec3 under = mix(vec3(0.62, 0.5, 0.38), vec3(0.2, 0.12, 0.07), step(0.5, team));
 	albedo = mix(albedo, under, step(0.55, edge * 0.7 + tap(cell_pos.xz * 0.5) * 0.3) * 0.6);
 	float rough = 0.35;
 	// Nacre: hue from the viewing angle and the swirl, snapped to three steps.
@@ -96,37 +99,30 @@ void fragment() {
 	float step3 = floor(hue * 3.0);
 	vec3 nacre_col = step3 < 0.5 ? nacre_pink : (step3 < 1.5 ? nacre_lilac : nacre_mint);
 	albedo *= mix(vec3(1.0), nacre_col, nacre * pearl_side) * mix(1.0, pearl_exposure, pearl_side);
-	// The sheen carries the nacre hue, pushed further from white so it shows on the lit face.
+	// The sheen carries the nacre hue, pushed further from white so it shows on the lit face; on
+	// black lacquer it is a cool neutral, so the black does not turn brown under the warm light.
 	vec3 nacre_sheen = mix(vec3(1.0), clamp((nacre_col - 0.86) * 3.0 + 0.86, 0.0, 1.0), nacre);
-	v_sheen = mix(vec3(1.0, 0.55, 0.45), nacre_sheen, pearl_side);
+	v_sheen = mix(vec3(0.78, 0.82, 0.9), nacre_sheen, pearl_side);
 
 	if (face > 0.5) {
 		bool is_back = back > 0.5;
 		vec2 t = 1.0 / mask_size;
-		float m, mu, mv;
-		if (is_back) {
-			m = texture(kanji_back, cell_uv).r;
-			mu = texture(kanji_back, cell_uv + vec2(t.x, 0)).r - texture(kanji_back, cell_uv - vec2(t.x, 0)).r;
-			mv = texture(kanji_back, cell_uv + vec2(0, t.y)).r - texture(kanji_back, cell_uv - vec2(0, t.y)).r;
-		} else {
-			m = texture(kanji_front, cell_uv).r;
-			mu = texture(kanji_front, cell_uv + vec2(t.x, 0)).r - texture(kanji_front, cell_uv - vec2(t.x, 0)).r;
-			mv = texture(kanji_front, cell_uv + vec2(0, t.y)).r - texture(kanji_front, cell_uv - vec2(0, t.y)).r;
-		}
-		// Raised texels: the edge of a stroke leans away from it and catches the light on one side.
-		n = normalize(n - (TANGENT * mu + BINORMAL * mv) * carve_depth * m);
+		// One texel toward the light, on the face: the light seen in the face's own axes, snapped.
+		vec3 lv = (VIEW_MATRIX * vec4(light_from, 0.0)).xyz;
+		vec2 toward = vec2(dot(lv, TANGENT), -dot(lv, BINORMAL));
+		toward = sign(toward) * step(0.38, abs(toward) / max(length(toward), 1e-4));
+		vec2 to_light = toward * t;
+		float m = mask_at(is_back, cell_uv);
 		float ink = step(0.5, m);
 		vec3 ink_col = is_back ? mix(ink_promoted, ink_gold, step(0.5, team)) : ink_kind;
-		// The ink stands out like a lacquered relief, shaded texel by texel as on a sprite: the
-		// texels on its upper-left rim catch the light, those on the lower-right rim fall in shade,
-		// and the lacquer just below and to the right of a stroke gets a one-texel drop shadow.
-		float above = step(0.5, mask_at(is_back, cell_uv - t));
-		float below = step(0.5, mask_at(is_back, cell_uv + t));
-		float lit_rim = ink * (1.0 - above);
-		float dark_rim = ink * (1.0 - below) * (1.0 - lit_rim);
-		ink_col = mix(ink_col, ink_col * 1.35 + vec3(0.05), lit_rim * ink_bevel);
-		ink_col = mix(ink_col, ink_col * 0.55, dark_rim * ink_bevel);
-		albedo = mix(mix(albedo, albedo * vec3(0.45, 0.42, 0.4), above * ink_shadow), ink_col, ink);
+		// The ink lies at the bottom of a groove, shaded texel by texel like a sunken sprite border:
+		// the wall on the light's side throws its shadow on the first texel of the stroke, and the
+		// far wall, facing the light, shows as a light texel on the lacquer just past the stroke.
+		// The rest of the stroke keeps its flat ink, so even the narrow strokes read as one colour.
+		float shaded = ink * (1.0 - step(0.5, mask_at(is_back, cell_uv + to_light)));
+		float lit = (1.0 - ink) * step(0.5, mask_at(is_back, cell_uv + to_light));
+		ink_col = mix(ink_col, ink_col * 0.45, shaded * groove_shadow);
+		albedo = mix(mix(albedo, albedo * 1.25 + vec3(0.05), lit * groove_light), ink_col, ink);
 		rough = mix(rough, 0.28, ink);
 	}
 
@@ -149,6 +145,6 @@ void light() {
 	SPECULAR_LIGHT += LIGHT_COLOR * step(0.5, s) * highlight * (1.0 - ROUGHNESS) / PI;
 	// Satin: a wide sheen in two flat steps, so the lacquer glows over the whole lit side.
 	float sheen = pow(clamp(dot(NORMAL, h), 0.0, 1.0), 6.0) * ATTENUATION;
-	float satin = mix(satin_pearl, satin_red, step(0.5, team));
+	float satin = mix(satin_pearl, satin_black, step(0.5, team));
 	SPECULAR_LIGHT += LIGHT_COLOR * v_sheen * (step(0.4, sheen) * 0.16 + step(0.7, sheen) * 0.2) * satin / PI;
 }

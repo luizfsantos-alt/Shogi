@@ -20,6 +20,7 @@ const APP_WORDING := {
 }
 
 static var _tracks: Array = []
+static var _red_words: RegEx
 
 
 static func tracks() -> Array:
@@ -104,3 +105,18 @@ static func save_result(lesson_id: String, stars: int, path := PROGRESS_PATH) ->
 		if f:
 			f.store_string(JSON.stringify(progress))
 	return progress
+
+
+## The PWA's texts call Gote's pieces red ("o Rei vermelho"), its lacquer there; in the pixel look
+## they are black. Red as the colour of danger ("as setas em vermelho") stays red.
+static func gote_words(text: String) -> String:
+	if not Koma.pixel:
+		return text
+	if _red_words == null:
+		_red_words = RegEx.create_from_string("(?<!em )([Vv])ermelh(os|as|o|a)\\b")
+	var out := ""
+	var at := 0
+	for m in _red_words.search_all(text):
+		out += text.substr(at, m.get_start() - at) + ("P" if m.get_string(1) == "V" else "p") + "ret" + m.get_string(2)
+		at = m.get_end()
+	return out + text.substr(at)

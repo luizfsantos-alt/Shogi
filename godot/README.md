@@ -84,10 +84,11 @@ efeitos e as setas de movimento. As jogadas seguem só o padrão de cada peça (
 outras regras: isso vem com o motor). Os lados se alternam, para testar os dois num aparelho.
 
 Dois visuais (`DECISIONS.md`, "Visual pixel"). O **pixel**, padrão: peças grossas com luz em
-faixas e contorno (`koma_pixel.gdshader`, `koma_outline.gdshader`), um kanji em pixel com as marcas
-de movimento (`textures/kanji_px/`, de `tools/make_pixel_kanji.mjs` com a DotGothic16), mesa de
-pedra, chão de lajes (`ground.gdshader`), vinheta em degraus e efeitos em pixel. O **clássico**, de
-laca e madeira, volta com Ajustes › "Visual pixel" desligado. O uniform global `pixel_look`
+faixas e contorno (`koma_pixel.gdshader`, `koma_outline.gdshader`), Gote em laca preta, um kanji
+em baixo-relevo com as marcas de movimento (`textures/kanji_px/`, de `tools/make_pixel_kanji.mjs`
+com a Noto Sans JP Black), mesa de madeira kaya, chão de lajes escuras (`ground.gdshader`),
+vinheta em degraus e efeitos em pixel. O **clássico**, de laca e madeira, volta com Ajustes ›
+"Visual pixel" desligado. O uniform global `pixel_look`
 (`project.godot`) troca os efeitos de uma vez; `Table.set_pixel_look` troca tudo sem recarregar.
 
 - `koma_mesh.gd`: a cunha gerada por código, com leves defeitos (semente diferente por peça).

@@ -1,15 +1,15 @@
 // The table under the board. Lacquer look: dark varnished wood, flat. Pixel look: a floor of
-// dark flagstones in big texels (twice the board's), mortar between them and a dithered mottle,
-// quiet enough that the board stays the brightest thing on screen.
+// near-black flagstones in big texels (twice the board's), mortar between them and a dithered
+// mottle, kept so dark that the kaya board stands out as the brightest thing on screen.
 shader_type spatial;
 render_mode diffuse_burley, specular_schlick_ggx;
 
 global uniform float pixel_look;
 uniform vec3 wood : source_color = vec3(0.16, 0.09, 0.055);
-uniform vec3 stone_0 : source_color = vec3(0.07, 0.062, 0.058);
-uniform vec3 stone_1 : source_color = vec3(0.1, 0.088, 0.08);
-uniform vec3 stone_2 : source_color = vec3(0.135, 0.118, 0.105);
-uniform vec3 mortar : source_color = vec3(0.03, 0.025, 0.022);
+uniform vec3 stone_0 : source_color = vec3(0.028, 0.026, 0.025);
+uniform vec3 stone_1 : source_color = vec3(0.036, 0.033, 0.031);
+uniform vec3 stone_2 : source_color = vec3(0.045, 0.041, 0.038);
+uniform vec3 mortar : source_color = vec3(0.016, 0.014, 0.013);
 uniform float texel = 0.42;         // cm
 uniform vec2 slab = vec2(15.0, 10.0); // cm, one flagstone, rows offset by half
 uniform sampler2D noise_tex : hint_default_white, filter_linear_mipmap, repeat_enable;
