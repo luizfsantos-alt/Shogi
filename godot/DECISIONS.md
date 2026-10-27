@@ -92,7 +92,9 @@ na linha de comando).
   (`light_from`, no mundo) projetada na face, então o sulco fica certo nos dois lados (o Gote está
   girado) e depois da virada da promoção. Força em `groove_shadow` e `groove_light`
   (`koma_pixel.gdshader`). A normal não é mais inclinada nas bordas do traço: o brilho duro pegava
-  nelas e riscava o kanji de branco. Antes o kanji era em alto-relevo. No visual clássico o kanji
+  nelas e riscava o kanji de branco. A tinta no fundo do sulco também não recebe o reflexo duro
+  nem o acetinado da laca (só a luz difusa em faixas): o brilho lavava as cores. Antes o kanji era
+  em alto-relevo. No visual clássico o kanji
   continua entalhado. `tools/lookdev_pixel.gd` renderiza todas as faces dos dois lados para ajustar.
 - Coordenadas da moldura em pixel, sem suavização (IBM Plex Mono pequena, ampliada com filtro
   *nearest*), num cinza claro e quente.
