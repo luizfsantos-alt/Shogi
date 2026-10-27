@@ -8,6 +8,20 @@ const KANJI := {
 	"G": ["gold", ""], "S": ["silver", "silver_p"], "N": ["knight", "knight_p"],
 	"L": ["lance", "lance_p"], "P": ["pawn", "pawn_p"],
 }
+## Ink of the unpromoted face, one colour per kind, the same on both teams: every knight has the
+## same kanji colour whether it is Sente's (pearl) or Gote's (red lacquer). Mid-dark, saturated
+## hues away from red, so they stay dark enough on the lit pearl and stand out by hue on the red.
+## The promoted face keeps its own ink (red or gold) and the gold rim: its move changes.
+const INK := {
+	"K": Color(0.05, 0.04, 0.04),   # black
+	"R": Color(0.05, 0.25, 0.85),   # blue
+	"B": Color(0.0, 0.5, 0.55),     # teal
+	"G": Color(0.85, 0.5, 0.0),     # amber
+	"S": Color(0.26, 0.34, 0.48),   # steel blue
+	"N": Color(0.05, 0.5, 0.15),    # green
+	"L": Color(0.5, 0.16, 0.82),    # violet
+	"P": Color(0.15, 0.17, 0.24),   # slate: the most common piece stays quiet
+}
 const SHADER := preload("res://visual/koma.gdshader")
 const PIXEL_SHADER := preload("res://visual/koma_pixel.gdshader")
 const OUTLINE_SHADER := preload("res://visual/koma_outline.gdshader")
@@ -90,6 +104,7 @@ func _build_look(team: float) -> void:
 	material.set_shader_parameter("seed", float(_seed % 997))
 	material.set_shader_parameter("noise_tex", shared_noise())
 	material.set_shader_parameter("team", team)
+	material.set_shader_parameter("ink_kind", INK[kind])
 	# Set now so tweens can animate them.
 	material.set_shader_parameter("glow", 0.0)
 	material.set_shader_parameter("gold_edge", 0.0)

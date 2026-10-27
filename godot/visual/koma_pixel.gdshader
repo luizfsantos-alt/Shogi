@@ -20,8 +20,7 @@ uniform vec3 pearl_base : source_color = vec3(0.9, 0.86, 0.78);
 uniform vec3 pearl_tint : source_color = vec3(0.86, 0.84, 0.95);
 uniform vec3 red_light : source_color = vec3(0.72, 0.1, 0.07);
 uniform vec3 red_base : source_color = vec3(0.56, 0.05, 0.035);
-uniform vec3 ink_black : source_color = vec3(0.07, 0.04, 0.03);
-uniform vec3 ink_cream : source_color = vec3(1.0, 0.93, 0.78);  // Gote's ink: cream reads on red
+uniform vec3 ink_kind : source_color = vec3(0.07, 0.04, 0.03);  // front face: Koma.INK, by kind
 uniform vec3 ink_promoted : source_color = vec3(0.78, 0.1, 0.04); // promoted Sente: red
 uniform vec3 ink_gold : source_color = vec3(1.0, 0.78, 0.3);      // promoted Gote: gold
 uniform float texels_per_cm = 9.5;   // the grid of the sheen and the edges, close to the mask's
@@ -86,7 +85,7 @@ void fragment() {
 		// Carved texels: the wall next to the ink catches the light on one side only.
 		n = normalize(n + (TANGENT * mu + BINORMAL * mv) * carve_depth * (1.0 - m));
 		float ink = step(0.5, m);
-		vec3 ink_col = is_back ? mix(ink_promoted, ink_gold, step(0.5, team)) : mix(ink_black, ink_cream, step(0.5, team));
+		vec3 ink_col = is_back ? mix(ink_promoted, ink_gold, step(0.5, team)) : ink_kind;
 		albedo = mix(albedo, ink_col, ink);
 		rough = mix(rough, 0.6, ink);
 	}
