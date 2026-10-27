@@ -73,11 +73,24 @@ na linha de comando).
   fica um pouco abaixo do máximo (`pearl_exposure`) para a luz da mesa não estourar os tons.
   No Gote o cetim é quente e mais fraco, para o vermelho continuar saturado. Ajustes em
   `nacre`, `satin_pearl`, `satin_red` (`koma_pixel.gdshader`).
-- **Um kanji só**, grande e de traço grosso, com as **marcas de movimento** gravadas em volta:
-  um ponto = uma casa, dois pontos em linha = qualquer distância, cruzinha = o salto do cavalo.
+- **Um kanji só**, grande e de traço grosso, com as **marcas de movimento** gravadas em volta.
   Máscaras de 48×54 em `visual/textures/kanji_px/` (`tools/make_pixel_kanji.mjs`): a Noto Sans
   JP Black (OFL) rasterizada sem meio-tom, com traços de 2 a 5 texels, ocupando ~2/3 da largura da
-  face e assentada no corpo da peça, abaixo da ponta. As marcas ficam no anel da borda.
+  face e assentada no corpo da peça, abaixo da ponta. O kanji vai no canal vermelho e as marcas no
+  verde, para redesenhar as marcas sem a fonte (`--keep-kanji`).
+- **Moldura-bússola** (out/2026, do esboço do dono do projeto): o contorno da peça é a bússola.
+  Ponta = frente, ombros = diagonais da frente, meio das laterais = lados, cantos de baixo =
+  diagonais de trás, meio da base = trás. **Semicírculo** cheio com o lado reto na borda = uma
+  casa; **chevron** apontando para fora = qualquer distância; **dois chifres** sob a ponta = o
+  salto do cavalo. Na cor do kanji e em baixo-relevo como ele, mas sem a sombra interna do sulco
+  (só a borda clara do outro lado): a sombra mordia os círculos. As marcas são sprites de pixel
+  (círculos de pixel de 8 e 7 texels cortados ao meio, chevrons a 45° em degraus iguais e
+  cantoneiras retas nos cantos), empurrados da borda para dentro até caberem inteiros na peça, e
+  o script para se uma marca encostar no kanji. Elas passam por cima da borda arredondada: o
+  shader grava a máscara também no alto do bisel (normal com `y` > 0,25 no espaço da peça).
+  Antes eram pontos no anel da borda (um ponto = uma casa, dois em linha = qualquer distância,
+  cruzinha = cavalo); quando as peças do visual pixel engrossaram, com bisel de 0,17 cm, as
+  diagonais da frente, as laterais e o cavalo caíam no bisel e sumiam.
   A primeira versão usava a DotGothic16 no tamanho nativo (16 px numa máscara de 32×36): traços de
   um texel e kanji em meia face, finos demais para ler no celular; 銀 e 歩 viravam borrões. Testadas
   e descartadas também: DotGothic16 ampliada ×2 (銀 continua quebrado), Dela Gothic One (pesada,
