@@ -63,6 +63,20 @@ describe("course structure", () => {
     expect(missing).toEqual([]);
   });
 
+  it("lets the opponent stand still only in one-move exercises and the piece drills of track A", () => {
+    for (const track of TRACKS.filter((t) => t.id !== "basics")) {
+      for (const lesson of track.lessons) {
+        for (const step of lesson.steps) {
+          if (step.kind !== "exercise") continue;
+          const goal = step.goal;
+          if (goal.type === "reach" || goal.type === "capture" || goal.type === "formation") expect(goal.solution.length, `${lesson.id}: ${step.title}`).toBe(1);
+          if (goal.type === "line") for (const index of Object.keys(goal.strong ?? {})) expect(Number(index) % 2, `${lesson.id}: strong move for the opponent`).toBe(0);
+          expect(step.text.join(" "), lesson.id).not.toMatch(/adversário espera/);
+        }
+      }
+    }
+  });
+
   it("puts every lesson of a track with parts in one of its parts", () => {
     for (const track of TRACKS.filter((t) => t.parts)) {
       const parts = new Set(track.parts!.map((p) => p.id));
@@ -114,6 +128,15 @@ describe.each(exercises)("$name", ({ lesson, index, step }) => {
           // Later options may belong to another branch of the line (after a different first move).
           const moves = i === 0 ? options(accept) : options(accept).slice(0, 1);
           for (const move of moves) expect(session.backend.isLegal(move), `${move} at ply ${i}`).toBe(true);
+          // Moves as good as the one asked are legal here, praised and not played.
+          for (const move of Object.keys(goal.strong?.[i] ?? {})) {
+            const before = session.backend.toSfen();
+            expect(session.backend.isLegal(move), `strong ${move} at ply ${i}`).toBe(true);
+            expect(options(accept), `strong ${move} at ply ${i}`).not.toContain(move);
+            session.play(move);
+            expect(session.feedback?.text).toMatch(/^Escolha forte!/);
+            expect(session.backend.toSfen()).toBe(before);
+          }
           session.play(options(accept)[0]);
         });
         break;
@@ -239,6 +262,20 @@ describe("LessonSession", () => {
     expect(exerciseStars(reach, 2, 0, true)).toBe(2);
     expect(exerciseStars({ type: "mate", solution: "G*5b" }, 1, 1, false)).toBe(2);
     expect(exerciseStars({ type: "mate", solution: "G*5b" }, 1, 5, true)).toBe(1);
+  });
+
+  it("praises a move as good as the one asked without playing it or costing a star", () => {
+    const mino = lesson("mino");
+    const session = sessionAt(mino, 1);
+    session.play("7i7h");
+    expect(session.feedback?.kind).toBe("info");
+    expect(session.feedback?.text).toContain("Escolha forte!");
+    expect(session.lastMove).toBe(null);
+    for (const move of ["5i4h", "4h3h", "3h2h", "3i3h", "6i5h"]) session.play(move);
+    expect(session.solved).toBe(true);
+    while (!session.finished) session.next();
+    expect(session.finished).toBe(true);
+    expect(session.score).toBe(3);
   });
 
   it("plays the opponent's scripted replies after a delay", () => {

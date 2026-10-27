@@ -169,6 +169,13 @@ func test_exercises() -> void:
 						var moves: Array = LessonSession.accepted(accept) if i == 0 else LessonSession.accepted(accept).slice(0, 1)
 						for move: String in moves:
 							expect(rules.is_legal(move), "%s: %s legal at ply %d" % [name, move, i])
+						# Moves as good as the one asked are praised and not played.
+						for strong: String in goal.get("strong", {}).get(str(i), {}):
+							var before := rules.sfen()
+							expect(rules.is_legal(strong), "%s: strong %s legal at ply %d" % [name, strong, i])
+							s.play(strong)
+							expect(s.feedback.get("text", "").begins_with("Escolha forte!"), "%s: %s praised" % [name, strong])
+							expect_eq(rules.sfen(), before, "%s: strong %s not played" % [name, strong])
 						s.play(LessonSession.accepted(accept)[0])
 				"mate":
 					s.play(goal.solution)
