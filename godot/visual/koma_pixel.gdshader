@@ -25,6 +25,8 @@ uniform vec3 ink_promoted : source_color = vec3(0.78, 0.1, 0.04); // promoted Se
 uniform vec3 ink_gold : source_color = vec3(1.0, 0.78, 0.3);      // promoted Gote: gold
 uniform float texels_per_cm = 9.5;   // the grid of the sheen and the edges, close to the mask's
 uniform float carve_depth = 0.9;
+uniform float ink_bevel : hint_range(0.0, 1.0) = 0.6;   // raised ink: lit top-left rim, dark lower-right rim
+uniform float ink_shadow : hint_range(0.0, 1.0) = 0.35;  // the shadow the raised ink casts on the lacquer
 
 group_uniforms shading;
 uniform float bands = 3.0;
@@ -40,6 +42,11 @@ varying vec3 lpos;
 
 void vertex() {
 	lpos = VERTEX;
+}
+
+// The kanji mask of a face (front or promoted back) at a texel.
+float mask_at(bool is_back, vec2 uv) {
+	return is_back ? texture(kanji_back, uv).r : texture(kanji_front, uv).r;
 }
 
 float tap(vec2 p) {
@@ -82,12 +89,21 @@ void fragment() {
 			mu = texture(kanji_front, cell_uv + vec2(t.x, 0)).r - texture(kanji_front, cell_uv - vec2(t.x, 0)).r;
 			mv = texture(kanji_front, cell_uv + vec2(0, t.y)).r - texture(kanji_front, cell_uv - vec2(0, t.y)).r;
 		}
-		// Carved texels: the wall next to the ink catches the light on one side only.
-		n = normalize(n + (TANGENT * mu + BINORMAL * mv) * carve_depth * (1.0 - m));
+		// Raised texels: the edge of a stroke leans away from it and catches the light on one side.
+		n = normalize(n - (TANGENT * mu + BINORMAL * mv) * carve_depth * m);
 		float ink = step(0.5, m);
 		vec3 ink_col = is_back ? mix(ink_promoted, ink_gold, step(0.5, team)) : ink_kind;
-		albedo = mix(albedo, ink_col, ink);
-		rough = mix(rough, 0.6, ink);
+		// The ink stands out like a lacquered relief, shaded texel by texel as on a sprite: the
+		// texels on its upper-left rim catch the light, those on the lower-right rim fall in shade,
+		// and the lacquer just below and to the right of a stroke gets a one-texel drop shadow.
+		float above = step(0.5, mask_at(is_back, cell_uv - t));
+		float below = step(0.5, mask_at(is_back, cell_uv + t));
+		float lit_rim = ink * (1.0 - above);
+		float dark_rim = ink * (1.0 - below) * (1.0 - lit_rim);
+		ink_col = mix(ink_col, ink_col * 1.35 + vec3(0.05), lit_rim * ink_bevel);
+		ink_col = mix(ink_col, ink_col * 0.55, dark_rim * ink_bevel);
+		albedo = mix(mix(albedo, albedo * vec3(0.45, 0.42, 0.4), above * ink_shadow), ink_col, ink);
+		rough = mix(rough, 0.28, ink);
 	}
 
 	ALBEDO = albedo;

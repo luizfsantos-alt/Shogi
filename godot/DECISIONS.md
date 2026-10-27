@@ -38,9 +38,9 @@ Do Hearthstone vêm só a **sensação 3D** e os **efeitos gordos**; o resto da 
   caminho do komadai.
 - **Kanji com a cor da função** (out/2026): peças da mesma função têm o kanji da mesma cor, no
   Sente e no Gote (todos os cavalos verdes, todas as lanças violeta…), para reconhecer a peça
-  de longe. Rei preto, Torre azul, Bispo verde-azulado, Ouro âmbar, Prata azul-aço, Cavalo
-  verde, Lança violeta, Peão ardósia. São tons saturados e meio escuros, longe do vermelho: no
-  pérola a luz não os apaga, no vermelho eles se destacam pela cor. A tabela fica em
+  de longe. Rei sumi (preto), Torre índigo, Bispo verde-azulado, Ouro ocre, Prata aço, Cavalo
+  musgo, Lança ameixa, Peão ardósia. Tons **dessaturados**, como tinta de laca, meio escuros e
+  longe do vermelho: os saturados da primeira versão ficaram berrantes. A tabela fica em
   `Koma.INK` (`visual/koma.gd`). A face promovida não segue a tabela (a peça muda de função).
 - Superfície com **gloss**: verniz com reflexo visível.
 - Kanji **entalhado** (sulco com a tinta no fundo), na fonte **Kaisei Tokumin ExtraBold**
@@ -65,6 +65,10 @@ na linha de comando).
 - Kanji na cor da função (`Koma.INK`), igual nos dois lados; promovida com kanji vermelho no
   Sente e ouro no Gote, mais a borda dourada. Um contorno de um texel em volta da tinta foi
   testado e descartado: fechava os vãos dos kanji densos (銀, 歩).
+- Kanji em **relevo** no visual pixel: a tinta fica em alto-relevo, sombreada texel a texel como
+  num sprite (borda de cima e da esquerda clara, de baixo e da direita escura, e uma sombra de um
+  texel na laca embaixo e à direita do traço). Força em `ink_bevel` e `ink_shadow`
+  (`koma_pixel.gdshader`). No visual clássico o kanji continua entalhado.
 - Coordenadas da moldura em pixel, sem suavização (IBM Plex Mono pequena, ampliada com filtro
   *nearest*), num cinza claro de pedra.
 - Tabuleiro e komadai em **pedra** pixelada (quatro cinzas com dither, rachaduras, a grade
