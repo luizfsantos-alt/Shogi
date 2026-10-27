@@ -257,12 +257,15 @@ func _show_page() -> void:
 
 func _show(box: Control, labels: Dictionary, title: String, text: String) -> void:
 	var other := _big if box == _small else _small
-	if _shown == other:
+	# The other balloon goes away at once: on screen, or still fading out after hide_now (whose
+	# fade the tween below replaces, so it would otherwise stay on screen, frozen).
+	if _shown == other or other.modulate.a > 0.0:
 		other.modulate.a = 0.0
 		other.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		if other == _big:
 			_big.visible = false
-			big_shown.emit(false)
+			if _shown == other:
+				big_shown.emit(false)
 	if box == _big and _shown != _big:
 		big_shown.emit(true)
 	labels.title.text = title
