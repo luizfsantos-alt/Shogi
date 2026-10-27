@@ -89,7 +89,7 @@ outras regras: isso vem com o motor). Os lados se alternam, para testar os dois 
 
 Dois visuais (`DECISIONS.md`, "Visual pixel"). O **pixel**, padrão: peças grossas com luz em
 faixas e contorno (`koma_pixel.gdshader`, `koma_outline.gdshader`), Gote em laca preta, um kanji
-em baixo-relevo com as marcas de movimento (`textures/kanji_px/`, de `tools/make_pixel_kanji.mjs`
+em baixo-relevo com as marcas de movimento na moldura (`textures/kanji_px/`, de `tools/make_pixel_kanji.mjs`
 com a Noto Sans JP Black), mesa de madeira kaya, chão de lajes escuras (`ground.gdshader`),
 vinheta em degraus e efeitos em pixel. O **clássico**, de laca e madeira, volta com Ajustes ›
 "Visual pixel" desligado. O uniform global `pixel_look`

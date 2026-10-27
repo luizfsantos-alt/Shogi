@@ -1,7 +1,7 @@
 // The pixel look of a koma (the default, see DECISIONS.md "Visual pixel"): the same lacquer as
 // koma.gdshader, but everything on its surface is drawn in whole texels, like a 16-bit sprite.
-// The kanji and the movement marks come from a 48×54 mask (textures/kanji_px/) sampled with
-// nearest filtering, the sheen is posterized, and the light falls in a few hard bands with one
+// The kanji (red) and the movement marks (green) come from a 48×54 mask (textures/kanji_px/)
+// sampled with nearest filtering, the sheen is posterized, and the light falls in a few hard bands with one
 // sharp highlight, so the thick wedge reads in 3D the way a hand-shaded sprite does.
 // Vertex colours from KomaMesh: r = edge wear, g = front face, b = back face.
 shader_type spatial;
@@ -57,14 +57,21 @@ uniform float gold_edge = 0.0;
 varying vec3 lpos;
 varying vec3 v_sheen;  // colour of the satin sheen: cool on black, the nacre hue on pearl
 varying float v_ink;   // 1 on the carved kanji: no highlight or sheen there, so its colour stays
+varying float v_up;    // the normal's height in the piece's own space: + on the front, - on the back
 
 void vertex() {
 	lpos = VERTEX;
+	v_up = NORMAL.y;
 }
 
-// The kanji mask of a face (front or promoted back) at a texel.
+// The carving of a face (front or promoted back) at a texel: r = the kanji, g = a movement mark.
+vec2 carving_at(bool is_back, vec2 uv) {
+	return is_back ? texture(kanji_back, uv).rg : texture(kanji_front, uv).rg;
+}
+
 float mask_at(bool is_back, vec2 uv) {
-	return is_back ? texture(kanji_back, uv).r : texture(kanji_front, uv).r;
+	vec2 m = carving_at(is_back, uv);
+	return max(m.r, m.g);
 }
 
 float tap(vec2 p) {
@@ -106,22 +113,33 @@ void fragment() {
 	vec3 nacre_sheen = mix(vec3(1.0), clamp((nacre_col - 0.86) * 3.0 + 0.86, 0.0, 1.0), nacre);
 	v_sheen = mix(vec3(0.78, 0.82, 0.9), nacre_sheen, pearl_side);
 
-	if (face > 0.5) {
-		bool is_back = back > 0.5;
+	// The movement marks sit on the edge of the face and run onto the top of the rounded edge,
+	// which shares the face's texture coordinates; the side wall below it stays bare.
+	bool on_bevel = face < 0.5 && abs(v_up) > 0.25;
+	if (face > 0.5 || on_bevel) {
+		bool is_back = face > 0.5 ? back > 0.5 : v_up < 0.0;
 		vec2 t = 1.0 / mask_size;
 		// One texel toward the light, on the face: the light seen in the face's own axes, snapped.
+		// On the face from its tangents; on the rounded edge, whose tangents follow the curve, from
+		// the piece's own axes (u runs along +x, v along +z; the edge is never mirrored).
 		vec3 lv = (VIEW_MATRIX * vec4(light_from, 0.0)).xyz;
 		vec2 toward = vec2(dot(lv, TANGENT), -dot(lv, BINORMAL));
+		if (on_bevel) {
+			vec3 lm = inverse(mat3(MODEL_MATRIX)) * light_from;
+			toward = lm.xz;
+		}
 		toward = sign(toward) * step(0.38, abs(toward) / max(length(toward), 1e-4));
 		vec2 to_light = toward * t;
-		float m = mask_at(is_back, cell_uv);
-		float ink = step(0.5, m);
+		vec2 carved = step(vec2(0.5), carving_at(is_back, cell_uv));
+		float ink = max(carved.r, carved.g);
 		vec3 ink_col = is_back ? mix(ink_promoted, ink_gold, step(0.5, team)) : ink_kind;
 		// The ink lies at the bottom of a groove, shaded texel by texel like a sunken sprite border:
 		// the wall on the light's side throws its shadow on the first texel of the stroke, and the
 		// far wall, facing the light, shows as a light texel on the lacquer just past the stroke.
 		// The rest of the stroke keeps its flat ink, so even the narrow strokes read as one colour.
-		float shaded = ink * (1.0 - step(0.5, mask_at(is_back, cell_uv + to_light)));
+		// The movement marks are too small for the shadow: it would bite into their round shapes,
+		// so they stay solid ink and show their depth by the lit far wall only.
+		float shaded = carved.r * (1.0 - step(0.5, mask_at(is_back, cell_uv + to_light)));
 		float lit = (1.0 - ink) * step(0.5, mask_at(is_back, cell_uv + to_light));
 		ink_col = mix(ink_col, ink_col * 0.45, shaded * groove_shadow);
 		albedo = mix(mix(albedo, albedo * 1.25 + vec3(0.05), lit * groove_light), ink_col, ink);
@@ -134,7 +152,8 @@ void fragment() {
 	NORMAL = n;
 	// The gold rim of a promoted piece and the selection glow, in flat steps too.
 	float fres = step(0.55, 1.0 - clamp(dot(n, VIEW), 0.0, 1.0));
-	EMISSION = glow_color * (glow * (0.3 + 1.4 * fres) + gold_edge * step(0.5, edge) * 0.9);
+	// The gold rim leaves the carved marks on the edge in their own ink.
+	EMISSION = glow_color * (glow * (0.3 + 1.4 * fres) + gold_edge * step(0.5, edge) * (1.0 - v_ink) * 0.9);
 }
 
 void light() {
