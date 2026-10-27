@@ -22,6 +22,8 @@ signal big_shown(on: bool)
 
 const SHOW_TIME := 0.25
 const CHARS_PER_SECOND := 55.0
+## Presses closer than this are one tap (see _on_input).
+const TAP_REPEAT_MS := 250
 const BALLOON := Color(0.97, 0.93, 0.85, 0.97)
 const BALLOON_BORDER := Color(0.75, 0.55, 0.2)
 const INK := Color(0.15, 0.08, 0.04)
@@ -53,6 +55,7 @@ var _page := -1                  ## page of the big dialogue on screen; -1 for n
 var _dialog_title := ""
 var _typed := 0.0
 var _head: TextureRect
+var _last_tap_ms := -1000
 var _tengu: Mascot
 
 
@@ -296,6 +299,13 @@ func _on_input(e: InputEvent) -> void:
 	if not pressed:
 		return
 	get_viewport().set_input_as_handled()
+	# On a phone one tap arrives twice: as the touch and as the mouse click Godot makes from it.
+	# Taken as two taps, it finished the typing and turned the page (or closed the dialogue and
+	# then acted on what came next) in one go. A second press this soon is the same tap.
+	var now := Time.get_ticks_msec()
+	if now - _last_tap_ms < TAP_REPEAT_MS:
+		return
+	_last_tap_ms = now
 	advance()
 
 
