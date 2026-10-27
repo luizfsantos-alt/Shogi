@@ -56,6 +56,7 @@ uniform float gold_edge = 0.0;
 
 varying vec3 lpos;
 varying vec3 v_sheen;  // colour of the satin sheen: cool on black, the nacre hue on pearl
+varying float v_ink;   // 1 on the carved kanji: no highlight or sheen there, so its colour stays
 
 void vertex() {
 	lpos = VERTEX;
@@ -92,6 +93,7 @@ void fragment() {
 	vec3 under = mix(vec3(0.62, 0.5, 0.38), vec3(0.2, 0.12, 0.07), step(0.5, team));
 	albedo = mix(albedo, under, step(0.55, edge * 0.7 + tap(cell_pos.xz * 0.5) * 0.3) * 0.6);
 	float rough = 0.35;
+	v_ink = 0.0;
 	// Nacre: hue from the viewing angle and the swirl, snapped to three steps.
 	float pearl_side = 1.0 - step(0.5, team);
 	float facing = 1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0);
@@ -123,7 +125,8 @@ void fragment() {
 		float lit = (1.0 - ink) * step(0.5, mask_at(is_back, cell_uv + to_light));
 		ink_col = mix(ink_col, ink_col * 0.45, shaded * groove_shadow);
 		albedo = mix(mix(albedo, albedo * 1.25 + vec3(0.05), lit * groove_light), ink_col, ink);
-		rough = mix(rough, 0.28, ink);
+		rough = mix(rough, 0.9, ink);
+		v_ink = ink;
 	}
 
 	ALBEDO = albedo;
@@ -142,9 +145,10 @@ void light() {
 	// One sharp square-ish highlight per light, like the white pixels on a sprite.
 	vec3 h = normalize(VIEW + LIGHT);
 	float s = pow(clamp(dot(NORMAL, h), 0.0, 1.0), 80.0) * ATTENUATION;
-	SPECULAR_LIGHT += LIGHT_COLOR * step(0.5, s) * highlight * (1.0 - ROUGHNESS) / PI;
+	// The ink at the bottom of the groove catches neither: the gloss would wash its colour out.
+	SPECULAR_LIGHT += LIGHT_COLOR * step(0.5, s) * highlight * (1.0 - ROUGHNESS) * (1.0 - v_ink) / PI;
 	// Satin: a wide sheen in two flat steps, so the lacquer glows over the whole lit side.
 	float sheen = pow(clamp(dot(NORMAL, h), 0.0, 1.0), 6.0) * ATTENUATION;
 	float satin = mix(satin_pearl, satin_black, step(0.5, team));
-	SPECULAR_LIGHT += LIGHT_COLOR * v_sheen * (step(0.4, sheen) * 0.16 + step(0.7, sheen) * 0.2) * satin / PI;
+	SPECULAR_LIGHT += LIGHT_COLOR * v_sheen * (step(0.4, sheen) * 0.16 + step(0.7, sheen) * 0.2) * satin * (1.0 - v_ink) / PI;
 }
