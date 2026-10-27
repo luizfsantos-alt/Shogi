@@ -645,10 +645,17 @@ export const BASICS: Lesson[] = [
         title: "Abra o Bispo",
         sfen: START,
         text: [
-          "O primeiro lance mais popular é avançar o Peão da coluna 7 (7g7f): ele abre a diagonal do Bispo.",
-          "Depois avance o Peão da coluna 2 (2g2f), que abre caminho para a Torre atacar. Jogue os dois; o computador responde.",
+          "Os primeiros lances abrem caminho para as peças grandes: o Bispo e a Torre. Eu aponto um lance de cada vez; o computador responde.",
         ],
-        goal: { type: "line", line: ["7g7f", "3c3d", "2g2f", "8c8d"] },
+        goal: {
+          type: "line",
+          line: ["7g7f", "3c3d", "2g2f", "8c8d"],
+          guide: [
+            "O primeiro lance mais popular: o Peão de 7g avança para 7f e abre a diagonal do Bispo.",
+            "Agora o Peão de 2g vai para 2f: ele abre caminho para a Torre atacar.",
+          ],
+          point: true,
+        },
         wrong: { "2g2f": "Também é um ótimo lance! Mas vamos começar pelo Peão da coluna 7 (7g7f)." },
         hint: "Primeiro o Peão de 7g, depois o de 2g.",
         success: "Ótimo começo: o Bispo respira e a Torre já mira o campo inimigo. Gote (後手) fez o mesmo do lado dele.",

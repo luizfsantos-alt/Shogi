@@ -29,6 +29,9 @@ const BALLOON_BORDER := Color(0.75, 0.55, 0.2)
 const INK := Color(0.15, 0.08, 0.04)
 ## The big tengu's height: a whole multiple of the art's, so every art pixel is the same size.
 const BIG_HEIGHT := 633.0
+const BIG_TEXT_SIZE := 38
+## Space kept free above the big balloon.
+const TOP_GAP := 20.0
 
 ## Layout of the small balloon, set before adding the node: bottom left corner of the screen,
 ## offset upward by `bottom`; the width of the balloon and the size of the head.
@@ -36,7 +39,7 @@ var bottom := -140.0
 var left := 24.0
 var balloon_width := 440.0
 var head_size := 150.0
-var small_text_size := 26
+var small_text_size := 32
 ## Width of the big balloon; how dark the screen gets behind the big tengu.
 var big_width := 820.0
 var big_dim := 0.62
@@ -145,7 +148,7 @@ func _build_big() -> void:
 	column.offset_bottom = -4
 	column.offset_top = -4
 	var tengu_width := BIG_HEIGHT * Mascot.aspect()
-	_big_text = _balloon(big_width, 32, "bottom", tengu_width * 0.5 - 30.0)
+	_big_text = _balloon(big_width, BIG_TEXT_SIZE, "bottom", tengu_width * 0.5 - 30.0)
 	_big_text.panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	column.add_child(_big_text.panel)
 	var tengu := Mascot.new()
@@ -232,10 +235,55 @@ func note(text: String, title := "", pose := "") -> void:
 func speak(pages: Array, title := "", pose := "explain") -> void:
 	_hide_timer = null
 	_tengu.set_pose(pose)
-	_pages = pages
+	_pages = _fit_pages(pages)
 	_page = 0
 	_dialog_title = title
 	_show_page()
+
+
+## Pages too long for the big balloon over the tengu are cut between sentences into more pages
+## (the text keeps its size).
+func _fit_pages(pages: Array) -> Array:
+	var label: Label = _big_text.text
+	var font := label.get_theme_font("font")
+	var size := label.get_theme_font_size("font_size")
+	var width := label.custom_minimum_size.x
+	var line := font.get_height(size) + label.get_theme_constant("line_spacing")
+	# The balloon grows upward from the tengu: what is left of the screen, less its frame,
+	# title and footer.
+	var room := _root.size.y - BIG_HEIGHT - 26.0 - TOP_GAP - 32.0 - 2.0 * (line + 8.0)
+	var max_lines := maxi(2, int(room / line))
+	var lines_of := func(text: String) -> int:
+		return roundi(font.get_multiline_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, width, size).y / font.get_height(size))
+	var out := []
+	for page in pages:
+		var text := str(page)
+		if lines_of.call(text) <= max_lines:
+			out.append(text)
+			continue
+		var chunk := ""
+		for sentence in _sentences(text):
+			var joined := sentence if chunk == "" else chunk + " " + sentence
+			if chunk != "" and lines_of.call(joined) > max_lines:
+				out.append(chunk)
+				chunk = sentence
+			else:
+				chunk = joined
+		if chunk != "":
+			out.append(chunk)
+	return out
+
+
+## The sentences of a paragraph, each with its final mark.
+static func _sentences(text: String) -> PackedStringArray:
+	var out := PackedStringArray()
+	var start := 0
+	for i in text.length():
+		if text[i] in ".!?…" and i + 1 < text.length() and text[i + 1] == " ":
+			out.append(text.substr(start, i + 1 - start))
+			start = i + 2
+	out.append(text.substr(start))
+	return out
 
 
 ## True while a big dialogue is on screen.

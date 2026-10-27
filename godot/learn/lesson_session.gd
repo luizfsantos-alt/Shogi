@@ -100,6 +100,45 @@ func focus() -> Array[Vector2i]:
 	return squares(step().get("focus"))
 
 
+## What the mentor says before the learner's next move in a guided line ("" when nothing).
+func cue() -> String:
+	var ex := exercise()
+	if ex.is_empty() or ex.goal.type != "line" or not ex.goal.has("guide") or solved or _line_index % 2 == 1:
+		return ""
+	var guide: Array = ex.goal.guide
+	var k := _line_index >> 1
+	return guide[k] if k < guide.size() else ""
+
+
+## Squares of that move (from and to), when the line points them: no help counted, no stars lost.
+func cue_squares() -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	if not points() or solved or replying or _line_index % 2 == 1:
+		return out
+	var options := accepted(exercise().goal.line[_line_index])
+	if options.is_empty():
+		return out
+	var parsed := GameRules.parse_move(options[0])
+	if parsed.from is Vector2i:
+		out.append(parsed.from)
+	out.append(parsed.to)
+	return out
+
+
+## The current exercise is a guided line that points each move on the board.
+func points() -> bool:
+	var ex := exercise()
+	return not ex.is_empty() and ex.goal.type == "line" and ex.goal.get("point", false)
+
+
+## Which of the learner's moves of the line comes next (from 0) and how many there are.
+func line_move() -> Vector2i:
+	var ex := exercise()
+	if ex.is_empty() or ex.goal.type != "line":
+		return Vector2i(0, 0)
+	return Vector2i(_line_index >> 1, ((ex.goal.line as Array).size() + 1) >> 1)
+
+
 ## Stars left on the board in a "reach" exercise.
 func remaining_stars() -> Array[Vector2i]:
 	return _star_squares
@@ -193,6 +232,8 @@ func _load_step(index: int) -> void:
 	_hinted = false
 	hint_squares = []
 	_star_squares = squares(s.goal.stars) if s.kind == "exercise" and s.goal.type == "reach" else ([] as Array[Vector2i])
+	if cue() != "":
+		feedback = {"kind": "info", "text": cue()}
 	var sfen := sfen_for(index)
 	if sfen != "":
 		rules.load_position(sfen)
@@ -318,7 +359,7 @@ func _play_line(ex: Dictionary, goal: Dictionary, move: String) -> void:
 		rules.play(answer)
 		last_move = answer
 		_line_index += 1
-		feedback = {"kind": "info", "text": "Sua vez."}
+		feedback = {"kind": "info", "text": cue() if cue() != "" else "Sua vez."}
 		if _line_index >= goal.line.size():
 			_solve(ex)
 		changed.emit()

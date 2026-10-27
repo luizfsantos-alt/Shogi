@@ -149,12 +149,20 @@ export const STRATEGY: Lesson[] = [
         sfen: SHIKENBISHA,
         focus: ["2h", "3h", "5h", "4i"],
         text: [
-          "Monte o castelo Mino (美濃囲い): Rei em 2h, Prata em 3h, um Ouro em 5h e o outro fica em 4i.",
-          "O adversário também leva o Rei dele para longe da Torre. Comece pelo Rei: ele atravessa 4h e 3h até 2h.",
+          "Monte o castelo Mino (美濃囲い): o Rei vai para o canto, longe da Torre, e Prata e Ouros fecham a porta. Eu aponto um lance de cada vez.",
+          "O adversário também leva o Rei dele para longe da Torre.",
         ],
         goal: {
           type: "line",
           line: ["5i4h", "5a4b", "4h3h", "4b3b", "3h2h", "6a5b", "3i3h", "1c1d", "6i5h"],
+          guide: [
+            "Comece pelo Rei: ele sai do centro, de 5i para 4h.",
+            "Continue com o Rei: de 4h para 3h.",
+            "Mais uma casa: o Rei chega a 2h, o canto do Mino.",
+            "Agora a Prata de 3i sobe para 3h, ao lado do Rei.",
+            "Por último, o Ouro de 6i vai para 5h. O outro Ouro fica em 4i.",
+          ],
+          point: true,
           strong: {
             0: { "7i7h": "A Prata em 7h faz parte do shikenbisha (四間飛車) e pode vir antes do castelo." },
             6: { "6i5h": "O Ouro em 5h antes da Prata monta o mesmo Mino (美濃囲い)." },
@@ -204,10 +212,22 @@ export const STRATEGY: Lesson[] = [
         title: "Monte a abertura",
         sfen: START,
         focus: ["7f", "6f", "6h", "7h", "2h", "3h", "5h"],
-        text: ["Monte a formação completa, na ordem do plano. O adversário joga de Torre parada (居飛車, ibisha) e também guarda o Rei."],
+        text: ["Monte a formação completa, na ordem do plano. Eu aponto um lance de cada vez. O adversário joga de Torre parada (居飛車, ibisha) e também guarda o Rei."],
         goal: {
           type: "line",
           line: ["7g7f", "3c3d", "6g6f", "8c8d", "2h6h", "7a6b", "7i7h", "5a4b", "5i4h", "4b3b", "4h3h", "6a5b", "3h2h", "1c1d", "3i3h", "7c7d", "6i5h"],
+          guide: [
+            "Abra o Bispo: o Peão de 7g vai para 7f.",
+            "O Peão de 6g vai para 6f: ele fecha a diagonal e evita a troca de Bispos.",
+            "A Torre vai para a coluna 6: de 2h para 6h. Isso é o shikenbisha (四間飛車).",
+            "A Prata de 7i sobe para 7h, ao lado da Torre.",
+            "Agora o castelo: o Rei sai do centro, de 5i para 4h.",
+            "O Rei continua: de 4h para 3h.",
+            "O Rei chega ao canto: de 3h para 2h.",
+            "A Prata de 3i sobe para 3h, ao lado do Rei.",
+            "Por último, o Ouro de 6i vai para 5h. O Mino (美濃囲い) está pronto.",
+          ],
+          point: true,
           strong: {
             6: { "5i4h": "Levar o Rei para o castelo antes da Prata também é bom." },
             14: { "6i5h": "O Ouro em 5h antes da Prata monta o mesmo Mino (美濃囲い)." },
@@ -230,9 +250,19 @@ export const STRATEGY: Lesson[] = [
         sfen: START,
         text: [
           "Na Torre parada, o ataque clássico é avançar o Peão da coluna 2 até ele encontrar o Peão adversário. Depois da troca (歩の交換, fu no kōkan), a Torre chega à 4ª fileira e você ganha um Peão na mão.",
-          "Avance o Peão da coluna 2 três vezes e recapture com a Torre.",
+          "Eu aponto um lance de cada vez.",
         ],
-        goal: { type: "line", line: ["2g2f", "8c8d", "2f2e", "8d8e", "2e2d", "2c2d", "2h2d"] },
+        goal: {
+          type: "line",
+          line: ["2g2f", "8c8d", "2f2e", "8d8e", "2e2d", "2c2d", "2h2d"],
+          guide: [
+            "O Peão da coluna 2 avança: de 2g para 2f.",
+            "Avance de novo: de 2f para 2e.",
+            "Mais uma vez: o Peão vai a 2d, encostado no Peão adversário.",
+            "O Peão adversário capturou. Recapture com a Torre: de 2h para 2d.",
+          ],
+          point: true,
+        },
         hint: "Sempre o Peão da coluna 2; quando o Peão vermelho capturar, recapture com a Torre.",
         success: "A Torre está em 2d, mirando o campo inimigo, e o Peão da mão já pode ser usado em um tesuji (手筋). Numa partida real o adversário defende 2c com Prata ou Ouro antes disso, mas a ideia é a mesma.",
       },

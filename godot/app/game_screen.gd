@@ -30,7 +30,7 @@ func _ready() -> void:
 	table = Table.new()
 	add_child(table)
 	mentor = Mentor.new()
-	mentor.balloon_width = 340.0
+	mentor.balloon_width = 400.0
 	add_child(mentor)
 	session = GameSession.new()
 	add_child(session)

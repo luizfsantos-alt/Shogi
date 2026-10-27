@@ -46,10 +46,13 @@ func _ready() -> void:
 	table.set_moves_button(true)
 
 	mentor = Mentor.new()
-	mentor.balloon_width = 380.0
-	mentor.small_text_size = 24
+	# The balloon stops at the board's frame; the text is big enough to read on a phone.
+	mentor.left = 16.0
+	mentor.head_size = 128.0
+	mentor.balloon_width = 412.0
+	mentor.small_text_size = 30
 	mentor.big_dim = 0.45
-	mentor.big_width = 780.0
+	mentor.big_width = 870.0
 	add_child(mentor)
 	mentor.dialog_finished.connect(_continue)
 	mentor.tapped.connect(_on_balloon_tapped)
@@ -69,7 +72,8 @@ func _ready() -> void:
 
 func _show_step() -> void:
 	_shown_step = session.step_index
-	_last_feedback = {}
+	# The first cue of a guided line is already in the goal's balloon.
+	_last_feedback = session.feedback.duplicate()
 	_reply_pending = false
 	var step := session.step()
 	table.set_view_side(0)
@@ -83,9 +87,18 @@ func _show_step() -> void:
 
 
 ## The exercise's explanation and goal, in the small balloon (the pieces can move meanwhile).
+## In a guided line the tengu then says one move at a time: after the first, only that move.
 func _show_goal() -> void:
 	var step := session.step()
-	mentor.note(Course.gote_words("\n\n".join(step.text)), step.title.to_upper(), "point")
+	var cue := session.cue()
+	var at := session.line_move()
+	if cue != "" and at.x > 0:
+		mentor.note(Course.gote_words(cue), "LANCE %d DE %d" % [at.x + 1, at.y], "point")
+		return
+	var text := "\n\n".join(step.text)
+	if cue != "":
+		text += "\n\n" + cue
+	mentor.note(Course.gote_words(text), step.title.to_upper(), "point")
 
 
 func _on_changed() -> void:
@@ -122,16 +135,21 @@ func _show_feedback() -> void:
 			mentor.note(text + "\n\nToque aqui para seguir.", "MUITO BEM!", "laugh")
 			table.fx.promotion_burst(table.square_pos(Vector2i(4, 4)) + Vector3(0, 3, 0))
 		_:
-			mentor.note(Course.gote_words(fb.text), session.step().title.to_upper(), "explain")
+			if fb.text == session.cue():
+				_show_goal()
+			else:
+				mentor.note(Course.gote_words(fb.text), session.step().title.to_upper(), "explain")
 	_illegal_text = ""
 
 
 ## Pieces, lit squares, stars and who may move, from the session.
 func _sync_table() -> void:
 	var marks := {}
-	for sq in session.focus():
+	var pointed := session.cue_squares()
+	# While the tengu points a move, only its squares are lit.
+	for sq in session.focus() if pointed.is_empty() else []:
 		marks[sq] = Table.GOLD
-	for sq in session.hint_squares:
+	for sq in session.hint_squares + pointed:
 		marks[sq] = HINT
 	var ex := session.exercise()
 	if not ex.is_empty() and ex.goal.type == "formation" and not session.solved:
@@ -313,7 +331,8 @@ func _update_hud() -> void:
 	var ex := session.exercise()
 	_hud.next.visible = session.can_continue()
 	_hud.next.text = ("Começar a partida ▸" if lesson.get("game", false) else "Concluir lição ▸") if session.is_last() else "Continuar ▸"
-	_hud.hint.disabled = ex.is_empty() or session.solved
+	# A line that points its moves needs no hint.
+	_hud.hint.disabled = ex.is_empty() or session.solved or session.points()
 	_hud.restart.disabled = ex.is_empty()
 	_hud.back.disabled = session.step_index == 0
 

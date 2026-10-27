@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { FairyEngine } from "../src/ai/FairyEngine";
 import type { LevelConfig } from "../src/ai/levels";
 import { explainMove } from "../src/core/explain";
+import { parseUsiMove } from "../src/core/notation";
 import type { FairyBackend } from "../src/core/FairyBackend";
 import { getVariant } from "../src/core/variants";
 import { squares } from "../src/learn/board";
@@ -77,6 +78,21 @@ describe("course structure", () => {
     }
   });
 
+  it("gives a guided line one cue per move of the learner", () => {
+    for (const lesson of TRACKS.flatMap((t) => t.lessons)) {
+      for (const step of lesson.steps) {
+        if (step.kind !== "exercise" || step.goal.type !== "line") continue;
+        const goal = step.goal;
+        if (goal.point) expect(goal.guide, `${lesson.id}: point without guide`).toBeDefined();
+        if (!goal.guide) continue;
+        expect(goal.guide.length, `${lesson.id}: ${step.title}`).toBe(Math.ceil(goal.line.length / 2));
+        // Pointed squares need a move to point at; a cue never gives away a mate.
+        if (goal.point) expect(goal.line.some((accept) => accept === "*"), lesson.id).toBe(false);
+        expect(goal.mate, lesson.id).toBeFalsy();
+      }
+    }
+  });
+
   it("puts every lesson of a track with parts in one of its parts", () => {
     for (const track of TRACKS.filter((t) => t.parts)) {
       const parts = new Set(track.parts!.map((p) => p.id));
@@ -124,6 +140,13 @@ describe.each(exercises)("$name", ({ lesson, index, step }) => {
       case "line":
         goal.line.forEach((accept, i) => {
           if (i % 2 === 1) return; // the opponent's replies are played by the session
+          const cue = goal.guide?.[i / 2] ?? "";
+          expect(session.cue, `cue at ply ${i}`).toBe(cue);
+          if (cue) expect(session.feedback?.text, `cue at ply ${i}`).toBe(cue);
+          if (goal.point) {
+            const parsed = parseUsiMove(options(accept)[0])!;
+            expect(session.cueSquares, `pointed squares at ply ${i}`).toEqual([...(parsed.from ? [parsed.from] : []), parsed.to]);
+          } else expect(session.cueSquares).toEqual([]);
           if (accept === "*") return session.play(session.backend.legalMoves()[0]);
           // Later options may belong to another branch of the line (after a different first move).
           const moves = i === 0 ? options(accept) : options(accept).slice(0, 1);

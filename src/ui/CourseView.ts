@@ -189,7 +189,7 @@ export class LessonScreen {
         targets: this.selection ? targetsFor(this.selection, legal) : [],
         last: last ? [...(last.from ? [last.from] : []), last.to] : [],
         check: backend.isCheck() ? findKing(backend.position(), backend.sideToMove(), backend.variant.dims) : null,
-        hint: session.hintSquares,
+        hint: [...session.hintSquares, ...session.cueSquares],
         stars: session.remainingStars,
         focus: session.focus,
       },
