@@ -1,6 +1,6 @@
 extends Node
 ## The course map, in two tabs. Iniciante: the three tracks side by side (基本 basics, 手筋 tactics,
-## 戦略 strategy). Avançado: the advanced track (上級), one column per part. Each lesson shows its
+## 戦略 strategy). Avançado: the advanced track (上級), its parts two by two. Each lesson shows its
 ## stars; the recommended one stands out.
 
 const TRACK_LETTERS := ["A", "B", "C", "D"]
@@ -10,7 +10,7 @@ const EMBLEMS := {"A": "basics", "B": "tactics", "C": "strategy"}
 
 var mentor: Mentor
 var _tab_buttons: Array[Button] = []
-var _columns: HBoxContainer
+var _columns: Control              ## holds the tab's columns (rebuilt on each tab)
 var _progress: Dictionary
 var _recommended: Dictionary
 
@@ -44,16 +44,16 @@ func _ready() -> void:
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 24)
 	col.add_child(head)
-	var back := UiTheme.button("← Início", "GhostButton", 30, 72)
+	var back := UiTheme.button("← Início", "GhostButton", 42, 88)
 	back.pressed.connect(App.go_home)
 	head.add_child(back)
 	var title := UiTheme.label("Aprender a jogar", "Title")
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(title)
 	var count := Course.completed_count(progress)
-	head.add_child(UiTheme.label("%d / %d LIÇÕES" % [count.done, count.total], "Caption", 24))
+	head.add_child(UiTheme.label("%d / %d LIÇÕES" % [count.done, count.total], "Caption", 42))
 	if not recommended.is_empty():
-		var go := UiTheme.button("Continuar: " + recommended.title, "PrimaryButton", 30, 76)
+		var go := UiTheme.button("Continuar: " + recommended.title, "PrimaryButton", 42, 92)
 		go.pressed.connect(App.open_lesson.bind(recommended.id))
 		head.add_child(go)
 
@@ -61,16 +61,15 @@ func _ready() -> void:
 	tabs.add_theme_constant_override("separation", 12)
 	col.add_child(tabs)
 	for i in TABS.size():
-		var tab := UiTheme.button(TABS[i], "GhostButton", 28, 64)
+		var tab := UiTheme.button(TABS[i], "GhostButton", 42, 80)
 		tab.toggle_mode = true
-		tab.custom_minimum_size.x = 260
+		tab.custom_minimum_size.x = 300
 		tab.pressed.connect(_show_tab.bind(i))
 		tabs.add_child(tab)
 		_tab_buttons.append(tab)
 
-	_columns = HBoxContainer.new()
+	_columns = MarginContainer.new()
 	_columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_columns.add_theme_constant_override("separation", 22)
 	col.add_child(_columns)
 	_progress = progress
 	_recommended = recommended
@@ -85,7 +84,7 @@ func _ready() -> void:
 	mentor = Mentor.new()
 	mentor.bottom = -26.0
 	mentor.left = 1180.0
-	mentor.balloon_width = 520.0
+	mentor.balloon_width = 680.0
 	add_child(mentor)
 	if count.done == 0:
 		mentor.say("Siga as trilhas em ordem: os Fundamentos ensinam todas as regras, até a primeira partida.", 7.0, "explain")
@@ -102,6 +101,25 @@ func _show_tab(tab: int) -> void:
 		b.add_theme_stylebox_override("pressed", line)
 	for c in _columns.get_children():
 		c.queue_free()
+	# Iniciante: the three tracks side by side, each list scrolling on its own. Avançado: its
+	# parts two by two, whole, the page scrolling (four columns would leave no room for the text).
+	var row: Container
+	var outer: ScrollContainer
+	if tab == 1:
+		outer = ScrollContainer.new()
+		outer.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		_columns.add_child(outer)
+		var grid := GridContainer.new()
+		grid.columns = 2
+		grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		grid.add_theme_constant_override("h_separation", 22)
+		grid.add_theme_constant_override("v_separation", 22)
+		outer.add_child(grid)
+		row = grid
+	else:
+		row = HBoxContainer.new()
+		row.add_theme_constant_override("separation", 22)
+		_columns.add_child(row)
 	var recommended: String = _recommended.get("id", "")
 	var tlist := Course.tracks()
 	for i in tlist.size():
@@ -116,13 +134,13 @@ func _show_tab(tab: int) -> void:
 				var lessons: Array = track.lessons.filter(func(l): return l.get("part", "") == part.id)
 				var column := {"title": part.title, "term": part.term, "description": part.description, "lessons": lessons}
 				var caption := "TRILHA %s · PARTE %d" % [TRACK_LETTERS[i], p + 1]
-				_columns.add_child(_track_column(column, TRACK_LETTERS[i], _progress, recommended, caption, n, 40))
+				row.add_child(_track_column(column, TRACK_LETTERS[i], _progress, recommended, caption, n, 56, outer))
 				n += lessons.size()
 		else:
-			_columns.add_child(_track_column(track, TRACK_LETTERS[i], _progress, recommended))
+			row.add_child(_track_column(track, TRACK_LETTERS[i], _progress, recommended))
 
 
-func _track_column(track: Dictionary, letter: String, progress: Dictionary, recommended: String, caption := "", first := 0, title_size := 46) -> Control:
+func _track_column(track: Dictionary, letter: String, progress: Dictionary, recommended: String, caption := "", first := 0, title_size := 56, outer: ScrollContainer = null) -> Control:
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.add_theme_stylebox_override("panel", UiTheme.box(Color(UiTheme.SURFACE, 0.95), UiTheme.BORDER, 2, 18))
@@ -133,7 +151,7 @@ func _track_column(track: Dictionary, letter: String, progress: Dictionary, reco
 	var count := Course.completed_count(progress, track)
 	if caption == "":
 		caption = "TRILHA %s" % letter
-	box.add_child(UiTheme.label("%s · %d/%d" % [caption, count.done, count.total], "Caption", 22))
+	box.add_child(UiTheme.label("%s · %d/%d" % [caption, count.done, count.total], "Caption", 42))
 	var name := HBoxContainer.new()
 	name.add_theme_constant_override("separation", 16)
 	name.custom_minimum_size.y = 98  # the emblem's height, so the three columns line up
@@ -156,22 +174,27 @@ func _track_column(track: Dictionary, letter: String, progress: Dictionary, reco
 	var kanji := term.substr(term.find(" ") + 1)
 	var k := UiTheme.label(kanji)
 	k.add_theme_font_override("font", UiTheme.kanji_font())
-	k.add_theme_font_size_override("font_size", UiTheme.kanji_size(48))
+	k.add_theme_font_size_override("font_size", UiTheme.kanji_size(64))
 	k.add_theme_color_override("font_color", UiTheme.GOLD)
 	k.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	name.add_child(k)
-	var desc := UiTheme.label(track.description, "Muted", 24)
+	var desc := UiTheme.label(track.description, "Muted", 36)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(desc)
 
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	box.add_child(scroll)
+	# The lessons scroll inside the column, or with the whole page (`outer`).
+	var scroll := outer
 	var list := VBoxContainer.new()
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	list.add_theme_constant_override("separation", 8)
-	scroll.add_child(list)
+	if outer == null:
+		scroll = ScrollContainer.new()
+		scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		box.add_child(scroll)
+		scroll.add_child(list)
+	else:
+		box.add_child(list)
 	var n := first
 	for lesson: Dictionary in track.lessons:
 		n += 1
@@ -184,7 +207,7 @@ func _track_column(track: Dictionary, letter: String, progress: Dictionary, reco
 
 func _lesson_button(lesson: Dictionary, n: int, stars: int, recommended: bool) -> Button:
 	var b := Button.new()
-	b.custom_minimum_size = Vector2(0, 96)
+	b.custom_minimum_size = Vector2(0, 120)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	if recommended:
 		b.add_theme_stylebox_override("normal", UiTheme.box(UiTheme.ACCENT_DEEP, UiTheme.ACCENT, 3, 12))
@@ -198,8 +221,8 @@ func _lesson_button(lesson: Dictionary, n: int, stars: int, recommended: bool) -
 	row.offset_right = -16
 	row.add_theme_constant_override("separation", 14)
 	b.add_child(row)
-	var num := UiTheme.label("%02d" % n, "Caption", 24)
-	num.custom_minimum_size.x = 40
+	var num := UiTheme.label("%02d" % n, "Caption", 42)
+	num.custom_minimum_size.x = 56
 	num.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(num)
 	var text := VBoxContainer.new()
@@ -211,12 +234,12 @@ func _lesson_button(lesson: Dictionary, n: int, stars: int, recommended: bool) -
 	var t := Label.new()
 	t.text = ("▷ " if lesson.get("game", false) else "") + lesson.title
 	t.add_theme_font_override("font", UiTheme.display())
-	t.add_theme_font_size_override("font_size", UiTheme.display_size(42))
+	t.add_theme_font_size_override("font_size", UiTheme.display_size(56))
 	# The whole title, on as many lines as it takes: the button grows to hold it.
 	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	t.add_theme_constant_override("line_spacing", -10)
 	text.add_child(t)
-	var s := UiTheme.label(lesson.summary, "Muted", 21)
+	var s := UiTheme.label(lesson.summary, "Muted", 36)
 	s.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	s.clip_text = true
 	text.add_child(s)
@@ -225,13 +248,13 @@ func _lesson_button(lesson: Dictionary, n: int, stars: int, recommended: bool) -
 	if stars > 0:
 		# The stars come from the pixel kanji font: a size on its grid.
 		st.add_theme_font_override("font", UiTheme.kanji_font())
-		st.add_theme_font_size_override("font_size", UiTheme.kanji_size(32))
+		st.add_theme_font_size_override("font_size", UiTheme.kanji_size(48))
 	if recommended and stars == 0:
 		st.add_theme_color_override("font_color", Color.WHITE)
 	row.add_child(st)
 	# The row is laid over the button, not inside a container: the button follows its height.
 	var fit := func() -> void:
-		b.custom_minimum_size.y = maxf(96, text.get_combined_minimum_size().y + 16)
+		b.custom_minimum_size.y = maxf(120, text.get_combined_minimum_size().y + 16)
 	text.minimum_size_changed.connect(fit)
 	return b
 

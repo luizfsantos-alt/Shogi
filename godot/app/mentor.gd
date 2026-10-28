@@ -29,7 +29,7 @@ const BALLOON_BORDER := Color(0.75, 0.55, 0.2)
 const INK := Color(0.15, 0.08, 0.04)
 ## The big tengu's height: a whole multiple of the art's, so every art pixel is the same size.
 const BIG_HEIGHT := 633.0
-const BIG_TEXT_SIZE := 36
+const BIG_TEXT_SIZE := 48
 ## Space kept free above the big balloon.
 const TOP_GAP := 20.0
 
@@ -37,11 +37,11 @@ const TOP_GAP := 20.0
 ## offset upward by `bottom`; the width of the balloon and the size of the head.
 var bottom := -140.0
 var left := 24.0
-var balloon_width := 440.0
+var balloon_width := 560.0
 var head_size := 150.0
-var small_text_size := 36
+var small_text_size := 48
 ## Width of the big balloon; how dark the screen gets behind the big tengu.
-var big_width := 820.0
+var big_width := 1040.0
 var big_dim := 0.62
 
 var _root: Control
