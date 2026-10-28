@@ -234,8 +234,11 @@ func _finish() -> void:
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	for l in [UiTheme.label("LIÇÃO CONCLUÍDA", "Caption", 24), UiTheme.label(lesson.title, "Title")]:
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		box.add_child(l)
-	var s := UiTheme.label("★".repeat(stars) + "☆".repeat(3 - stars) if stars > 0 else "", "", 84)
+	var s := UiTheme.label("★".repeat(stars) + "☆".repeat(3 - stars) if stars > 0 else "")
+	s.add_theme_font_override("font", UiTheme.kanji_font())
+	s.add_theme_font_size_override("font_size", UiTheme.kanji_size(80))
 	s.add_theme_color_override("font_color", UiTheme.GOLD)
 	s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(s)
@@ -293,7 +296,7 @@ func _build_hud() -> void:
 	_hud.card = VBoxContainer.new()
 	col.add_child(_hud.card)
 
-	_hud.next = UiTheme.button("Continuar ▸", "PrimaryButton", 32, 88)
+	_hud.next = UiTheme.button("Continuar →", "PrimaryButton", 32, 88)
 	_hud.next.pressed.connect(func() -> void:
 		if mentor.in_dialog():
 			mentor.hide_now()
@@ -310,7 +313,7 @@ func _build_hud() -> void:
 	_hud.restart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hud.restart.pressed.connect(func() -> void: _restart(session.step_index))
 	row.add_child(_hud.restart)
-	_hud.back = UiTheme.button("◂", "", 26, 72)
+	_hud.back = UiTheme.button("←", "", 26, 72)
 	_hud.back.custom_minimum_size.x = 72
 	_hud.back.pressed.connect(func() -> void: _restart(session.step_index - 1))
 	row.add_child(_hud.back)
@@ -330,7 +333,7 @@ func _update_hud() -> void:
 		_hud.card.add_child(PieceCard.make(step.piece))
 	var ex := session.exercise()
 	_hud.next.visible = session.can_continue()
-	_hud.next.text = ("Começar a partida ▸" if lesson.get("game", false) else "Concluir lição ▸") if session.is_last() else "Continuar ▸"
+	_hud.next.text = ("Começar a partida →" if lesson.get("game", false) else "Concluir lição →") if session.is_last() else "Continuar →"
 	# A line that points its moves needs no hint.
 	_hud.hint.disabled = ex.is_empty() or session.solved or session.points()
 	_hud.restart.disabled = ex.is_empty()

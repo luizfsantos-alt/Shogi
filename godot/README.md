@@ -29,9 +29,16 @@ guarda os ajustes em `user://ajustes.json`; o botão "voltar" do Android sobe um
   de saída e a de chegada e, depois da resposta do adversário, aponta o próximo (`guide` e `point`
   do objetivo `line`; nos problemas táticos o `guide` só lembra a etapa seguinte, sem acender casas).
 
-O visual segue o Genpei do PWA (`ui/ui_theme.gd`): fundo queimado, Archivo condensada, rótulos em
-IBM Plex Mono, botões chanfrados, vermelho para ação e ouro para valor; os kanji da interface vêm
-da Potta One reduzida aos caracteres usados (`node scripts/make-kanji-font.mjs --godot`).
+A interface (`ui/ui_theme.gd`) é pixel art, como o tengu e os rivais: as cores Genpei do PWA (fundo
+queimado, vermelho para ação, ouro para valor) numa grade de 2 pixels de tela por pixel da arte.
+As caixas e botões são geradas no código, com cantos chanfrados em degraus, contorno escuro, brilho
+em cima e sombra embaixo; o interruptor e a barra deslizante também são desenhados em pixels; a
+transição entre telas é pontilhada (`ui/dither.gdshader`). O texto não tem suavização e cada fonte
+fica em tamanhos da sua grade: Jersey 10 (títulos, botões, legendas; múltiplos de 14), Pixelify
+Sans (texto corrido; múltiplos de 12) e DotGothic16 (kanji e símbolos como ★ ← ▷; múltiplos de
+16), esta reduzida aos caracteres usados (`node scripts/make-kanji-font.mjs --godot`). A mesa e as
+peças não usam nada disso, e o que fica por cima da mesa (o escurecimento atrás de painéis e do
+tengu, a sombra do Início) continua liso, para não mudar o visual dela.
 
 ### O mentor (tengu 天狗) e os rivais
 
@@ -57,7 +64,10 @@ vence. Sem a arte (Kitsune, por enquanto), aparece o kanji.
 **A arte.** As imagens geradas ficam em `art_source/` (JPEG sobre preto).
 `python3 -I godot/art_source/prepare_art.py` acha a grade de pixels de cada uma (3×3 nos
 retratos), recorta o fundo, reduz a um pixel por bloco, fecha a paleta e grava os PNG em `app/`
-(tengu, rivais, emblemas das trilhas em `app/course_art/`, ícone em `app/icon/`). Tudo é
+(tengu, rivais, emblemas das trilhas em `app/course_art/`, a marca 将棋 da tela inicial em
+`app/logo/`, ícone em `app/icon/`). As duas imagens de logo (`logo_shogi.jpg` e `logo_sho.jpg`, em
+vermelho sobre preto) têm grade de 10,24 px: o script primeiro ajusta a escala para a grade ficar
+inteira. O ícone do app é o 将 sozinho sobre preto. Tudo é
 desenhado com filtro *nearest*.
 
 ### O curso (`learn/`)

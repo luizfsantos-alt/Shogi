@@ -2,18 +2,18 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://ccx8ncxp67mre"
-path="res://.godot/imported/plex-mono-500-latin.woff2-bbb5fbf9c7091f1a4a476f8d09f7e1c4.fontdata"
+uid="uid://dnsfjq2f0bytf"
+path="res://.godot/imported/jersey-10.ttf-b52d403151134feac22251b851c1f8a9.fontdata"
 
 [deps]
 
-source_file="res://app/ui/fonts/plex-mono-500-latin.woff2"
-dest_files=["res://.godot/imported/plex-mono-500-latin.woff2-bbb5fbf9c7091f1a4a476f8d09f7e1c4.fontdata"]
+source_file="res://app/ui/fonts/jersey-10.ttf"
+dest_files=["res://.godot/imported/jersey-10.ttf-b52d403151134feac22251b851c1f8a9.fontdata"]
 
 [params]
 
 Rendering=null
-antialiasing=1
+antialiasing=0
 generate_mipmaps=false
 disable_embedded_bitmaps=true
 multichannel_signed_distance_field=false
@@ -22,8 +22,8 @@ msdf_size=48
 allow_system_fallback=true
 force_autohinter=false
 modulate_color_glyphs=false
-hinting=3
-subpixel_positioning=4
+hinting=0
+subpixel_positioning=0
 keep_rounding_remainders=true
 oversampling=0.0
 Fallbacks=null

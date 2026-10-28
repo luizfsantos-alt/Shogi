@@ -1,8 +1,8 @@
 class_name GameOverPanel
 extends RefCounted
 ## The end of a game (win, loss or draw), over the table: the result and what to do next.
-## `actions` holds the callables {home, restart, new_game}. The ✕ closes it to look at the final
-## position; the menu ☰ still has "Reiniciar partida" and "Nova partida". Returns the panel's
+## `actions` holds the callables {home, restart, new_game}. The × closes it to look at the final
+## position; the game menu still has "Reiniciar partida" and "Nova partida". Returns the panel's
 ## layer (free it to close).
 
 static func open(parent: Node, title: String, reason: String, actions: Dictionary) -> CanvasLayer:
@@ -16,7 +16,7 @@ static func open(parent: Node, title: String, reason: String, actions: Dictionar
 	var heading := UiTheme.label(title, "Title")
 	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(heading)
-	var x := UiTheme.button("✕", "GhostButton", 36, 72)
+	var x := UiTheme.button("×", "GhostButton", 36, 72)
 	x.custom_minimum_size.x = 72
 	x.pressed.connect(close)
 	head.add_child(x)

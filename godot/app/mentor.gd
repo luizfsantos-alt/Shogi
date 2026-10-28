@@ -29,7 +29,7 @@ const BALLOON_BORDER := Color(0.75, 0.55, 0.2)
 const INK := Color(0.15, 0.08, 0.04)
 ## The big tengu's height: a whole multiple of the art's, so every art pixel is the same size.
 const BIG_HEIGHT := 633.0
-const BIG_TEXT_SIZE := 38
+const BIG_TEXT_SIZE := 36
 ## Space kept free above the big balloon.
 const TOP_GAP := 20.0
 
@@ -39,7 +39,7 @@ var bottom := -140.0
 var left := 24.0
 var balloon_width := 440.0
 var head_size := 150.0
-var small_text_size := 32
+var small_text_size := 36
 ## Width of the big balloon; how dark the screen gets behind the big tengu.
 var big_width := 820.0
 var big_dim := 0.62
@@ -93,14 +93,10 @@ func _build_small() -> void:
 	_small.offset_top = bottom
 	_small.gui_input.connect(_on_input)
 
-	# The head in a lacquered medallion.
+	# The head in a lacquered medallion: an octagon in pixel steps, its rim showing around the head.
 	var medallion := PanelContainer.new()
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.2, 0.07, 0.05)
-	sb.border_color = Color(1.0, 0.75, 0.3)
-	sb.set_border_width_all(4)
-	sb.set_corner_radius_all(int(head_size / 2))
-	sb.anti_aliasing = true
+	var sb := UiTheme.box(Color(0.2, 0.07, 0.05), Color(1.0, 0.75, 0.3), 4, 0, int(head_size / UiTheme.PX / 4))
+	sb.set_content_margin_all(2 * UiTheme.PX)
 	medallion.add_theme_stylebox_override("panel", sb)
 	medallion.custom_minimum_size = Vector2(head_size, head_size)
 	medallion.size_flags_vertical = Control.SIZE_SHRINK_END
@@ -160,15 +156,11 @@ func _build_big() -> void:
 	_big.visible = false
 
 
-## A paper balloon with a gold edge: title (mono, red), text, footer ("toque para continuar").
+## A paper balloon with a gold edge, in pixels: title (small capitals, red), text, footer
+## ("toque para continuar").
 func _balloon(width: float, text_size: int, tail_side: String, tail_at: float) -> Dictionary:
 	var panel := PanelContainer.new()
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = BALLOON
-	sb.border_color = BALLOON_BORDER
-	sb.set_border_width_all(3)
-	sb.corner_detail = 1
-	sb.set_corner_radius_all(14)
+	var sb := UiTheme.box(BALLOON, BALLOON_BORDER, 3, 0, 3)
 	sb.content_margin_left = 28
 	sb.content_margin_right = 28
 	sb.content_margin_top = 18
@@ -188,21 +180,21 @@ func _balloon(width: float, text_size: int, tail_side: String, tail_at: float) -
 	panel.add_child(inner)
 	var title := Label.new()
 	title.add_theme_font_override("font", UiTheme.mono())
-	title.add_theme_font_size_override("font_size", int(text_size * 0.78))
+	title.add_theme_font_size_override("font_size", UiTheme.display_size(int(text_size * 0.75)))
 	title.add_theme_color_override("font_color", Color(0.62, 0.12, 0.06))
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	inner.add_child(title)
 	var text := Label.new()
 	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	text.custom_minimum_size = Vector2(width - 56, 0)
-	text.add_theme_font_size_override("font_size", text_size)
+	text.add_theme_font_size_override("font_size", UiTheme.text_size(text_size))
 	text.add_theme_color_override("font_color", INK)
 	text.add_theme_constant_override("line_spacing", 4)
 	inner.add_child(text)
 	var footer := Label.new()
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	footer.add_theme_font_override("font", UiTheme.mono())
-	footer.add_theme_font_size_override("font_size", int(text_size * 0.7))
+	footer.add_theme_font_size_override("font_size", UiTheme.display_size(int(text_size * 0.75)))
 	footer.add_theme_color_override("font_color", Color(0.45, 0.32, 0.2))
 	inner.add_child(footer)
 	return {"panel": panel, "title": title, "text": text, "footer": footer}
@@ -299,7 +291,7 @@ func _show_page() -> void:
 	_show(_big, _big_text, _dialog_title, str(_pages[_page]))
 	var last := _page == _pages.size() - 1
 	var count := "%d/%d   " % [_page + 1, _pages.size()] if _pages.size() > 1 else ""
-	_big_text.footer.text = count + ("toque para continuar ▸" if not last else "toque para seguir ▸")
+	_big_text.footer.text = count + ("toque para continuar →" if not last else "toque para seguir →")
 	_big_text.footer.visible = true
 
 
@@ -396,7 +388,9 @@ func hide_now() -> void:
 		_tween.tween_callback(func() -> void: _big.visible = _shown == _big)
 
 
-## The balloon's tail: a small triangle on its left or bottom edge, pointing at the tengu.
+## The balloon's tail: a small triangle on its left or bottom edge, pointing at the tengu, drawn
+## in art pixels with the balloon's dark outline and gold rim on its two outer sides; where it
+## meets the balloon it covers the balloon's rim, so the two read as one shape.
 class _Tail extends Control:
 	var colour: Color
 	var border: Color
@@ -408,17 +402,50 @@ class _Tail extends Control:
 
 	## The container places this control inside its margins: draw from the balloon's corner.
 	func _draw() -> void:
+		var px := float(UiTheme.PX)
 		var parent_size: Vector2 = get_parent().size
 		var o := -position
-		var pts: PackedVector2Array
-		if side == "bottom":
+		var bottom := side == "bottom"
+		var rim := 4 * px                # the balloon's outline and rim, covered by the tail
+		var tri: PackedVector2Array
+		if bottom:
 			var h := parent_size.y
-			pts = PackedVector2Array([o + Vector2(at - 16, h - 3), o + Vector2(at + 4, h + 26), o + Vector2(at + 18, h - 3)])
+			tri = PackedVector2Array([o + Vector2(at - 16, h - rim), o + Vector2(at + 4, h + 26), o + Vector2(at + 18, h - rim)])
 		else:
 			var y := minf(parent_size.y - 30.0, at)
-			pts = PackedVector2Array([o + Vector2(3, y - 18), o + Vector2(-24, y + 6), o + Vector2(3, y + 12)])
-		draw_colored_polygon(pts, colour)
-		draw_polyline(pts, border, 3.0, true)
+			tri = PackedVector2Array([o + Vector2(rim, y - 18), o + Vector2(-24, y + 6), o + Vector2(rim, y + 12)])
+		var lo := Vector2(INF, INF)
+		var hi := -lo
+		for p in tri:
+			lo = lo.min(p)
+			hi = hi.max(p)
+		lo = (lo / px).floor() - Vector2.ONE
+		var cells := Vector2i(((hi / px).ceil() - lo)) + Vector2i(2, 2)
+		# 0 outside, 1 inside the tail, 2 inside the balloon (no edge drawn against it).
+		var kind := {}
+		for cy in cells.y:
+			for cx in cells.x:
+				var centre := (lo + Vector2(cx, cy) + Vector2(0.5, 0.5)) * px
+				var k := 0
+				if Geometry2D.point_is_inside_triangle(centre, tri[0], tri[1], tri[2]):
+					k = 1
+				elif (bottom and centre.y < o.y + parent_size.y) or (not bottom and centre.x > o.x):
+					k = 2
+				kind[Vector2i(cx, cy)] = k
+		var steps: Array[Vector2i] = [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]
+		var edge := {}
+		for cell: Vector2i in kind:
+			if kind[cell] == 1 and steps.any(func(d: Vector2i) -> bool: return kind.get(cell + d, 0) == 0):
+				edge[cell] = true
+		for cell: Vector2i in kind:
+			if kind[cell] != 1:
+				continue
+			var c := colour
+			if edge.has(cell):
+				c = UiTheme.OUTLINE
+			elif steps.any(func(d: Vector2i) -> bool: return edge.has(cell + d)):
+				c = border
+			draw_rect(Rect2((lo + Vector2(cell)) * px, Vector2(px, px)), c)
 
 	func _process(_delta: float) -> void:
 		queue_redraw()

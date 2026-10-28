@@ -5,9 +5,12 @@ block of screen pixels (3×3 for the portraits), blurred by the compression, wit
 colours. For each picture this script
 
 1. finds where the blocks start (the columns and rows where the colour jumps), for the block size
-   given below (measured once per kind of picture: the generator keeps it within a set);
+   given below (measured once per kind of picture: the generator keeps it within a set); a
+   fractional size (the logos: a 100×100 grid on 1024 pixels) first scales the picture so the
+   blocks become whole;
 2. cuts the black background: near-black blocks connected to the border become transparent
-   (a flood fill, so the dark outlines inside the drawing stay);
+   (a flood fill, so the dark outlines inside the drawing stay; the logos have no outlines, so
+   every near-black block goes, the holes inside the kanji too);
 3. shrinks the picture to one pixel per block (the median of the block: sharp, no JPEG haze);
 4. closes the palette (median cut, no dithering) and crops to the drawing.
 
@@ -27,7 +30,8 @@ APP = HERE.parent / "app"
 THRESHOLD = 34   # max channel value counted as background (JPEG noise on the black)
 PAD = 2          # art pixels of margin around the crop
 
-# name -> (output, block size, colours, group). A group shares its crop box.
+# name -> (output, block size, colours, group). A group shares its crop box; group "logo" cuts
+# every near-black block, not only the ones connected to the border.
 JOBS = {
     "tengu_neutral": ("mentor/art/tengu_neutral.png", 3, 48, "tengu"),
     "tengu_explain": ("mentor/art/tengu_explain.png", 3, 48, "tengu"),
@@ -48,8 +52,10 @@ JOBS = {
     "emblem_basics": ("course_art/basics.png", 16, 24, None),
     "emblem_tactics": ("course_art/tactics.png", 16, 24, None),
     "emblem_strategy": ("course_art/strategy.png", 16, 24, None),
-    "icon_tengu": ("icon/tengu.png", 16, 32, None),  # then the launcher sizes: see icons()
+    "logo_shogi": ("logo/shogi.png", 10.24, 4, "logo"),  # 将棋, the mark on the start screen
+    "logo_sho": ("icon/sho.png", 10.24, 4, "logo"),  # 将, then the launcher sizes: see icons()
 }
+ICON_SIDE = 64  # art pixels of the square launcher icon, the kanji centred on black
 
 
 def offset(gray: np.ndarray, axis: int, size: int) -> int:
@@ -59,8 +65,12 @@ def offset(gray: np.ndarray, axis: int, size: int) -> int:
     return (int(np.argmax(phases)) + 1) % size
 
 
-def shrink(path: Path, s: int) -> tuple[np.ndarray, np.ndarray]:
-    rgb = np.asarray(Image.open(path).convert("RGB")).astype(np.int16)
+def shrink(path: Path, size: float, cut_all: bool) -> tuple[np.ndarray, np.ndarray]:
+    image = Image.open(path).convert("RGB")
+    s = round(size)
+    if s != size:
+        image = image.resize((round(image.width * s / size), round(image.height * s / size)), Image.LANCZOS)
+    rgb = np.asarray(image).astype(np.int16)
     gray = rgb.mean(axis=2)
     ox = offset(gray, 1, s)
     oy = offset(gray, 0, s)
@@ -70,6 +80,9 @@ def shrink(path: Path, s: int) -> tuple[np.ndarray, np.ndarray]:
     small = np.median(cells, axis=2).astype(np.int16)
     # Background: dark blocks reachable from the border.
     dark = small.max(axis=2) <= THRESHOLD
+    if cut_all:
+        print(f"  {path.name}: blocks of {size} px -> {nx}x{ny}")
+        return small.astype(np.uint8), ~dark
     bg = np.zeros((ny, nx), bool)
     queue = deque([(y, x) for x in range(nx) for y in (0, ny - 1)] + [(y, x) for y in range(ny) for x in (0, nx - 1)])
     while queue:
@@ -88,23 +101,29 @@ def quantize(rgb: np.ndarray, opaque: np.ndarray, colours: int) -> np.ndarray:
     return np.asarray(full)
 
 
+def crop_key(name: str, group: str | None) -> str:
+    """The crop box a picture uses: its group's, or its own (each logo is cut to its kanji)."""
+    return name if group in (None, "logo") else group
+
+
 def main() -> None:
     results = {}
     for name, (out, size, colours, group) in JOBS.items():
-        rgb, opaque = shrink(HERE / f"{name}.jpg", size)
+        rgb, opaque = shrink(HERE / f"{name}.jpg", size, group == "logo")
         results[name] = (quantize(rgb, opaque, colours), opaque, out, group)
     # Crop boxes: per group, the union of the drawings (same size pictures only).
     boxes = {}
     for name, (_, opaque, _, group) in results.items():
         ys, xs = np.nonzero(opaque)
         box = [xs.min(), ys.min(), xs.max() + 1, ys.max() + 1]
-        key = group or name
+        key = crop_key(name, group)
+
         if key in boxes:
             b = boxes[key]
             box = [min(b[0], box[0]), min(b[1], box[1]), max(b[2], box[2]), max(b[3], box[3])]
         boxes[key] = box
     for name, (rgb, opaque, out, group) in results.items():
-        x0, y0, x1, y1 = boxes[group or name]
+        x0, y0, x1, y1 = boxes[crop_key(name, group)]
         h, w = opaque.shape
         x0, y0, x1, y1 = max(0, x0 - PAD), max(0, y0 - PAD), min(w, x1 + PAD), min(h, y1 + PAD)
         rgba = np.dstack([rgb, np.where(opaque, 255, 0).astype(np.uint8)])[y0:y1, x0:x1]
@@ -116,22 +135,22 @@ def main() -> None:
 
 
 def icons() -> None:
-    """Launcher icons from the tengu's face: square, whole multiples of the art pixels."""
-    face = Image.open(APP / "icon/tengu.png").convert("RGBA")
-    corner = face.getpixel((1, 1))
-    side = max(face.size)
-    square = Image.new("RGBA", (side, side), corner)
-    square.alpha_composite(face, ((side - face.width) // 2, side - face.height))
+    """Launcher icons from 将: square, black, whole multiples of the art pixels."""
+    sho = Image.open(APP / "icon/sho.png").convert("RGBA")
+    black = (0, 0, 0, 255)
+    square = Image.new("RGBA", (ICON_SIDE, ICON_SIDE), black)
+    centre = ((ICON_SIDE - sho.width) // 2, (ICON_SIDE - sho.height) // 2)
+    square.alpha_composite(sho, centre)
     square.save(APP / "icon/icon.png")
-    square.resize((side * 3, side * 3), Image.NEAREST).save(APP / "icon/icon_192.png")
-    # Adaptive icon: the face on the same colour, the background plain; the launcher masks the
-    # outer third, so the face fills the middle 384 of 432 pixels.
+    square.resize((ICON_SIDE * 3, ICON_SIDE * 3), Image.NEAREST).save(APP / "icon/icon_192.png")
+    # Adaptive icon: the kanji alone on a plain black background. The launcher may mask it to a
+    # circle 2/3 of the 432 pixels wide, so the kanji (4 screen pixels per art pixel) stays inside.
     fg = Image.new("RGBA", (432, 432), (0, 0, 0, 0))
-    fg.alpha_composite(square.resize((side * 6, side * 6), Image.NEAREST), ((432 - side * 6) // 2,) * 2)
+    big = sho.resize((sho.width * 4, sho.height * 4), Image.NEAREST)
+    fg.alpha_composite(big, ((432 - big.width) // 2, (432 - big.height) // 2))
     fg.save(APP / "icon/icon_foreground_432.png")
-    Image.new("RGBA", (432, 432), corner).save(APP / "icon/icon_background_432.png")
+    Image.new("RGBA", (432, 432), black).save(APP / "icon/icon_background_432.png")
     print("app/icon: icon.png, icon_192.png, icon_foreground_432.png, icon_background_432.png")
-
 
 main()
 icons()

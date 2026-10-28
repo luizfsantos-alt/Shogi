@@ -27,11 +27,8 @@ func _ready() -> void:
 	var layer := CanvasLayer.new()
 	layer.layer = 100
 	add_child(layer)
-	_fade = ColorRect.new()
-	_fade.color = UiTheme.BG
-	_fade.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_fade.modulate.a = 0.0
+	# A dissolve in dithered pixels, not a smooth fade.
+	_fade = UiTheme.shade(UiTheme.BG, 0.0)
 	layer.add_child(_fade)
 	UiTheme.apply(get_tree())
 	# Android "back": up one screen.
@@ -103,14 +100,14 @@ func _go(scene: String, req: Dictionary) -> void:
 	request = req
 	_fade.mouse_filter = Control.MOUSE_FILTER_STOP
 	var t := create_tween()
-	t.tween_property(_fade, "modulate:a", 1.0, 0.18)
+	t.tween_property(_fade, "material:shader_parameter/amount", 1.0, 0.18)
 	await t.finished
 	Engine.time_scale = 1.0
 	get_tree().change_scene_to_file(scene)
 	await get_tree().process_frame
 	await get_tree().process_frame
 	t = create_tween()
-	t.tween_property(_fade, "modulate:a", 0.0, 0.25)
+	t.tween_property(_fade, "material:shader_parameter/amount", 0.0, 0.25)
 	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 

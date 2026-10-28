@@ -20,7 +20,7 @@ static func open(parent: Node, on_start: Callable, level := 1) -> void:
 	var title := UiTheme.label("Nova partida", "Title")
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(title)
-	var x := UiTheme.button("✕", "GhostButton", 36, 72)
+	var x := UiTheme.button("×", "GhostButton", 36, 72)
 	x.custom_minimum_size.x = 72
 	x.pressed.connect(close)
 	head.add_child(x)
@@ -49,6 +49,7 @@ static func open(parent: Node, on_start: Callable, level := 1) -> void:
 		var caption := UiTheme.label("%d · %s" % [lv.id, Rivals.of_level(lv.id).name], "", 26)
 		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		caption.add_theme_font_override("font", UiTheme.display())
+		caption.add_theme_font_size_override("font_size", UiTheme.display_size(28))
 		card.add_child(caption)
 		var level_name := UiTheme.label(lv.name.to_upper(), "Caption", 18)
 		level_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
