@@ -1,7 +1,8 @@
 class_name NewGamePanel
 extends RefCounted
 ## "Nova partida": the computer's level and the player's side, as a modal panel. Used by the
-## start screen and by the game's menu. `on_start` receives (level: int, human_color: String).
+## start screen and by the game's menu. `on_start` receives (level: int, side: String), the side
+## being "black", "white" or "random" (drawn by the game, again on each restart).
 
 ## Gote's lacquer is black in the pixel look and red in the classic one.
 static func side_labels() -> Array:
@@ -80,6 +81,5 @@ static func open(parent: Node, on_start: Callable, level := 1) -> void:
 	var go := UiTheme.button("Começar", "PrimaryButton", 40, 100)
 	go.pressed.connect(func() -> void:
 		close.call()
-		var side: int = chosen.side if chosen.side < 2 else randi() % 2
-		on_start.call(chosen.level, "black" if side == 0 else "white"))
+		on_start.call(chosen.level, ["black", "white", "random"][chosen.side]))
 	box.add_child(go)

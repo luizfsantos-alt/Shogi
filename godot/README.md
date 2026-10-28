@@ -15,7 +15,11 @@ guarda os ajustes em `user://ajustes.json`; o botão "voltar" do Android sobe um
   pelo computador e salva a partida (`user://partida.json`); a mesa anima; o mentor explica lances
   recusados (`Explain`), diz como sair do xeque (`Coach`) e dá dicas em palavras. Na **partida
   guiada** do curso, o treinador (`learn/coach_tips.gd`) comenta os momentos importantes e marca as
-  casas. No menu ☰: início, nova partida, desfazer, dica, declarar impasse, desistir e os ajustes.
+  casas. No menu ☰: início, nova partida, reiniciar partida (mesmo nível e lado; o lado aleatório é
+  sorteado de novo; na partida guiada, a mesma lição), desfazer, dica, declarar impasse, desistir e
+  os ajustes. Nova partida e reiniciar pedem confirmação no meio de uma partida. Quando a partida
+  acaba, um painel (`ui/game_over_panel.gd`) oferece reiniciar, nova partida ou o menu inicial (na
+  partida guiada, o curso segue para a próxima lição).
 - **Curso** (`course.gd`): duas abas. **Iniciante**: as três trilhas lado a lado; **Avançado**: a trilha D,
   uma coluna por parte (aberturas, táticas, planejamento, mates). Abre na aba da próxima lição.
 - **Lição** (`lesson.gd`): a mesa com a posição do passo, estrelas ★ para alcançar, casas em foco,
@@ -79,6 +83,7 @@ godot --path godot --fixed-fps 30 res://app/home.tscn -- shot=/tmp/a.png demo=we
 godot --path godot --fixed-fps 30 res://app/course.tscn -- shot=/tmp/a.png at=1
 godot --path godot --fixed-fps 30 res://app/lesson.tscn -- shot=/tmp/a.png lesson=rook step=1 demo=move at=2
 godot --path godot --fixed-fps 30 res://app/game.tscn -- shot=/tmp/a.png demo=guided at=3
+godot --path godot --fixed-fps 30 res://app/game.tscn -- shot=/tmp/a.png demo=gameover at=2
 ```
 
 ## Frente visual (`visual/`)
