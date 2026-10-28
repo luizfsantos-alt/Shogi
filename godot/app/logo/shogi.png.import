@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bw1rpcnwnjwbx"
-path="res://.godot/imported/tengu.png-1f6aaf63029b262e37cd4b0bd4257720.ctex"
+uid="uid://jxr95cj99jy9v"
+path="res://.godot/imported/shogi.png-b6b9aaa5b7a1f851d759df24aa2e3dca.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://app/icon/tengu.png"
-dest_files=["res://.godot/imported/tengu.png-1f6aaf63029b262e37cd4b0bd4257720.ctex"]
+source_file="res://app/logo/shogi.png"
+dest_files=["res://.godot/imported/shogi.png-b6b9aaa5b7a1f851d759df24aa2e3dca.ctex"]
 
 [params]
 

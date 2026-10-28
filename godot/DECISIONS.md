@@ -132,6 +132,8 @@ na linha de comando).
   (o duelo da ponte Gojō) e Kiyomori. Rosto calmo e rosto derrotado.
 - **O jogador não tem rosto.**
 - Emblemas das trilhas do curso e o ícone do app, na mesma pixel art.
+- Logo (out/2026): 将棋 em caligrafia pixelada vermelha sobre preto. A palavra inteira é a
+  marca da tela inicial; só o 将 é o ícone do app.
 
 ## Efeitos ("gordos", referência Hearthstone)
 

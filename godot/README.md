@@ -57,7 +57,10 @@ vence. Sem a arte (Kitsune, por enquanto), aparece o kanji.
 **A arte.** As imagens geradas ficam em `art_source/` (JPEG sobre preto).
 `python3 -I godot/art_source/prepare_art.py` acha a grade de pixels de cada uma (3×3 nos
 retratos), recorta o fundo, reduz a um pixel por bloco, fecha a paleta e grava os PNG em `app/`
-(tengu, rivais, emblemas das trilhas em `app/course_art/`, ícone em `app/icon/`). Tudo é
+(tengu, rivais, emblemas das trilhas em `app/course_art/`, a marca 将棋 da tela inicial em
+`app/logo/`, ícone em `app/icon/`). As duas imagens de logo (`logo_shogi.jpg` e `logo_sho.jpg`, em
+vermelho sobre preto) têm grade de 10,24 px: o script primeiro ajusta a escala para a grade ficar
+inteira. O ícone do app é o 将 sozinho sobre preto. Tudo é
 desenhado com filtro *nearest*.
 
 ### O curso (`learn/`)
