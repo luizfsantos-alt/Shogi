@@ -6,7 +6,7 @@ extends RefCounted
 ## layer (free it to close).
 
 static func open(parent: Node, title: String, reason: String, actions: Dictionary) -> CanvasLayer:
-	var m := UiTheme.modal(parent, 5, 720)
+	var m := UiTheme.modal(parent, 5, 880)
 	var layer: CanvasLayer = m.layer
 	var box: VBoxContainer = m.box
 	var close := func() -> void: layer.queue_free()
@@ -16,8 +16,8 @@ static func open(parent: Node, title: String, reason: String, actions: Dictionar
 	var heading := UiTheme.label(title, "Title")
 	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(heading)
-	var x := UiTheme.button("×", "GhostButton", 36, 72)
-	x.custom_minimum_size.x = 72
+	var x := UiTheme.button("×", "GhostButton", 56, 84)
+	x.custom_minimum_size.x = 84
 	x.pressed.connect(close)
 	head.add_child(x)
 	if reason != "":
@@ -25,7 +25,7 @@ static func open(parent: Node, title: String, reason: String, actions: Dictionar
 
 	for item: Array in [["Reiniciar partida", "PrimaryButton", actions.restart],
 			["Nova partida", "", actions.new_game], ["Menu inicial", "GhostButton", actions.home]]:
-		var b := UiTheme.button(item[0], item[1], 34, 96)
+		var b := UiTheme.button(item[0], item[1], 42, 108)
 		var action: Callable = item[2]
 		b.pressed.connect(func() -> void:
 			close.call()

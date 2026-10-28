@@ -25,15 +25,18 @@ func _ready() -> void:
 	box.add_child(head)
 	var kanji := UiTheme.label(Pieces.kanji(piece))
 	kanji.add_theme_font_override("font", UiTheme.kanji_font())
-	kanji.add_theme_font_size_override("font_size", UiTheme.kanji_size(64))
+	kanji.add_theme_font_size_override("font_size", UiTheme.kanji_size(80))
 	kanji.add_theme_color_override("font_color", UiTheme.GOLD if piece.promoted else UiTheme.TEXT)
 	head.add_child(kanji)
 	var names := VBoxContainer.new()
 	names.alignment = BoxContainer.ALIGNMENT_CENTER
 	names.add_theme_constant_override("separation", 0)
+	names.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(names)
-	names.add_child(UiTheme.label(info.name_pt, "Title", 36))
-	names.add_child(UiTheme.label("%s · %s" % [info.romaji, info.kanji_name], "Caption", 20))
+	# Long names ("Ōshō / Gyokushō") wrap instead of widening the lesson's controls.
+	for l in [UiTheme.label(info.name_pt, "Title", 56), UiTheme.label("%s · %s" % [info.romaji, info.kanji_name], "Caption", 42)]:
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		names.add_child(l)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 16)
 	box.add_child(row)
@@ -42,7 +45,7 @@ func _ready() -> void:
 	diagram.custom_minimum_size = Vector2(160, 160)
 	diagram.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	row.add_child(diagram)
-	var move := UiTheme.label(info.move_pt, "Muted", 22)
+	var move := UiTheme.label(info.move_pt, "Muted", 36)
 	move.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	move.custom_minimum_size.x = 220
 	move.size_flags_horizontal = Control.SIZE_EXPAND_FILL

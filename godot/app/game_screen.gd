@@ -31,7 +31,7 @@ func _ready() -> void:
 	table = Table.new()
 	add_child(table)
 	mentor = Mentor.new()
-	mentor.balloon_width = 400.0
+	mentor.balloon_width = 560.0
 	add_child(mentor)
 	session = GameSession.new()
 	add_child(session)
@@ -122,7 +122,7 @@ func _confirm_abandon(then: Callable) -> void:
 	if session.rules.result().over or session.rules.history().is_empty():
 		then.call()
 		return
-	var m := UiTheme.modal(self, 7, 720)
+	var m := UiTheme.modal(self, 7, 900)
 	var layer: CanvasLayer = m.layer
 	var box: VBoxContainer = m.box
 	var question := UiTheme.label("Abandonar a partida atual?", "Title")
@@ -133,11 +133,11 @@ func _confirm_abandon(then: Callable) -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 	box.add_child(row)
-	var keep := UiTheme.button("Continuar jogando", "GhostButton", 30, 96)
+	var keep := UiTheme.button("Continuar jogando", "GhostButton", 42, 108)
 	keep.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	keep.pressed.connect(layer.queue_free)
 	row.add_child(keep)
-	var leave := UiTheme.button("Abandonar", "PrimaryButton", 30, 96)
+	var leave := UiTheme.button("Abandonar", "PrimaryButton", 42, 108)
 	leave.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	leave.pressed.connect(func() -> void:
 		layer.queue_free()
@@ -345,7 +345,7 @@ func _build_status() -> void:
 	_status.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_status.offset_top = 18
 	_status.add_theme_font_override("font", UiTheme.mono())
-	_status.add_theme_font_size_override("font_size", UiTheme.display_size(28))
+	_status.add_theme_font_size_override("font_size", UiTheme.display_size(42))
 	_status.add_theme_color_override("font_color", UiTheme.GOLD)
 	_status.add_theme_color_override("font_outline_color", UiTheme.OUTLINE)
 	_status.add_theme_constant_override("outline_size", 2 * UiTheme.PX)
@@ -372,12 +372,12 @@ func _show_rival(level: int) -> void:
 	face.size_flags_horizontal = Control.SIZE_SHRINK_END
 	box.add_child(face)
 	var rival := Rivals.of_level(level)
-	var name_label := UiTheme.label("%s %s" % [rival.name, rival.kanji], "", 32)
+	var name_label := UiTheme.label("%s %s" % [rival.name, rival.kanji], "", 56)
 	name_label.add_theme_font_override("font", UiTheme.display())
-	name_label.add_theme_font_size_override("font_size", UiTheme.display_size(42))
+	name_label.add_theme_font_size_override("font_size", UiTheme.display_size(56))
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	box.add_child(name_label)
-	var level_label := UiTheme.label("NÍVEL %d · %s" % [level, Levels.get_level(level).name.to_upper()], "Caption", 18)
+	var level_label := UiTheme.label("NÍVEL %d · %s" % [level, Levels.get_level(level).name.to_upper()], "Caption", 42)
 	level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	box.add_child(level_label)
 	_status_layer.add_child(box)

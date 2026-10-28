@@ -58,18 +58,13 @@ static func _dot() -> FontFile:
 	return _pixel_font("dot-kanji.ttf")
 
 
-## The device's own fonts, last in every fallback list: anything the bundled fonts lack.
-static func system_font() -> SystemFont:
-	var f := SystemFont.new()
-	f.font_names = PackedStringArray(["sans-serif", "Noto Sans Symbols 2", "Noto Sans Symbols", "DejaVu Sans"])
-	return f
-
-
-## Pixelify Sans, regular: body text.
+## Pixelify Sans, regular: body text. Its only fallback is the pixel kanji font: a fallback's
+## line height counts for every line, so the device's own fonts are not listed (Godot still turns
+## to them for a character no bundled font has, without counting their height).
 static func body() -> Font:
 	if _body == null:
 		var f := _pixel_font("pixelify-400.ttf")
-		f.fallbacks = [_dot(), system_font()]
+		f.fallbacks = [_dot()]
 		_body = f
 	return _body
 
@@ -78,7 +73,7 @@ static func body() -> Font:
 static func display() -> Font:
 	if _display == null:
 		var f := _pixel_font("jersey-10.ttf")
-		f.fallbacks = [_dot(), system_font()]
+		f.fallbacks = [_dot()]
 		_display = f
 	return _display
 
@@ -216,7 +211,7 @@ static func theme() -> Theme:
 		return _theme
 	var t := Theme.new()
 	t.default_font = body()
-	t.default_font_size = 36
+	t.default_font_size = 48
 
 	t.set_color("font_color", "Label", TEXT)
 	t.set_stylebox("panel", "PanelContainer", box(Color(SURFACE, 0.96), BORDER, 2, 20))
@@ -224,7 +219,7 @@ static func theme() -> Theme:
 
 	# Buttons: dark iron with a thin border; pressed/toggled ones turn red.
 	t.set_font("font", "Button", display())
-	t.set_font_size("font_size", "Button", 42)
+	t.set_font_size("font_size", "Button", 56)
 	t.set_stylebox("normal", "Button", box(SURFACE_2, BORDER, 2, 14))
 	t.set_stylebox("hover", "Button", box(FRAME, IRON, 2, 14))
 	t.set_stylebox("pressed", "Button", box(ACCENT_DEEP, ACCENT, 2, 14))
@@ -258,23 +253,23 @@ static func theme() -> Theme:
 	t.add_type("Caption")
 	t.set_type_variation("Caption", "Label")
 	t.set_font("font", "Caption", mono())
-	t.set_font_size("font_size", "Caption", 28)
+	t.set_font_size("font_size", "Caption", 42)
 	t.set_color("font_color", "Caption", GOLD)
 
 	t.add_type("Title")
 	t.set_type_variation("Title", "Label")
 	t.set_font("font", "Title", display())
-	t.set_font_size("font_size", "Title", 56)
+	t.set_font_size("font_size", "Title", 70)
 	t.set_color("font_color", "Title", TEXT)
 
 	t.add_type("Muted")
 	t.set_type_variation("Muted", "Label")
-	t.set_font_size("font_size", "Muted", 24)
+	t.set_font_size("font_size", "Muted", 36)
 	t.set_color("font_color", "Muted", MUTED)
 
 	# The switch and the slider, in pixels too.
 	t.set_font("font", "CheckButton", body())
-	t.set_font_size("font_size", "CheckButton", 36)
+	t.set_font_size("font_size", "CheckButton", 48)
 	for state in ["font_color", "font_hover_color", "font_focus_color", "font_pressed_color", "font_hover_pressed_color"]:
 		t.set_color(state, "CheckButton", TEXT)
 	t.set_icon("checked", "CheckButton", _switch(true))
@@ -300,7 +295,7 @@ static func theme() -> Theme:
 	t.set_icon("grabber", "HSlider", sprite(grabber, {"o": OUTLINE, "h": GOLD.lightened(0.3), "k": GOLD, "s": GOLD.darkened(0.35)}))
 	t.set_icon("grabber_highlight", "HSlider", sprite(grabber, {"o": OUTLINE, "h": Color.WHITE, "k": GOLD.lightened(0.2), "s": GOLD.darkened(0.2)}))
 
-	t.set_font_size("font_size", "RichTextLabel", 36)
+	t.set_font_size("font_size", "RichTextLabel", 48)
 	t.set_font("normal_font", "RichTextLabel", body())
 	t.set_font("bold_font", "RichTextLabel", display())
 	_theme = t
@@ -330,7 +325,7 @@ static func label(text: String, variation := "", size := 0) -> Label:
 	return l
 
 
-static func button(text: String, variation := "", size := 0, min_height := 84) -> Button:
+static func button(text: String, variation := "", size := 0, min_height := 100) -> Button:
 	var b := Button.new()
 	b.text = text
 	if variation != "":

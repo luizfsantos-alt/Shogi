@@ -2,7 +2,7 @@ extends Node
 ## The start screen: the 3D table in the background, the menu on the left (continue the saved
 ## game, play, learn, settings) and the tengu, who greets the player.
 
-const MENU_WIDTH := 600.0
+const MENU_WIDTH := 720.0
 
 var table: Table
 var mentor: Mentor
@@ -21,7 +21,7 @@ func _ready() -> void:
 	mentor = Mentor.new()
 	mentor.left = MENU_WIDTH + 140.0
 	mentor.bottom = -40.0
-	mentor.balloon_width = 560.0
+	mentor.balloon_width = 700.0
 	add_child(mentor)
 	if not _run_cmdline_demo():
 		_greet.call_deferred()
@@ -83,17 +83,13 @@ func _build_menu() -> void:
 	mark.custom_minimum_size = mark.texture.get_size() * 2
 	mark.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	head.add_child(mark)
-	var names := VBoxContainer.new()
-	names.alignment = BoxContainer.ALIGNMENT_CENTER
-	names.add_theme_constant_override("separation", -6)
-	head.add_child(names)
 	var title := Label.new()
 	title.text = "SHOGI"
 	title.add_theme_font_override("font", UiTheme.display())
 	title.add_theme_font_size_override("font_size", UiTheme.display_size(140))
 	title.add_theme_color_override("font_color", UiTheme.TEXT)
-	names.add_child(title)
-	names.add_child(UiTheme.label("XADREZ JAPONÊS · APRENDA JOGANDO", "Caption", 22))
+	title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(title)
 
 	var spacer := Control.new()
 	spacer.custom_minimum_size.y = 26
@@ -107,7 +103,7 @@ func _build_menu() -> void:
 	var fill := Control.new()
 	fill.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(fill)
-	var version := UiTheme.label("v" + str(ProjectSettings.get_setting("application/config/version", "?")), "Caption", 20)
+	var version := UiTheme.label("v" + str(ProjectSettings.get_setting("application/config/version", "?")), "Caption", 42)
 	version.modulate.a = 0.6
 	col.add_child(version)
 
@@ -121,7 +117,7 @@ func _fill_menu() -> void:
 		var plies: int = (saved.get("moves", []) as Array).size()
 		var b := _menu_button("Continuar partida", "%s · %d lances" % [lv.name, plies], "")
 		b.pressed.connect(App.continue_game)
-	var play := _menu_button("Jogar", "contra o computador, 5 níveis", "PrimaryButton")
+	var play := _menu_button("Jogar", "contra o computador", "PrimaryButton")
 	play.pressed.connect(func() -> void: NewGamePanel.open(self, App.new_game))
 	var progress := Course.load_progress()
 	var count := Course.completed_count(progress)
@@ -136,7 +132,7 @@ func _menu_button(text: String, sub: String, variation: String) -> Button:
 	var b := Button.new()
 	if variation != "":
 		b.theme_type_variation = variation
-	b.custom_minimum_size = Vector2(MENU_WIDTH, 112 if sub != "" else 76)
+	b.custom_minimum_size = Vector2(MENU_WIDTH, 144 if sub != "" else 96)
 	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_menu.add_child(b)
 	var box := VBoxContainer.new()
@@ -149,11 +145,11 @@ func _menu_button(text: String, sub: String, variation: String) -> Button:
 	var t := Label.new()
 	t.text = text.to_upper()
 	t.add_theme_font_override("font", UiTheme.display())
-	t.add_theme_font_size_override("font_size", UiTheme.display_size(56 if sub != "" else 42))
+	t.add_theme_font_size_override("font_size", UiTheme.display_size(70 if sub != "" else 56))
 	t.add_theme_color_override("font_color", Color.WHITE if variation == "PrimaryButton" else (UiTheme.MUTED if variation == "GhostButton" else UiTheme.TEXT))
 	box.add_child(t)
 	if sub != "":
-		var s := UiTheme.label(sub, "Caption", 21)
+		var s := UiTheme.label(sub, "Caption", 42)
 		if variation == "PrimaryButton":
 			s.add_theme_color_override("font_color", Color(1, 0.88, 0.8))
 		box.add_child(s)
@@ -177,7 +173,7 @@ func _greet() -> void:
 
 
 func _show_settings() -> void:
-	var m := UiTheme.modal(self, 5, 880)
+	var m := UiTheme.modal(self, 5, 1200)
 	var layer: CanvasLayer = m.layer
 	var box: VBoxContainer = m.box
 	box.add_child(UiTheme.label("Ajustes", "Title"))
@@ -186,17 +182,17 @@ func _show_settings() -> void:
 	reduced.button_pressed = App.settings.reduced_effects
 	reduced.toggled.connect(func(on: bool) -> void: App.set_setting("reduced_effects", on))
 	box.add_child(reduced)
-	var welcome := UiTheme.button("Ouvir as boas-vindas do Tengu de novo", "", 28, 76)
+	var welcome := UiTheme.button("Ouvir as boas-vindas do Tengu de novo", "", 42, 96)
 	welcome.pressed.connect(func() -> void:
 		layer.queue_free()
 		App.set_setting("welcomed", false)
 		_greet())
 	box.add_child(welcome)
-	var about := UiTheme.label("Shogi v%s · GPL-3.0\nRegras e computador: Fairy-Stockfish. Fontes: Jersey 10, Pixelify Sans, DotGothic16, IBM Plex Mono e Kaisei Tokumin (OFL)." % ProjectSettings.get_setting("application/config/version", "?"), "Muted", 22)
+	var about := UiTheme.label("Shogi v%s · GPL-3.0\nRegras e computador: Fairy-Stockfish. Fontes: Jersey 10, Pixelify Sans, DotGothic16, IBM Plex Mono e Kaisei Tokumin (OFL)." % ProjectSettings.get_setting("application/config/version", "?"), "Muted", 36)
 	about.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	about.custom_minimum_size.x = 790
+	about.custom_minimum_size.x = 1116
 	box.add_child(about)
-	var close := UiTheme.button("Fechar", "PrimaryButton", 32, 84)
+	var close := UiTheme.button("Fechar", "PrimaryButton", 56, 104)
 	close.pressed.connect(layer.queue_free)
 	box.add_child(close)
 

@@ -10,7 +10,7 @@ static func side_labels() -> Array:
 
 
 static func open(parent: Node, on_start: Callable, level := 1) -> void:
-	var m := UiTheme.modal(parent, 5, 1180)
+	var m := UiTheme.modal(parent, 5, 1400)
 	var layer: CanvasLayer = m.layer
 	var box: VBoxContainer = m.box
 	var close := func() -> void: layer.queue_free()
@@ -20,8 +20,8 @@ static func open(parent: Node, on_start: Callable, level := 1) -> void:
 	var title := UiTheme.label("Nova partida", "Title")
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(title)
-	var x := UiTheme.button("×", "GhostButton", 36, 72)
-	x.custom_minimum_size.x = 72
+	var x := UiTheme.button("×", "GhostButton", 56, 84)
+	x.custom_minimum_size.x = 84
 	x.pressed.connect(close)
 	head.add_child(x)
 
@@ -32,11 +32,11 @@ static func open(parent: Node, on_start: Callable, level := 1) -> void:
 	box.add_child(levels)
 	var about := UiTheme.label("", "Muted")
 	about.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	about.custom_minimum_size = Vector2(1100, 70)
+	about.custom_minimum_size = Vector2(1316, 84)
 	var level_group := ButtonGroup.new()
 	for lv: Dictionary in Levels.LEVELS:
 		# Each level is its rival: the face, then the level's number and name.
-		var b := UiTheme.button("", "", 28, 250)
+		var b := UiTheme.button("", "", 42, 290)
 		var card := VBoxContainer.new()
 		card.alignment = BoxContainer.ALIGNMENT_CENTER
 		card.add_theme_constant_override("separation", 8)
@@ -46,12 +46,12 @@ static func open(parent: Node, on_start: Callable, level := 1) -> void:
 		var face := Rivals.portrait(lv.id, 140)
 		face.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		card.add_child(face)
-		var caption := UiTheme.label("%d · %s" % [lv.id, Rivals.of_level(lv.id).name], "", 26)
+		var caption := UiTheme.label("%d · %s" % [lv.id, Rivals.of_level(lv.id).name], "", 42)
 		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		caption.add_theme_font_override("font", UiTheme.display())
-		caption.add_theme_font_size_override("font_size", UiTheme.display_size(28))
+		caption.add_theme_font_size_override("font_size", UiTheme.display_size(42))
 		card.add_child(caption)
-		var level_name := UiTheme.label(lv.name.to_upper(), "Caption", 18)
+		var level_name := UiTheme.label(lv.name.to_upper(), "Caption", 42)
 		level_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		card.add_child(level_name)
 		b.toggle_mode = true
@@ -71,7 +71,7 @@ static func open(parent: Node, on_start: Callable, level := 1) -> void:
 	box.add_child(sides)
 	var side_group := ButtonGroup.new()
 	for i in 3:
-		var b := UiTheme.button(side_labels()[i], "", 28, 112)
+		var b := UiTheme.button(side_labels()[i], "", 42, 140)
 		b.toggle_mode = true
 		b.button_group = side_group
 		b.button_pressed = i == 0
@@ -79,7 +79,7 @@ static func open(parent: Node, on_start: Callable, level := 1) -> void:
 		b.pressed.connect(func() -> void: chosen.side = i)
 		sides.add_child(b)
 
-	var go := UiTheme.button("Começar", "PrimaryButton", 40, 100)
+	var go := UiTheme.button("Começar", "PrimaryButton", 56, 112)
 	go.pressed.connect(func() -> void:
 		close.call()
 		on_start.call(chosen.level, ["black", "white", "random"][chosen.side]))

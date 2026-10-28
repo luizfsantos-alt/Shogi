@@ -7,7 +7,7 @@ extends Node
 const HINT := Color(0.35, 0.65, 1.0)
 ## How far the board slides right while the big tengu talks (pixels of a 1080-high screen).
 const BIG_OFFSET := 420.0
-const HUD_WIDTH := 430.0
+const HUD_WIDTH := 560.0
 
 var table: Table
 var mentor: Mentor
@@ -49,10 +49,9 @@ func _ready() -> void:
 	# The balloon stops at the board's frame; the text is big enough to read on a phone.
 	mentor.left = 16.0
 	mentor.head_size = 128.0
-	mentor.balloon_width = 412.0
-	mentor.small_text_size = 30
+	mentor.balloon_width = 540.0
 	mentor.big_dim = 0.45
-	mentor.big_width = 870.0
+	mentor.big_width = 1040.0
 	add_child(mentor)
 	mentor.dialog_finished.connect(_continue)
 	mentor.tapped.connect(_on_balloon_tapped)
@@ -228,40 +227,40 @@ func _finish() -> void:
 	table.set_legal_moves(PackedStringArray(), 0, false)
 	mentor.hide_now()
 	var following := Course.next_lesson(lesson.id)
-	var m := UiTheme.modal(self, 7, 760)
+	var m := UiTheme.modal(self, 7, 960)
 	var layer: CanvasLayer = m.layer
 	var box: VBoxContainer = m.box
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	for l in [UiTheme.label("LIÇÃO CONCLUÍDA", "Caption", 24), UiTheme.label(lesson.title, "Title")]:
+	for l in [UiTheme.label("LIÇÃO CONCLUÍDA", "Caption", 42), UiTheme.label(lesson.title, "Title")]:
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		box.add_child(l)
 	var s := UiTheme.label("★".repeat(stars) + "☆".repeat(3 - stars) if stars > 0 else "")
 	s.add_theme_font_override("font", UiTheme.kanji_font())
-	s.add_theme_font_size_override("font_size", UiTheme.kanji_size(80))
+	s.add_theme_font_size_override("font_size", UiTheme.kanji_size(112))
 	s.add_theme_color_override("font_color", UiTheme.GOLD)
 	s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(s)
 	var note := UiTheme.label("Três estrelas: sem lances a mais, sem erros e sem dica." if stars > 0 and stars < 3 else (
-		"Perfeito!" if stars == 3 else "Você pulou exercícios: faça todos para ganhar estrelas."), "Muted", 24)
+		"Perfeito!" if stars == 3 else "Você pulou exercícios: faça todos para ganhar estrelas."), "Muted", 36)
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(note)
 	var buttons := HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", 12)
 	box.add_child(buttons)
-	var again := UiTheme.button("Repetir", "", 30, 84)
+	var again := UiTheme.button("Repetir", "", 42, 100)
 	again.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	again.pressed.connect(func() -> void:
 		layer.queue_free()
 		_restart(0))
 	buttons.add_child(again)
-	var course := UiTheme.button("Mapa do curso", "", 30, 84)
+	var course := UiTheme.button("Mapa do curso", "", 42, 100)
 	course.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	course.pressed.connect(App.open_course)
 	buttons.add_child(course)
 	if not following.is_empty():
-		var go := UiTheme.button("Próxima: " + following.title, "PrimaryButton", 32, 96)
+		var go := UiTheme.button("Próxima: " + following.title, "PrimaryButton", 42, 108)
 		go.pressed.connect(App.open_lesson.bind(following.id))
 		box.add_child(go)
 
@@ -285,18 +284,20 @@ func _build_hud() -> void:
 
 	var index: int = track.lessons.find(lesson) + 1
 	var letter := String.chr(65 + Course.tracks().find(track))  # A, B, C, D
-	col.add_child(UiTheme.label("TRILHA %s · LIÇÃO %d/%d" % [letter, index, track.lessons.size()], "Caption", 21))
-	var title := UiTheme.label(lesson.title, "Title", 46)
+	col.add_child(UiTheme.label("TRILHA %s · LIÇÃO %d/%d" % [letter, index, track.lessons.size()], "Caption", 42))
+	var title := UiTheme.label(lesson.title, "Title", 56)
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(title)
 	if lesson.has("term"):
-		col.add_child(UiTheme.label(lesson.term, "Muted", 26))
-	_hud.step = UiTheme.label("", "Caption", 21)
+		var term := UiTheme.label(lesson.term, "Muted", 36)
+		term.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		col.add_child(term)
+	_hud.step = UiTheme.label("", "Caption", 42)
 	col.add_child(_hud.step)
 	_hud.card = VBoxContainer.new()
 	col.add_child(_hud.card)
 
-	_hud.next = UiTheme.button("Continuar →", "PrimaryButton", 32, 88)
+	_hud.next = UiTheme.button("Continuar →", "PrimaryButton", 42, 100)
 	_hud.next.pressed.connect(func() -> void:
 		if mentor.in_dialog():
 			mentor.hide_now()
@@ -305,16 +306,16 @@ func _build_hud() -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	col.add_child(row)
-	_hud.hint = UiTheme.button("Dica", "", 26, 72)
+	_hud.hint = UiTheme.button("Dica", "", 42, 88)
 	_hud.hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hud.hint.pressed.connect(func() -> void: session.hint())
 	row.add_child(_hud.hint)
-	_hud.restart = UiTheme.button("Recomeçar", "", 26, 72)
+	_hud.restart = UiTheme.button("Recomeçar", "", 42, 88)
 	_hud.restart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hud.restart.pressed.connect(func() -> void: _restart(session.step_index))
 	row.add_child(_hud.restart)
-	_hud.back = UiTheme.button("←", "", 26, 72)
-	_hud.back.custom_minimum_size.x = 72
+	_hud.back = UiTheme.button("←", "", 42, 88)
+	_hud.back.custom_minimum_size.x = 88
 	_hud.back.pressed.connect(func() -> void: _restart(session.step_index - 1))
 	row.add_child(_hud.back)
 
