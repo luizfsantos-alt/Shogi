@@ -345,7 +345,7 @@ func test_coach_tips() -> void:
 
 ## Every Japanese character of the course and of the app's scripts is in the bundled pixel kanji
 ## font (app/ui/fonts/dot-kanji.ttf; `node scripts/make-kanji-font.mjs --godot` remakes it), and
-## every other character beyond ASCII in it or in the pixel Latin font (Pixelify Sans).
+## every other character beyond ASCII in it or in both pixel Latin fonts (Pixelify Sans, Jersey 10).
 func test_gote_words() -> void:
 	var pixel := Koma.pixel
 	Koma.pixel = true
@@ -359,6 +359,7 @@ func test_gote_words() -> void:
 func test_kanji_font() -> void:
 	var font: FontFile = load("res://app/ui/fonts/dot-kanji.ttf")
 	var latin: FontFile = load("res://app/ui/fonts/pixelify-400.ttf")
+	var display: FontFile = load("res://app/ui/fonts/jersey-10.ttf")
 	var japanese := RegEx.create_from_string("[\\x{3040}-\\x{30ff}\\x{3400}-\\x{9fff}\\x{3005}]")
 	var texts := [FileAccess.get_file_as_string(Course.DATA_PATH)]
 	for dir in ["res://app", "res://app/ui", "res://learn", "res://game"]:
@@ -374,7 +375,7 @@ func test_kanji_font() -> void:
 				missing[ch] = true
 		for i in text.length():
 			var code := text.unicode_at(i)
-			if code > 126 and not japanese.search(text[i]) and not font.has_char(code) and not latin.has_char(code):
+			if code > 126 and not japanese.search(text[i]) and not font.has_char(code) and not (latin.has_char(code) and display.has_char(code)):
 				other[text[i]] = true
 	expect_eq("".join(other.keys()), "", "symbols missing from the pixel fonts")
 	expect_eq("".join(missing.keys()), "", "kanji missing from the font")

@@ -211,9 +211,10 @@ func _lesson_button(lesson: Dictionary, n: int, stars: int, recommended: bool) -
 	var t := Label.new()
 	t.text = ("▷ " if lesson.get("game", false) else "") + lesson.title
 	t.add_theme_font_override("font", UiTheme.display())
-	t.add_theme_font_size_override("font_size", 36)
-	t.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	t.clip_text = true
+	t.add_theme_font_size_override("font_size", UiTheme.display_size(42))
+	# The whole title, on as many lines as it takes: the button grows to hold it.
+	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	t.add_theme_constant_override("line_spacing", -10)
 	text.add_child(t)
 	var s := UiTheme.label(lesson.summary, "Muted", 21)
 	s.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -228,6 +229,10 @@ func _lesson_button(lesson: Dictionary, n: int, stars: int, recommended: bool) -
 	if recommended and stars == 0:
 		st.add_theme_color_override("font_color", Color.WHITE)
 	row.add_child(st)
+	# The row is laid over the button, not inside a container: the button follows its height.
+	var fit := func() -> void:
+		b.custom_minimum_size.y = maxf(96, text.get_combined_minimum_size().y + 16)
+	text.minimum_size_changed.connect(fit)
 	return b
 
 

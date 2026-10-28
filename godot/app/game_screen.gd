@@ -345,7 +345,7 @@ func _build_status() -> void:
 	_status.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_status.offset_top = 18
 	_status.add_theme_font_override("font", UiTheme.mono())
-	_status.add_theme_font_size_override("font_size", 24)
+	_status.add_theme_font_size_override("font_size", UiTheme.display_size(28))
 	_status.add_theme_color_override("font_color", UiTheme.GOLD)
 	_status.add_theme_color_override("font_outline_color", UiTheme.OUTLINE)
 	_status.add_theme_constant_override("outline_size", 2 * UiTheme.PX)
@@ -374,6 +374,7 @@ func _show_rival(level: int) -> void:
 	var rival := Rivals.of_level(level)
 	var name_label := UiTheme.label("%s %s" % [rival.name, rival.kanji], "", 32)
 	name_label.add_theme_font_override("font", UiTheme.display())
+	name_label.add_theme_font_size_override("font_size", UiTheme.display_size(42))
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	box.add_child(name_label)
 	var level_label := UiTheme.label("NÍVEL %d · %s" % [level, Levels.get_level(level).name.to_upper()], "Caption", 18)

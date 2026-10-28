@@ -126,7 +126,9 @@ func _build_big() -> void:
 	_big.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_big.gui_input.connect(_on_input)
 	# The screen dims: this is to be read now, the pieces wait.
-	var dim := UiTheme.shade(Color(0.02, 0.012, 0.008), big_dim)
+	var dim := ColorRect.new()
+	dim.color = Color(0.02, 0.012, 0.008, big_dim)
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_big.add_child(dim)
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
@@ -178,7 +180,7 @@ func _balloon(width: float, text_size: int, tail_side: String, tail_at: float) -
 	panel.add_child(inner)
 	var title := Label.new()
 	title.add_theme_font_override("font", UiTheme.mono())
-	title.add_theme_font_size_override("font_size", UiTheme.text_size(int(text_size * 0.66)))
+	title.add_theme_font_size_override("font_size", UiTheme.display_size(int(text_size * 0.75)))
 	title.add_theme_color_override("font_color", Color(0.62, 0.12, 0.06))
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	inner.add_child(title)
@@ -192,7 +194,7 @@ func _balloon(width: float, text_size: int, tail_side: String, tail_at: float) -
 	var footer := Label.new()
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	footer.add_theme_font_override("font", UiTheme.mono())
-	footer.add_theme_font_size_override("font_size", UiTheme.text_size(int(text_size * 0.66)))
+	footer.add_theme_font_size_override("font_size", UiTheme.display_size(int(text_size * 0.75)))
 	footer.add_theme_color_override("font_color", Color(0.45, 0.32, 0.2))
 	inner.add_child(footer)
 	return {"panel": panel, "title": title, "text": text, "footer": footer}

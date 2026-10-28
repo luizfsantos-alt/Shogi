@@ -32,12 +32,13 @@ guarda os ajustes em `user://ajustes.json`; o botão "voltar" do Android sobe um
 A interface (`ui/ui_theme.gd`) é pixel art, como o tengu e os rivais: as cores Genpei do PWA (fundo
 queimado, vermelho para ação, ouro para valor) numa grade de 2 pixels de tela por pixel da arte.
 As caixas e botões são geradas no código, com cantos chanfrados em degraus, contorno escuro, brilho
-em cima e sombra embaixo; o interruptor e a barra deslizante também são desenhados em pixels; as
-sombras, o escurecimento dos painéis e a transição entre telas são pontilhados
-(`ui/dither.gdshader`). O texto usa Pixelify Sans sem suavização, em tamanhos múltiplos de 12; os
-kanji e os símbolos (★ ← ▷), DotGothic16, reduzida aos caracteres usados
-(`node scripts/make-kanji-font.mjs --godot`), em múltiplos de 16. A mesa e as peças não usam nada
-disso: têm o visual delas.
+em cima e sombra embaixo; o interruptor e a barra deslizante também são desenhados em pixels; a
+transição entre telas é pontilhada (`ui/dither.gdshader`). O texto não tem suavização e cada fonte
+fica em tamanhos da sua grade: Jersey 10 (títulos, botões, legendas; múltiplos de 14), Pixelify
+Sans (texto corrido; múltiplos de 12) e DotGothic16 (kanji e símbolos como ★ ← ▷; múltiplos de
+16), esta reduzida aos caracteres usados (`node scripts/make-kanji-font.mjs --godot`). A mesa e as
+peças não usam nada disso, e o que fica por cima da mesa (o escurecimento atrás de painéis e do
+tengu, a sombra do Início) continua liso, para não mudar o visual dela.
 
 ### O mentor (tengu 天狗) e os rivais
 

@@ -3,8 +3,9 @@ extends RefCounted
 ## The Genpei look of the PWA in pixel art, like the tengu and the rivals, for every screen of the
 ## app (not the table: its look is its own): charred dark surfaces, red for action and gold for
 ## value, drawn on a grid of PX screen pixels per art pixel. Boxes are chamfered in steps with a
-## dark outline, a light top edge and a dark bottom edge; text is Pixelify Sans (Latin) and
-## DotGothic16 (kanji and symbols), without smoothing, in sizes on each font's own grid.
+## dark outline, a light top edge and a dark bottom edge; text is Jersey 10 (titles, buttons,
+## labels: heavy and condensed), Pixelify Sans (body text) and DotGothic16 (kanji and symbols),
+## without smoothing, in sizes on each font's own grid.
 
 const BG := Color("0e0a09")
 const SURFACE := Color("17100d")
@@ -24,9 +25,10 @@ const OUTLINE := Color("080404")
 const PX := 2
 ## Art pixels cut off each corner of a box.
 const CHAMFER := 2
-## Pixelify Sans is drawn on a grid of 12 pixels per em, DotGothic16 on 16: font sizes are
-## multiples of these, so every font pixel is a whole block of screen pixels.
+## Pixelify Sans is drawn on a grid of 12 pixels per em, Jersey 10 on 14, DotGothic16 on 16: font
+## sizes are multiples of these, so every font pixel is a whole block of screen pixels.
 const TEXT_GRID := 12
+const DISPLAY_GRID := 14
 const KANJI_GRID := 16
 
 const FONTS := "res://app/ui/fonts/"
@@ -51,7 +53,7 @@ static func _pixel_font(file: String) -> FontFile:
 
 
 ## DotGothic16 reduced to the Japanese characters the app uses and the symbols (★ ← ▷ ≡…)
-## Pixelify Sans lacks (`node scripts/make-kanji-font.mjs --godot` remakes it).
+## the Latin fonts lack (`node scripts/make-kanji-font.mjs --godot` remakes it).
 static func _dot() -> FontFile:
 	return _pixel_font("dot-kanji.ttf")
 
@@ -72,16 +74,16 @@ static func body() -> Font:
 	return _body
 
 
-## Pixelify Sans, bold: titles, buttons, labels.
+## Jersey 10, heavy and condensed: titles, buttons, labels.
 static func display() -> Font:
 	if _display == null:
-		var f := _pixel_font("pixelify-700.ttf")
+		var f := _pixel_font("jersey-10.ttf")
 		f.fallbacks = [_dot(), system_font()]
 		_display = f
 	return _display
 
 
-## Small labels ("NÍVEL", "TRILHA A"): the bold face, in gold capitals (see "Caption").
+## Small labels ("NÍVEL", "TRILHA A"): the display face, in gold capitals (see "Caption").
 static func mono() -> Font:
 	return display()
 
@@ -96,9 +98,14 @@ static func kanji_font() -> Font:
 	return _kanji
 
 
-## The nearest size on the Latin font's grid (at least two screen pixels per font pixel).
+## The nearest size on the body font's grid (at least two screen pixels per font pixel).
 static func text_size(size: int) -> int:
 	return maxi(TEXT_GRID * 2, roundi(size / float(TEXT_GRID)) * TEXT_GRID)
+
+
+## The nearest size on the display font's grid.
+static func display_size(size: int) -> int:
+	return maxi(DISPLAY_GRID * 2, roundi(size / float(DISPLAY_GRID)) * DISPLAY_GRID)
 
 
 ## The nearest size on the kanji font's grid.
@@ -164,19 +171,20 @@ static func _depth(x: int, y: int, n: int, chamfer: int) -> int:
 
 
 ## A picture from rows of characters, one per art pixel ("." clear, others from `colours`),
-## at PX screen pixels per art pixel: the switch, the slider's grabber.
-static func sprite(rows: PackedStringArray, colours: Dictionary) -> ImageTexture:
+## at `scale` screen pixels per art pixel (PX by default): the switch, the slider's grabber.
+static func sprite(rows: PackedStringArray, colours: Dictionary, scale := PX) -> ImageTexture:
 	var img := Image.create_empty(rows[0].length(), rows.size(), false, Image.FORMAT_RGBA8)
 	for y in rows.size():
 		for x in rows[y].length():
 			var ch := rows[y][x]
 			if colours.has(ch):
 				img.set_pixel(x, y, colours[ch])
-	img.resize(img.get_width() * PX, img.get_height() * PX, Image.INTERPOLATE_NEAREST)
+	img.resize(img.get_width() * scale, img.get_height() * scale, Image.INTERPOLATE_NEAREST)
 	return ImageTexture.create_from_image(img)
 
 
-## The switch of a CheckButton, 20 × 10 art pixels: off (dark track, iron knob on the left) or
+## The switch of a CheckButton, 20 × 10 art pixels drawn a size up (3 screen pixels each, so it
+## reads beside the text): off (dark track, iron knob on the left) or
 ## on (red track, gold knob on the right).
 static func _switch(on: bool, dim := false) -> ImageTexture:
 	var knob_from := 12 if on else 2
@@ -200,7 +208,7 @@ static func _switch(on: bool, dim := false) -> ImageTexture:
 	return sprite(rows, {
 		"o": Color(OUTLINE, alpha), "T": Color(track, alpha), "k": Color(knob, alpha),
 		"h": Color(knob.lightened(0.3), alpha), "s": Color(knob.darkened(0.35), alpha),
-	})
+	}, PX + 1)
 
 
 static func theme() -> Theme:
@@ -216,7 +224,7 @@ static func theme() -> Theme:
 
 	# Buttons: dark iron with a thin border; pressed/toggled ones turn red.
 	t.set_font("font", "Button", display())
-	t.set_font_size("font_size", "Button", 36)
+	t.set_font_size("font_size", "Button", 42)
 	t.set_stylebox("normal", "Button", box(SURFACE_2, BORDER, 2, 14))
 	t.set_stylebox("hover", "Button", box(FRAME, IRON, 2, 14))
 	t.set_stylebox("pressed", "Button", box(ACCENT_DEEP, ACCENT, 2, 14))
@@ -250,13 +258,13 @@ static func theme() -> Theme:
 	t.add_type("Caption")
 	t.set_type_variation("Caption", "Label")
 	t.set_font("font", "Caption", mono())
-	t.set_font_size("font_size", "Caption", 24)
+	t.set_font_size("font_size", "Caption", 28)
 	t.set_color("font_color", "Caption", GOLD)
 
 	t.add_type("Title")
 	t.set_type_variation("Title", "Label")
 	t.set_font("font", "Title", display())
-	t.set_font_size("font_size", "Title", 60)
+	t.set_font_size("font_size", "Title", 56)
 	t.set_color("font_color", "Title", TEXT)
 
 	t.add_type("Muted")
@@ -317,7 +325,8 @@ static func label(text: String, variation := "", size := 0) -> Label:
 	if variation != "":
 		l.theme_type_variation = variation
 	if size > 0:
-		l.add_theme_font_size_override("font_size", text_size(size))
+		var display_face := variation in ["Caption", "Title"]
+		l.add_theme_font_size_override("font_size", display_size(size) if display_face else text_size(size))
 	return l
 
 
@@ -327,7 +336,7 @@ static func button(text: String, variation := "", size := 0, min_height := 84) -
 	if variation != "":
 		b.theme_type_variation = variation
 	if size > 0:
-		b.add_theme_font_size_override("font_size", text_size(size))
+		b.add_theme_font_size_override("font_size", display_size(size))
 	b.custom_minimum_size = Vector2(0, min_height)
 	return b
 
@@ -337,8 +346,10 @@ static func modal(parent: Node, layer := 5, width := 0.0) -> Dictionary:
 	var cl := CanvasLayer.new()
 	cl.layer = layer
 	parent.add_child(cl)
-	var dim := shade(Color(0.02, 0.012, 0.008), 0.74)
-	dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	# A smooth dim, not a dithered one: it lies over the table, whose look stays its own.
+	var dim := ColorRect.new()
+	dim.color = Color(0.02, 0.012, 0.008, 0.74)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	cl.add_child(dim)
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -357,6 +368,8 @@ static func modal(parent: Node, layer := 5, width := 0.0) -> Dictionary:
 ## A full-screen shade in the pixel look: `colour` over a share `amount` of the art pixels
 ## (ordered dither, app/ui/dither.gdshader), optionally fading out from left to right between the
 ## shares `ramp.x` and `ramp.y` of the width. Tween "material:shader_parameter/amount" to fade it.
+## Only for what does not lie over the table (the screen transition): over the table the dither
+## would change how the table looks.
 static func shade(colour: Color, amount: float, ramp := Vector2.ZERO) -> ColorRect:
 	var r := ColorRect.new()
 	r.set_anchors_preset(Control.PRESET_FULL_RECT)

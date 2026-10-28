@@ -302,7 +302,8 @@ Este projeto é software livre sob a **GNU General Public License v3.0 ou poster
   [Archivo](https://fonts.google.com/specimen/Archivo) e
   [IBM Plex Mono](https://fonts.google.com/specimen/IBM+Plex+Mono) (SIL OFL 1.1): fontes incluídas
   em `src/ui/fonts/` (detalhes no README da pasta).
-- [Pixelify Sans](https://fonts.google.com/specimen/Pixelify+Sans) e
+- [Jersey 10](https://fonts.google.com/specimen/Jersey+10),
+  [Pixelify Sans](https://fonts.google.com/specimen/Pixelify+Sans) e
   [DotGothic16](https://fonts.google.com/specimen/DotGothic16) (SIL OFL 1.1): a interface em pixel
   do app Godot, em `godot/app/ui/fonts/`.
 

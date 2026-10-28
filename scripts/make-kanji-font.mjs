@@ -5,8 +5,8 @@
  *
  * `node scripts/make-kanji-font.mjs --godot` makes the Godot app's font instead: the pixel kanji
  * of its interface (godot/app/ui/fonts/dot-kanji.ttf), DotGothic16 with the characters of the
- * scripts and the exported course in godot/, plus the symbols the pixel Latin font (Pixelify
- * Sans) lacks.
+ * scripts and the exported course in godot/, plus the symbols the pixel Latin fonts (Pixelify
+ * Sans, Jersey 10) lack.
  *
  * The Google Fonts API returns a font with only the characters passed in `text=`.
  */
@@ -16,7 +16,7 @@ import { join } from "node:path";
 const JAPANESE = /[\u3040-\u30ff\u3400-\u9fff\u3005]/gu;
 /** Characters on the pieces, always included. */
 const PIECES = "王玉将飛車角行金銀桂馬香歩兵龍竜全圭杏と成棋";
-/** Symbols of the Godot interface missing from Pixelify Sans, drawn by DotGothic16. */
+/** Symbols of the Godot interface missing from its Latin fonts, drawn by DotGothic16. */
 const SYMBOLS = "★☆←→↑↓▲▼△▽▷◁■□◆≡、";
 
 function sourceFiles(dir) {
