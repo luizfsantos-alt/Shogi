@@ -3,7 +3,7 @@ extends Node
 ##
 ## Screens: start (home.tscn), game (game.tscn), course map (course.tscn) and lesson
 ## (lesson.tscn). What the next screen should do is left in `request`:
-##   game:   {action: "new", level, human_color} | {action: "continue"} | {action: "guided", lesson}
+##   game:   {action: "new", level, side ("black"|"white"|"random")} | {action: "continue"} | {action: "guided", lesson}
 ##   lesson: {lesson: id}
 
 const HOME := "res://app/home.tscn"
@@ -42,8 +42,8 @@ func go_home() -> void:
 	_go(HOME, {})
 
 
-func new_game(level: int, human_color: String) -> void:
-	_go(GAME, {"action": "new", "level": level, "human_color": human_color})
+func new_game(level: int, side: String) -> void:
+	_go(GAME, {"action": "new", "level": level, "side": side})
 
 
 func continue_game() -> void:

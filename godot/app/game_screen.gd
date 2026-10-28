@@ -23,6 +23,7 @@ var _rival_level := 0
 var _animating := false              ## the table is showing a move; the next waits for it
 var _queue: Array = []               ## computer moves to animate, in order
 var _coach_seen := {}                ## coach tips already shown in this guided game
+var _game_over_panel: CanvasLayer    ## the end-of-game panel, while it is open
 
 
 func _ready() -> void:
@@ -49,7 +50,8 @@ func _ready() -> void:
 	table.reduced_effects_changed.connect(func(on: bool) -> void: App.set_setting("reduced_effects", on))
 	table.pixel_look_changed.connect(func(on: bool) -> void: App.set_setting("classic_look", not on))
 	table.add_menu_action("Início", App.go_home)
-	table.add_menu_action("Nova partida", _show_new_game)
+	table.add_menu_action("Nova partida", func() -> void: _confirm_abandon(_show_new_game))
+	table.add_menu_action("Reiniciar partida", func() -> void: _confirm_abandon(_restart))
 	table.add_menu_action("Desfazer", func() -> void: session.undo())
 	table.add_menu_action("Dica", _hint)
 	table.add_menu_action("Declarar impasse", _declare_impasse)
@@ -62,7 +64,7 @@ func _ready() -> void:
 func _start_requested(req: Dictionary) -> void:
 	match req.get("action", ""):
 		"new":
-			start(int(req.level), req.human_color)
+			start(int(req.level), req.side)
 		"continue":
 			if not session.load_game():
 				mentor.say("Não consegui abrir a partida salva. Comece uma nova.", 0.0, "startled")
@@ -79,10 +81,13 @@ func _colour(c: String) -> int:
 	return 0 if c == "black" else 1
 
 
-func start(level: int, human: String) -> void:
+## `side` is "black", "white" or "random"; a random side is drawn again on each restart.
+func start(level: int, side: String) -> void:
+	_close_game_over()
 	_queue.clear()
 	_coach_seen.clear()
-	session.new_game({"mode": "ai", "human_color": human, "level": level})
+	var human: String = side if side != "random" else ["black", "white"][randi() % 2]
+	session.new_game({"mode": "ai", "human_color": human, "level": level, "side": side})
 	var beginner := level <= BEGINNER_LEVELS
 	mentor.say("Vamos lá! Você joga com as peças %s. %s" % [
 		"peroladas e começa" if human == "black" else "%s; o computador começa" % ("pretas" if Koma.pixel else "vermelhas"),
@@ -91,6 +96,7 @@ func start(level: int, human: String) -> void:
 
 ## A game lesson of the course: Sente against the lesson's level (the weakest by default), with the coach.
 func start_guided(lesson_id: String) -> void:
+	_close_game_over()
 	_queue.clear()
 	_coach_seen.clear()
 	var level := int(Course.find_lesson(lesson_id).get("lesson", {}).get("level", 1))
@@ -102,8 +108,44 @@ func _guided() -> String:
 	return str(session.settings.get("coach", ""))
 
 
+## The same game again: the same level and side (a random side is drawn again), or the same
+## lesson of the course.
+func _restart() -> void:
+	if _guided() != "":
+		start_guided(_guided())
+	else:
+		start(int(session.settings.level), str(session.settings.get("side", session.settings.human_color)))
+
+
+## Restarting or starting a new game in the middle of one asks first.
+func _confirm_abandon(then: Callable) -> void:
+	if session.rules.result().over or session.rules.history().is_empty():
+		then.call()
+		return
+	var m := UiTheme.modal(self, 7, 720)
+	var layer: CanvasLayer = m.layer
+	var box: VBoxContainer = m.box
+	box.add_child(UiTheme.label("Abandonar a partida atual?", "Title"))
+	var note := UiTheme.label("A partida em andamento será perdida.", "Muted")
+	box.add_child(note)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	box.add_child(row)
+	var keep := UiTheme.button("Continuar jogando", "GhostButton", 30, 96)
+	keep.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	keep.pressed.connect(layer.queue_free)
+	row.add_child(keep)
+	var leave := UiTheme.button("Abandonar", "PrimaryButton", 30, 96)
+	leave.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	leave.pressed.connect(func() -> void:
+		layer.queue_free()
+		then.call())
+	row.add_child(leave)
+
+
 ## Rebuilds the table from the session (new game, undo, continuing a saved game).
 func _on_position_reset() -> void:
+	_close_game_over()
 	_queue.clear()
 	_show_rival(int(session.settings.level))
 	var human := _colour(session.settings.human_color)
@@ -182,7 +224,7 @@ func _on_game_over(result: Dictionary) -> void:
 	elif winner == human:
 		text = "Você venceu! (%s)" % reason
 	else:
-		text = "O computador venceu (%s). Quer tentar de novo? Menu ☰ → Nova partida." % reason
+		text = "O computador venceu (%s)." % reason
 	table.set_legal_moves(PackedStringArray(), _colour(session.rules.side_to_move()), false)
 	if result.get("reason", "") == "checkmate":
 		var loser := 1 if winner == "black" else 0
@@ -194,6 +236,12 @@ func _on_game_over(result: Dictionary) -> void:
 	var lesson := _guided()
 	if lesson == "":
 		mentor.say(text, 8.0, "laugh" if winner == human else ("stern" if winner != "draw" else ""))
+		# Unless the game was undone or restarted during the checkmate effect.
+		if session.rules.result().over:
+			_close_game_over()
+			var title := "Empate" if winner == "draw" else ("Você venceu!" if winner == human else "O computador venceu")
+			_game_over_panel = GameOverPanel.open(self, title, reason,
+				{"home": App.go_home, "restart": _restart, "new_game": _show_new_game})
 		return
 	# The guided game is a lesson: 3 stars for a win, 2 for a draw, 1 for playing it to the end.
 	var stars := 3 if winner == human else (2 if winner == "draw" else 1)
@@ -275,6 +323,12 @@ func _declare_impasse() -> void:
 
 func _show_new_game() -> void:
 	NewGamePanel.open(self, start, int(session.settings.get("level", 1)))
+
+
+func _close_game_over() -> void:
+	if is_instance_valid(_game_over_panel):
+		_game_over_panel.queue_free()
+	_game_over_panel = null
 
 
 # --- Status line ----------------------------------------------------------------------------
@@ -369,6 +423,16 @@ func _demo(args: Dictionary) -> void:
 		"guided":
 			# The course's first game: the coach suggests the first move.
 			start_guided("first-game")
+		"gameover":
+			# The player resigns: the end-of-game panel.
+			start(1, "black")
+			session.resign()
+		"confirm":
+			# Restarting in the middle of a game asks first.
+			start(1, "black")
+			await table.play_usi("7g7f")
+			_on_player_move("7g7f")
+			_confirm_abandon(_restart)
 	for i in int(float(args.get("at", "2.0")) * 30.0):
 		await get_tree().process_frame
 	get_viewport().get_texture().get_image().save_png(args["shot"])
