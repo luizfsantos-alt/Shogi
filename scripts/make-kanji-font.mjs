@@ -42,6 +42,30 @@ const format = godot ? "truetype" : "woff2";
 const url = new RegExp(`url\\((https:[^)]+)\\)\\s*format\\(['"]${format}['"]\\)`).exec(css)?.[1];
 if (!url) throw new Error(`No ${format} in the Google Fonts answer:\n${css}`);
 const font = Buffer.from(await (await fetch(url, { headers })).arrayBuffer());
+if (godot) fitLineHeight(font);
 writeFileSync(output, font);
 console.log(`${output}: ${chars.size} characters, ${font.length} bytes`);
 console.log(text);
+
+/**
+ * DotGothic16's line (hhea and Windows metrics: 1.448 em) is much taller than its glyphs and than
+ * the Latin fonts it backs up, and Godot makes every line as tall as the tallest font in the
+ * fallback chain: Latin text would get a third more height than it needs and spill out of its
+ * boxes. The line becomes the font's own typographic one (its glyphs' bounds, 1 em).
+ */
+function fitLineHeight(font) {
+  const tables = {};
+  for (let i = 0; i < font.readUInt16BE(4); i++) {
+    const at = 12 + 16 * i;
+    tables[font.toString("latin1", at, at + 4)] = font.readUInt32BE(at + 8);
+  }
+  const os2 = tables["OS/2"];
+  const hhea = tables.hhea;
+  const ascent = font.readInt16BE(os2 + 68);
+  const descent = font.readInt16BE(os2 + 70);
+  font.writeInt16BE(ascent, hhea + 4);
+  font.writeInt16BE(descent, hhea + 6);
+  font.writeInt16BE(0, hhea + 8);
+  font.writeUInt16BE(ascent, os2 + 74);
+  font.writeUInt16BE(-descent, os2 + 76);
+}

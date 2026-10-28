@@ -58,18 +58,13 @@ static func _dot() -> FontFile:
 	return _pixel_font("dot-kanji.ttf")
 
 
-## The device's own fonts, last in every fallback list: anything the bundled fonts lack.
-static func system_font() -> SystemFont:
-	var f := SystemFont.new()
-	f.font_names = PackedStringArray(["sans-serif", "Noto Sans Symbols 2", "Noto Sans Symbols", "DejaVu Sans"])
-	return f
-
-
-## Pixelify Sans, regular: body text.
+## Pixelify Sans, regular: body text. Its only fallback is the pixel kanji font: a fallback's
+## line height counts for every line, so the device's own fonts are not listed (Godot still turns
+## to them for a character no bundled font has, without counting their height).
 static func body() -> Font:
 	if _body == null:
 		var f := _pixel_font("pixelify-400.ttf")
-		f.fallbacks = [_dot(), system_font()]
+		f.fallbacks = [_dot()]
 		_body = f
 	return _body
 
@@ -78,7 +73,7 @@ static func body() -> Font:
 static func display() -> Font:
 	if _display == null:
 		var f := _pixel_font("jersey-10.ttf")
-		f.fallbacks = [_dot(), system_font()]
+		f.fallbacks = [_dot()]
 		_display = f
 	return _display
 
