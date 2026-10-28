@@ -37,13 +37,12 @@ static func head(level: int, defeated := false) -> AtlasTexture:
 
 
 ## A square portrait of `px` screen pixels: the head with nearest filtering on a dark lacquer
-## plate with a gold rim, or the kanji when there is no art.
+## plate with a gold rim (a pixel box, like the rest of the interface), or the kanji when there
+## is no art.
 static func portrait(level: int, px: float, defeated := false) -> PanelContainer:
 	var frame := PanelContainer.new()
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.1, 0.06, 0.05)
-	sb.border_color = UiTheme.GOLD
-	sb.set_border_width_all(3)
+	var sb := UiTheme.box(Color(0.1, 0.06, 0.05), UiTheme.GOLD, 3, 0, 1)
+	sb.set_content_margin_all(2 * UiTheme.PX)
 	frame.add_theme_stylebox_override("panel", sb)
 	frame.custom_minimum_size = Vector2(px, px)
 	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -63,8 +62,8 @@ static func portrait(level: int, px: float, defeated := false) -> PanelContainer
 		k.text = of_level(level).kanji
 		k.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		k.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		k.add_theme_font_override("font", UiTheme.display())
-		k.add_theme_font_size_override("font_size", int(px * 0.42))
+		k.add_theme_font_override("font", UiTheme.kanji_font())
+		k.add_theme_font_size_override("font_size", UiTheme.kanji_size(int(px * 0.42)))
 		k.add_theme_color_override("font_color", UiTheme.GOLD)
 		frame.add_child(k)
 	return frame

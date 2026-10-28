@@ -29,9 +29,15 @@ guarda os ajustes em `user://ajustes.json`; o botão "voltar" do Android sobe um
   de saída e a de chegada e, depois da resposta do adversário, aponta o próximo (`guide` e `point`
   do objetivo `line`; nos problemas táticos o `guide` só lembra a etapa seguinte, sem acender casas).
 
-O visual segue o Genpei do PWA (`ui/ui_theme.gd`): fundo queimado, Archivo condensada, rótulos em
-IBM Plex Mono, botões chanfrados, vermelho para ação e ouro para valor; os kanji da interface vêm
-da Potta One reduzida aos caracteres usados (`node scripts/make-kanji-font.mjs --godot`).
+A interface (`ui/ui_theme.gd`) é pixel art, como o tengu e os rivais: as cores Genpei do PWA (fundo
+queimado, vermelho para ação, ouro para valor) numa grade de 2 pixels de tela por pixel da arte.
+As caixas e botões são geradas no código, com cantos chanfrados em degraus, contorno escuro, brilho
+em cima e sombra embaixo; o interruptor e a barra deslizante também são desenhados em pixels; as
+sombras, o escurecimento dos painéis e a transição entre telas são pontilhados
+(`ui/dither.gdshader`). O texto usa Pixelify Sans sem suavização, em tamanhos múltiplos de 12; os
+kanji e os símbolos (★ ← ▷), DotGothic16, reduzida aos caracteres usados
+(`node scripts/make-kanji-font.mjs --godot`), em múltiplos de 16. A mesa e as peças não usam nada
+disso: têm o visual delas.
 
 ### O mentor (tengu 天狗) e os rivais
 

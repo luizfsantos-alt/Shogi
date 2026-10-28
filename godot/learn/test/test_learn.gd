@@ -343,8 +343,9 @@ func test_coach_tips() -> void:
 	expect_eq(CoachTips.piece_value({"type": "P", "promoted": true}), 6, "tokin value")
 
 
-## Every Japanese character of the course and of the app's scripts is in the bundled brush font
-## (app/ui/fonts/koma-kanji.woff2; `node scripts/make-kanji-font.mjs --godot` remakes it).
+## Every Japanese character of the course and of the app's scripts is in the bundled pixel kanji
+## font (app/ui/fonts/dot-kanji.ttf; `node scripts/make-kanji-font.mjs --godot` remakes it), and
+## every other character beyond ASCII in it or in the pixel Latin font (Pixelify Sans).
 func test_gote_words() -> void:
 	var pixel := Koma.pixel
 	Koma.pixel = true
@@ -356,17 +357,24 @@ func test_gote_words() -> void:
 
 
 func test_kanji_font() -> void:
-	var font: FontFile = load("res://app/ui/fonts/koma-kanji.woff2")
+	var font: FontFile = load("res://app/ui/fonts/dot-kanji.ttf")
+	var latin: FontFile = load("res://app/ui/fonts/pixelify-400.ttf")
 	var japanese := RegEx.create_from_string("[\\x{3040}-\\x{30ff}\\x{3400}-\\x{9fff}\\x{3005}]")
 	var texts := [FileAccess.get_file_as_string(Course.DATA_PATH)]
-	for dir in ["res://app", "res://learn", "res://game"]:
+	for dir in ["res://app", "res://app/ui", "res://learn", "res://game"]:
 		for file in DirAccess.get_files_at(dir):
 			if file.ends_with(".gd"):
 				texts.append(FileAccess.get_file_as_string(dir + "/" + file))
 	var missing := {}
+	var other := {}
 	for text: String in texts:
 		for m in japanese.search_all(text):
 			var ch := m.get_string()
 			if not font.has_char(ch.unicode_at(0)):
 				missing[ch] = true
+		for i in text.length():
+			var code := text.unicode_at(i)
+			if code > 126 and not japanese.search(text[i]) and not font.has_char(code) and not latin.has_char(code):
+				other[text[i]] = true
+	expect_eq("".join(other.keys()), "", "symbols missing from the pixel fonts")
 	expect_eq("".join(missing.keys()), "", "kanji missing from the font")

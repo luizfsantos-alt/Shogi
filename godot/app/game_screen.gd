@@ -125,7 +125,9 @@ func _confirm_abandon(then: Callable) -> void:
 	var m := UiTheme.modal(self, 7, 720)
 	var layer: CanvasLayer = m.layer
 	var box: VBoxContainer = m.box
-	box.add_child(UiTheme.label("Abandonar a partida atual?", "Title"))
+	var question := UiTheme.label("Abandonar a partida atual?", "Title")
+	question.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(question)
 	var note := UiTheme.label("A partida em andamento será perdida.", "Muted")
 	box.add_child(note)
 	var row := HBoxContainer.new()
@@ -343,10 +345,10 @@ func _build_status() -> void:
 	_status.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_status.offset_top = 18
 	_status.add_theme_font_override("font", UiTheme.mono())
-	_status.add_theme_font_size_override("font_size", 26)
+	_status.add_theme_font_size_override("font_size", 24)
 	_status.add_theme_color_override("font_color", UiTheme.GOLD)
-	_status.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
-	_status.add_theme_constant_override("outline_size", 8)
+	_status.add_theme_color_override("font_outline_color", UiTheme.OUTLINE)
+	_status.add_theme_constant_override("outline_size", 2 * UiTheme.PX)
 	layer.add_child(_status)
 
 

@@ -32,27 +32,12 @@ func _process(delta: float) -> void:
 	table.camera.rotate_y(sin(Time.get_ticks_msec() / 9000.0) * delta * 0.012)
 
 
-## Darkens the left side, where the menu is.
+## Darkens the left side, where the menu is: dithered pixels thinning out to the right.
 func _build_shade() -> void:
 	var layer := CanvasLayer.new()
 	layer.layer = 1
 	add_child(layer)
-	var shade := TextureRect.new()
-	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
-	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	shade.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	shade.stretch_mode = TextureRect.STRETCH_SCALE
-	var g := Gradient.new()
-	g.set_color(0, Color(UiTheme.BG, 0.97))
-	g.set_offset(0, 0.36)
-	g.set_color(1, Color(UiTheme.BG, 0.0))
-	g.set_offset(1, 0.66)
-	var gt := GradientTexture2D.new()
-	gt.gradient = g
-	gt.fill_from = Vector2(0, 0)
-	gt.fill_to = Vector2(1, 0)
-	shade.texture = gt
-	layer.add_child(shade)
+	layer.add_child(UiTheme.shade(UiTheme.BG, 0.97, Vector2(0.36, 0.66)))
 
 
 func _build_menu() -> void:
@@ -73,7 +58,7 @@ func _build_menu() -> void:
 	# The mark: 将棋 in red pixel brush (two screen pixels per art pixel), the name in heavy
 	# condensed type.
 	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", 24)
+	head.add_theme_constant_override("separation", 12)
 	col.add_child(head)
 	var mark := TextureRect.new()
 	mark.texture = load("res://app/logo/shogi.png")
@@ -89,7 +74,7 @@ func _build_menu() -> void:
 	head.add_child(names)
 	var title := Label.new()
 	title.text = "SHOGI"
-	title.add_theme_font_override("font", UiTheme.display_font(900, 62))
+	title.add_theme_font_override("font", UiTheme.display())
 	title.add_theme_font_size_override("font_size", 132)
 	title.add_theme_color_override("font_color", UiTheme.TEXT)
 	names.add_child(title)
@@ -149,7 +134,7 @@ func _menu_button(text: String, sub: String, variation: String) -> Button:
 	var t := Label.new()
 	t.text = text.to_upper()
 	t.add_theme_font_override("font", UiTheme.display())
-	t.add_theme_font_size_override("font_size", 44 if sub != "" else 30)
+	t.add_theme_font_size_override("font_size", 48 if sub != "" else 36)
 	t.add_theme_color_override("font_color", Color.WHITE if variation == "PrimaryButton" else (UiTheme.MUTED if variation == "GhostButton" else UiTheme.TEXT))
 	box.add_child(t)
 	if sub != "":
@@ -177,7 +162,7 @@ func _greet() -> void:
 
 
 func _show_settings() -> void:
-	var m := UiTheme.modal(self, 5, 760)
+	var m := UiTheme.modal(self, 5, 880)
 	var layer: CanvasLayer = m.layer
 	var box: VBoxContainer = m.box
 	box.add_child(UiTheme.label("Ajustes", "Title"))
@@ -192,9 +177,9 @@ func _show_settings() -> void:
 		App.set_setting("welcomed", false)
 		_greet())
 	box.add_child(welcome)
-	var about := UiTheme.label("Shogi v%s · GPL-3.0\nRegras e computador: Fairy-Stockfish. Fontes: Archivo, IBM Plex Mono, Potta One e Kaisei Tokumin (OFL)." % ProjectSettings.get_setting("application/config/version", "?"), "Muted", 22)
+	var about := UiTheme.label("Shogi v%s · GPL-3.0\nRegras e computador: Fairy-Stockfish. Fontes: Pixelify Sans, DotGothic16, IBM Plex Mono e Kaisei Tokumin (OFL)." % ProjectSettings.get_setting("application/config/version", "?"), "Muted", 22)
 	about.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	about.custom_minimum_size.x = 680
+	about.custom_minimum_size.x = 790
 	box.add_child(about)
 	var close := UiTheme.button("Fechar", "PrimaryButton", 32, 84)
 	close.pressed.connect(layer.queue_free)

@@ -134,6 +134,10 @@ na linha de comando).
 - Emblemas das trilhas do curso e o ícone do app, na mesma pixel art.
 - Logo (out/2026): 将棋 em caligrafia pixelada vermelha sobre preto. A palavra inteira é a
   marca da tela inicial; só o 将 é o ícone do app.
+- Interface em pixel art (out/2026), no mesmo estilo dos personagens: caixas e botões chanfrados
+  em degraus, fontes pixel (Pixelify Sans e DotGothic16), sombras e transições pontilhadas, 2 pixels
+  de tela por pixel da arte. **A mesa e as peças ficam como estão**: o contraste entre a mesa e a
+  interface é desejado.
 
 ## Efeitos ("gordos", referência Hearthstone)
 

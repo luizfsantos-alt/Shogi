@@ -20,7 +20,7 @@ static func open(parent: Node, on_start: Callable, level := 1) -> void:
 	var title := UiTheme.label("Nova partida", "Title")
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(title)
-	var x := UiTheme.button("✕", "GhostButton", 36, 72)
+	var x := UiTheme.button("×", "GhostButton", 36, 72)
 	x.custom_minimum_size.x = 72
 	x.pressed.connect(close)
 	head.add_child(x)

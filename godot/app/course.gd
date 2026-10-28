@@ -97,8 +97,7 @@ func _show_tab(tab: int) -> void:
 		var b := _tab_buttons[i]
 		b.set_pressed_no_signal(i == tab)
 		b.add_theme_color_override("font_color", UiTheme.TEXT if i == tab else UiTheme.MUTED)
-		var line := UiTheme.box(Color(UiTheme.FRAME, 0.9) if i == tab else Color(0, 0, 0, 0), UiTheme.GOLD if i == tab else Color.TRANSPARENT, 0, 10)
-		line.border_width_bottom = 3 if i == tab else 0
+		var line := UiTheme.box(Color(UiTheme.FRAME, 0.9) if i == tab else Color(0, 0, 0, 0), UiTheme.GOLD if i == tab else Color.TRANSPARENT, 2 if i == tab else 0, 10)
 		b.add_theme_stylebox_override("normal", line)
 		b.add_theme_stylebox_override("pressed", line)
 	for c in _columns.get_children():
@@ -152,11 +151,12 @@ func _track_column(track: Dictionary, letter: String, progress: Dictionary, reco
 	var title := UiTheme.label(track.title, "Title", title_size)
 	title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	name.add_child(title)
-	# "Kihon 基本": the kanji in brush, gold.
+	# "Kihon 基本": the kanji in pixels, gold.
 	var term: String = track.get("term", "")
 	var kanji := term.substr(term.find(" ") + 1)
-	var k := UiTheme.label(kanji, "", 40)
+	var k := UiTheme.label(kanji)
 	k.add_theme_font_override("font", UiTheme.kanji_font())
+	k.add_theme_font_size_override("font_size", UiTheme.kanji_size(48))
 	k.add_theme_color_override("font_color", UiTheme.GOLD)
 	k.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	name.add_child(k)
@@ -209,9 +209,9 @@ func _lesson_button(lesson: Dictionary, n: int, stars: int, recommended: bool) -
 	text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(text)
 	var t := Label.new()
-	t.text = ("▶ " if lesson.get("game", false) else "") + lesson.title
+	t.text = ("▷ " if lesson.get("game", false) else "") + lesson.title
 	t.add_theme_font_override("font", UiTheme.display())
-	t.add_theme_font_size_override("font_size", 30)
+	t.add_theme_font_size_override("font_size", 36)
 	t.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	t.clip_text = true
 	text.add_child(t)
@@ -219,8 +219,12 @@ func _lesson_button(lesson: Dictionary, n: int, stars: int, recommended: bool) -
 	s.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	s.clip_text = true
 	text.add_child(s)
-	var st := UiTheme.label(_stars_text(stars) if stars > 0 else ("PRÓXIMA" if recommended else ""), "Caption", 26 if stars > 0 else 20)
+	var st := UiTheme.label(_stars_text(stars) if stars > 0 else ("PRÓXIMA" if recommended else ""), "Caption")
 	st.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	if stars > 0:
+		# The stars come from the pixel kanji font: a size on its grid.
+		st.add_theme_font_override("font", UiTheme.kanji_font())
+		st.add_theme_font_size_override("font_size", UiTheme.kanji_size(32))
 	if recommended and stars == 0:
 		st.add_theme_color_override("font_color", Color.WHITE)
 	row.add_child(st)
