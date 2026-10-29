@@ -88,6 +88,9 @@ func start(level: int, side: String) -> void:
 	_coach_seen.clear()
 	var human: String = side if side != "random" else ["black", "white"][randi() % 2]
 	session.new_game({"mode": "ai", "human_color": human, "level": level, "side": side})
+	# The new game replaces the saved one now, not at its first move: otherwise "Continuar
+	# partida" would still bring the abandoned game back.
+	session.save_game()
 	var beginner := level <= BEGINNER_LEVELS
 	mentor.say("Vamos lá! Você joga com as peças %s. %s" % [
 		"peroladas e começa" if human == "black" else "%s; o computador começa" % ("pretas" if Koma.pixel else "vermelhas"),
@@ -102,6 +105,7 @@ func start_guided(lesson_id: String) -> void:
 	var level := int(Course.find_lesson(lesson_id).get("lesson", {}).get("level", 1))
 	# The coach's first tip (the opening) comes with the first turn.
 	session.new_game({"mode": "ai", "human_color": "black", "level": level, "coach": lesson_id})
+	session.save_game()
 
 
 func _guided() -> String:
@@ -122,27 +126,7 @@ func _confirm_abandon(then: Callable) -> void:
 	if session.rules.result().over or session.rules.history().is_empty():
 		then.call()
 		return
-	var m := UiTheme.modal(self, 7, 900)
-	var layer: CanvasLayer = m.layer
-	var box: VBoxContainer = m.box
-	var question := UiTheme.label("Abandonar a partida atual?", "Title")
-	question.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	box.add_child(question)
-	var note := UiTheme.label("A partida em andamento será perdida.", "Muted")
-	box.add_child(note)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
-	box.add_child(row)
-	var keep := UiTheme.button("Continuar jogando", "GhostButton", 42, 108)
-	keep.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	keep.pressed.connect(layer.queue_free)
-	row.add_child(keep)
-	var leave := UiTheme.button("Abandonar", "PrimaryButton", 42, 108)
-	leave.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	leave.pressed.connect(func() -> void:
-		layer.queue_free()
-		then.call())
-	row.add_child(leave)
+	NewGamePanel.confirm_abandon(self, then)
 
 
 ## Rebuilds the table from the session (new game, undo, continuing a saved game).

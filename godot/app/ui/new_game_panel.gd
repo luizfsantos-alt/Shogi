@@ -9,6 +9,31 @@ static func side_labels() -> Array:
 	return ["先手 Sente\npérola, começa", "後手 Gote\n%s" % ("preto" if Koma.pixel else "vermelho"), "Aleatório"]
 
 
+## "Abandonar a partida atual?": `then` runs only if the player chooses to abandon it.
+static func confirm_abandon(parent: Node, then: Callable) -> void:
+	var m := UiTheme.modal(parent, 7, 900)
+	var layer: CanvasLayer = m.layer
+	var box: VBoxContainer = m.box
+	var question := UiTheme.label("Abandonar a partida atual?", "Title")
+	question.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(question)
+	var note := UiTheme.label("A partida em andamento será perdida.", "Muted")
+	box.add_child(note)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	box.add_child(row)
+	var keep := UiTheme.button("Continuar jogando", "GhostButton", 42, 108)
+	keep.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	keep.pressed.connect(layer.queue_free)
+	row.add_child(keep)
+	var leave := UiTheme.button("Abandonar", "PrimaryButton", 42, 108)
+	leave.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	leave.pressed.connect(func() -> void:
+		layer.queue_free()
+		then.call())
+	row.add_child(leave)
+
+
 static func open(parent: Node, on_start: Callable, level := 1) -> void:
 	var m := UiTheme.modal(parent, 5, 1400)
 	var layer: CanvasLayer = m.layer
