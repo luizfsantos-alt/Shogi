@@ -118,7 +118,12 @@ func _fill_menu() -> void:
 		var b := _menu_button("Continuar partida", "%s · %d lances" % [lv.name, plies], "")
 		b.pressed.connect(App.continue_game)
 	var play := _menu_button("Jogar", "contra o computador", "PrimaryButton")
-	play.pressed.connect(func() -> void: NewGamePanel.open(self, App.new_game))
+	# With a game in progress, a new one asks first whether to abandon it.
+	play.pressed.connect(func() -> void:
+		if saved.is_empty():
+			NewGamePanel.open(self, App.new_game)
+		else:
+			NewGamePanel.confirm_abandon(self, func() -> void: NewGamePanel.open(self, App.new_game)))
 	var progress := Course.load_progress()
 	var count := Course.completed_count(progress)
 	var learn := _menu_button("Aprender a jogar", "%d de %d lições ★" % [count.done, count.total], "")
@@ -223,6 +228,8 @@ func _demo(args: Dictionary) -> void:
 			_greet()
 		"play":
 			NewGamePanel.open(self, App.new_game)
+		"abandon":
+			NewGamePanel.confirm_abandon(self, func() -> void: NewGamePanel.open(self, App.new_game))
 		"settings":
 			_show_settings()
 	for i in int(float(args.get("at", "2.0")) * 30.0):
